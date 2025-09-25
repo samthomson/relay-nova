@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 import { RelayInfoModal } from './RelayInfoModal';
+import { createEarthTexture } from '@/lib/earthTexture';
 
 interface RelayLocation {
   url: string;
@@ -31,9 +32,9 @@ export function ThreeEarth() {
   useEffect(() => {
     if (!mountRef.current) return;
 
-    // Scene setup
+    // Scene setup with lighter background
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000011);
+    scene.background = new THREE.Color(0x000033); // Slightly lighter space background
     sceneRef.current = scene;
 
     // Camera setup
@@ -53,125 +54,69 @@ export function ThreeEarth() {
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    // Lighting - much brighter for better visibility
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Increased from 0.3
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1);
+    const pointLight = new THREE.PointLight(0xffffff, 1.5); // Increased intensity
     pointLight.position.set(10, 10, 10);
     scene.add(pointLight);
+
+    // Add another light from the opposite side for even illumination
+    const fillLight = new THREE.PointLight(0xffffff, 0.8);
+    fillLight.position.set(-10, -10, -10);
+    scene.add(fillLight);
 
     // Create Earth with proper satellite imagery texture
     const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
 
-    // Start with a basic material, we'll update it when texture loads
-    const earthMaterial = new THREE.MeshPhongMaterial({
-      color: 0x4444aa,
-      shininess: 10
+    // Start with a good fallback texture
+    const fallbackTexture = createEarthTexture();
+    const earthMaterial = new THREE.MeshLambertMaterial({
+      map: fallbackTexture
     });
 
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earth);
     earthRef.current = earth;
 
+    // Add relay markers as children of Earth so they rotate together
+    earth.add(relayMarkersGroup);
+
     // Load real Earth texture asynchronously
     const textureLoader = new THREE.TextureLoader();
 
-    // Try multiple Earth texture sources
-    const earthTextureSources = [
-      // High quality NASA Blue Marble textures
-      'https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg',
-      'https://raw.githubusercontent.com/turban/webgl-earth/master/images/2_no_clouds_4k.jpg',
-      // Wikimedia Commons Earth textures
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Land_ocean_ice_cloud_2048.jpg/2048px-Land_ocean_ice_cloud_2048.jpg',
-      // Backup sources
-      'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
-      'https://unpkg.com/three-globe/example/img/earth-dark.jpg'
-    ];
+    // Try to load a better external texture, but we already have a good fallback
+    const textureLoader = new THREE.TextureLoader();
 
-    let textureLoaded = false;
-
-    const loadTexture = (sourceIndex: number) => {
-      if (sourceIndex >= earthTextureSources.length || textureLoaded) return;
-
-      textureLoader.load(
-        earthTextureSources[sourceIndex],
-        (texture) => {
-          if (!textureLoaded && earthRef.current) {
-            textureLoaded = true;
-            earthMaterial.map = texture;
-            earthMaterial.needsUpdate = true;
-            console.log('Earth texture loaded successfully');
-
-            // Also try to load night texture for city lights
-            textureLoader.load(
-              'https://www.solarsystemscope.com/textures/download/2k_earth_nightmap.jpg',
-              (nightTexture) => {
-                // Create a shader material that blends day and night
-                const earthShaderMaterial = new THREE.ShaderMaterial({
-                  uniforms: {
-                    dayTexture: { value: texture },
-                    nightTexture: { value: nightTexture },
-                    sunDirection: { value: new THREE.Vector3(1, 0, 0) }
-                  },
-                  vertexShader: `
-                    varying vec2 vUv;
-                    varying vec3 vNormal;
-                    void main() {
-                      vUv = uv;
-                      vNormal = normalize(normalMatrix * normal);
-                      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                    }
-                  `,
-                  fragmentShader: `
-                    uniform sampler2D dayTexture;
-                    uniform sampler2D nightTexture;
-                    uniform vec3 sunDirection;
-                    varying vec2 vUv;
-                    varying vec3 vNormal;
-
-                    void main() {
-                      vec4 dayColor = texture2D(dayTexture, vUv);
-                      vec4 nightColor = texture2D(nightTexture, vUv);
-
-                      float intensity = dot(vNormal, sunDirection);
-                      intensity = smoothstep(-0.2, 0.2, intensity);
-
-                      gl_FragColor = mix(nightColor, dayColor, intensity);
-                    }
-                  `
-                });
-
-                if (earthRef.current) {
-                  earthRef.current.material = earthShaderMaterial;
-                  console.log('Night texture also loaded, using day/night shader');
-                }
-              },
-              undefined,
-              (nightError) => {
-                console.log('Night texture failed to load, using day texture only');
-              }
-            );
-          }
-        },
-        undefined,
-        (error) => {
-          console.warn(`Failed to load Earth texture from source ${sourceIndex}:`, error);
-          loadTexture(sourceIndex + 1);
+    // Try a CORS-friendly texture source
+    textureLoader.load(
+      // Use a reliable CORS-enabled source
+      'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+      (texture) => {
+        if (earthRef.current) {
+          const newMaterial = new THREE.MeshLambertMaterial({
+            map: texture
+          });
+          earthRef.current.material = newMaterial;
+          console.log('High-quality Earth texture loaded successfully');
         }
-      );
-    };
+      },
+      undefined,
+      (error) => {
+        console.log('External texture failed to load, using fallback texture');
+        // Fallback texture is already applied
+      }
+    );
 
-    // Start loading textures
-    loadTexture(0);
 
-
-    // Create atmosphere
+    // Create atmosphere with better visibility
     const atmosphereGeometry = new THREE.SphereGeometry(2.05, 64, 32);
-    const atmosphereMaterial = new THREE.MeshPhongMaterial({
+    const atmosphereMaterial = new THREE.MeshBasicMaterial({
       color: 0x87ceeb,
       transparent: true,
-      opacity: 0.1
+      opacity: 0.2, // Increased opacity
+      side: THREE.BackSide // Only render the inside
     });
     const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
     scene.add(atmosphere);
@@ -201,9 +146,8 @@ export function ThreeEarth() {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    // Create relay markers group
+    // Create relay markers group as child of Earth (so they rotate together)
     const relayMarkersGroup = new THREE.Group();
-    scene.add(relayMarkersGroup);
     relayMarkersRef.current = relayMarkersGroup;
 
     // Raycaster for mouse picking

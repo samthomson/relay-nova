@@ -88,25 +88,11 @@ async function getRelayLocation(relayUrl: string): Promise<RelayLocation | null>
 }
 
 async function fetchRelayLocations(): Promise<RelayLocation[]> {
-  // Fetch locations for all known relays
-  const locationPromises = KNOWN_RELAYS.map(async (relayUrl) => {
-    // Add a small delay to avoid overwhelming the API
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
-    return getRelayLocation(relayUrl);
-  });
-
-  const results = await Promise.allSettled(locationPromises);
-
-  const locations: RelayLocation[] = [];
-  results.forEach((result) => {
-    if (result.status === 'fulfilled' && result.value) {
-      locations.push(result.value);
-    }
-  });
+  // Skip API calls due to rate limiting - use fallback data directly
+  console.log('Using fallback relay locations due to API rate limits');
 
   // Enhanced fallback locations with more global coverage
-  if (locations.length === 0) {
-    return [
+  return [
       // North America
       { url: 'wss://relay.damus.io', lat: 37.7749, lng: -122.4194, city: 'San Francisco', country: 'USA' },
       { url: 'wss://relay.primal.net', lat: 40.7128, lng: -74.0060, city: 'New York', country: 'USA' },
@@ -140,9 +126,6 @@ async function fetchRelayLocations(): Promise<RelayLocation[]> {
       { url: 'wss://relay.nostr.vision', lat: -26.2041, lng: 28.0473, city: 'Johannesburg', country: 'South Africa' },
       { url: 'wss://relay.8333.space', lat: 25.2048, lng: 55.2708, city: 'Dubai', country: 'UAE' },
     ];
-  }
-
-  return locations;
 }
 
 export function useRelayLocations() {
