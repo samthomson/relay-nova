@@ -23,6 +23,8 @@ export function ThreeEarth() {
   const mouseRef = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
+  const dragStartPosition = useRef({ x: 0, y: 0 });
+  const DRAG_THRESHOLD = 5; // Minimum pixels to count as drag vs click
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -155,11 +157,23 @@ export function ThreeEarth() {
 
     // Mouse controls
     const onMouseDown = (event: MouseEvent) => {
-      isDragging.current = true;
       previousMouse.current = { x: event.clientX, y: event.clientY };
+      dragStartPosition.current = { x: event.clientX, y: event.clientY };
+      isDragging.current = false; // Don't set to true immediately
     };
 
     const onMouseMove = (event: MouseEvent) => {
+      // Check if we've moved enough to start dragging
+      if (!isDragging.current) {
+        const dragDistance = Math.sqrt(
+          Math.pow(event.clientX - dragStartPosition.current.x, 2) +
+          Math.pow(event.clientY - dragStartPosition.current.y, 2)
+        );
+        if (dragDistance > DRAG_THRESHOLD) {
+          isDragging.current = true;
+        }
+      }
+
       if (isDragging.current && earthRef.current) {
         const deltaX = event.clientX - previousMouse.current.x;
         const deltaY = event.clientY - previousMouse.current.y;
@@ -169,9 +183,9 @@ export function ThreeEarth() {
 
         // Clamp X rotation to prevent flipping
         earthRef.current.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, earthRef.current.rotation.x));
-
-        previousMouse.current = { x: event.clientX, y: event.clientY };
       }
+
+      previousMouse.current = { x: event.clientX, y: event.clientY };
     };
 
     const onMouseUp = () => {
@@ -179,8 +193,15 @@ export function ThreeEarth() {
     };
 
     const onMouseClick = (event: MouseEvent) => {
-      // Don't handle click if we were dragging
-      if (isDragging.current) return;
+      // Only handle click if we didn't drag
+      const dragDistance = Math.sqrt(
+        Math.pow(event.clientX - dragStartPosition.current.x, 2) +
+        Math.pow(event.clientY - dragStartPosition.current.y, 2)
+      );
+
+      if (dragDistance > DRAG_THRESHOLD) {
+        return; // This was a drag, not a click
+      }
 
       // Calculate mouse position in normalized device coordinates
       const rect = renderer.domElement.getBoundingClientRect();
@@ -317,29 +338,38 @@ export function ThreeEarth() {
     console.log('Adding relay markers for', relayLocations.length, 'relays');
 
     relayLocations.forEach((relay, index) => {
-      console.log(`Placing relay ${index}: ${relay.url} at lat=${relay.lat}, lng=${relay.lng}`);
+      console.log(`Placing relay ${index}: ${relay.url} at lat=${relay.lat}, lng=${relay.lng} in ${relay.city}, ${relay.country}`);
 
       const radius = 2.05; // Slightly above Earth surface
 
-      // Convert lat/lng to spherical coordinates (standard geographic to 3D conversion)
-      const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = relay.lng * (Math.PI / 180);
+      // Convert lat/lng to spherical coordinates
+      // Three.js uses Y-up coordinate system, standard geographic coordinates
+      const latRad = (90 - relay.lat) * (Math.PI / 180); // Convert to polar angle (0 = North Pole)
+      const lngRad = (relay.lng + 180) * (Math.PI / 180); // Convert to azimuthal angle
 
-      // Standard spherical to cartesian conversion for a sphere
-      // X = r * cos(lat) * cos(lng)
-      // Y = r * sin(lat)
-      // Z = r * cos(lat) * sin(lng)
-      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
-      const y = radius * Math.sin(latRad);
-      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+      // Spherical to Cartesian conversion for Three.js coordinate system
+      const x = -radius * Math.sin(latRad) * Math.cos(lngRad);
+      const y = radius * Math.cos(latRad);
+      const z = radius * Math.sin(latRad) * Math.sin(lngRad);
 
-      console.log(`  Calculated position: x=${x.toFixed(2)}, y=${y.toFixed(2)}, z=${z.toFixed(2)}`);
+      console.log(`  Position: x=${x.toFixed(2)}, y=${y.toFixed(2)}, z=${z.toFixed(2)}`);
+
+      // Verify expected locations for known cities
+      if (relay.city === 'San Francisco') {
+        console.log('  ✓ San Francisco should be on the left side (negative X, positive Y)');
+      } else if (relay.city === 'London') {
+        console.log('  ✓ London should be on the front-right (positive X, positive Y, near Z=0)');
+      } else if (relay.city === 'Tokyo') {
+        console.log('  ✓ Tokyo should be on the back-right (negative X, positive Y, positive Z)');
+      } else if (relay.city === 'Sydney') {
+        console.log('  ✓ Sydney should be on the back-bottom (negative X, negative Y, positive Z)');
+      }
 
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
-      // Main marker sphere
-      const markerGeometry = new THREE.SphereGeometry(0.03, 16, 12);
+      // Main marker sphere - made larger for better visibility
+      const markerGeometry = new THREE.SphereGeometry(0.05, 16, 12);
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: 0xff0000,
         transparent: false
@@ -352,8 +382,8 @@ export function ThreeEarth() {
 
       markerGroup.add(marker);
 
-      // Create pulsing glow effect
-      const glowGeometry = new THREE.SphereGeometry(0.045, 16, 12);
+      // Create pulsing glow effect - made larger
+      const glowGeometry = new THREE.SphereGeometry(0.08, 16, 12);
       const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0xff4444,
         transparent: true,
