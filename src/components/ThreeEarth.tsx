@@ -76,6 +76,10 @@ export function ThreeEarth() {
       map: fallbackTexture
     });
 
+    // Create relay markers group first
+    const relayMarkersGroup = new THREE.Group();
+    relayMarkersRef.current = relayMarkersGroup;
+
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earth);
     earthRef.current = earth;
@@ -84,9 +88,6 @@ export function ThreeEarth() {
     earth.add(relayMarkersGroup);
 
     // Load real Earth texture asynchronously
-    const textureLoader = new THREE.TextureLoader();
-
-    // Try to load a better external texture, but we already have a good fallback
     const textureLoader = new THREE.TextureLoader();
 
     // Try a CORS-friendly texture source
@@ -146,9 +147,7 @@ export function ThreeEarth() {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    // Create relay markers group as child of Earth (so they rotate together)
-    const relayMarkersGroup = new THREE.Group();
-    relayMarkersRef.current = relayMarkersGroup;
+    // Relay markers group was already created above
 
     // Raycaster for mouse picking
     const raycaster = new THREE.Raycaster();
