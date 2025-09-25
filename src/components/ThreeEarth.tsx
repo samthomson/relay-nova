@@ -34,6 +34,10 @@ export function ThreeEarth() {
   useEffect(() => {
     if (!mountRef.current) return;
 
+    console.log('ThreeEarth: Starting initialization');
+
+    try {
+
     // Scene setup with lighter background
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000033); // Slightly lighter space background
@@ -73,20 +77,25 @@ export function ThreeEarth() {
     const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
 
     // Start with a good fallback texture
+    console.log('ThreeEarth: Creating fallback texture');
     const fallbackTexture = createEarthTexture();
+    console.log('ThreeEarth: Creating Earth material');
     const earthMaterial = new THREE.MeshLambertMaterial({
       map: fallbackTexture
     });
 
     // Create relay markers group first
+    console.log('ThreeEarth: Creating relay markers group');
     const relayMarkersGroup = new THREE.Group();
     relayMarkersRef.current = relayMarkersGroup;
 
+    console.log('ThreeEarth: Creating Earth mesh');
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earth);
     earthRef.current = earth;
 
     // Add relay markers as children of Earth so they rotate together
+    console.log('ThreeEarth: Adding relay markers to Earth');
     earth.add(relayMarkersGroup);
 
     // Load real Earth texture asynchronously
@@ -323,6 +332,32 @@ export function ThreeEarth() {
 
       renderer.dispose();
     };
+
+    } catch (error) {
+      console.error('ThreeEarth initialization failed:', error);
+
+      // Create a simple fallback display
+      if (mountRef.current) {
+        mountRef.current.innerHTML = `
+          <div style="
+            display: flex;
+            items-align: center;
+            justify-content: center;
+            height: 100%;
+            color: white;
+            background: #000033;
+            text-align: center;
+            padding: 2rem;
+          ">
+            <div>
+              <h2 style="margin-bottom: 1rem;">3D Earth Loading Error</h2>
+              <p>WebGL initialization failed. Your browser may not support 3D graphics.</p>
+              <p style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">Error: ${error.message}</p>
+            </div>
+          </div>
+        `;
+      }
+    }
   }, []);
 
   // Update relay markers when data changes
