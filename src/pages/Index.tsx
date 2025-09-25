@@ -1,23 +1,38 @@
 import { useSeoMeta } from '@unhead/react';
-
-// FIXME: Update this page (the content is just a fallback if you fail to update the page)
+import { ThreeEarth } from '@/components/ThreeEarth';
 
 const Index = () => {
   useSeoMeta({
-    title: 'Welcome to Your Blank App',
-    description: 'A modern Nostr client application built with React, TailwindCSS, and Nostrify.',
+    title: 'Earthly Relays - Nostr Relay Visualization',
+    description: 'Explore Nostr relays around the world on an interactive 3D Earth visualization.',
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-          Welcome to Your Blank App
-        </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400">
-          Start building your amazing project here!
-        </p>
+    <div className="relative min-h-screen">
+      {/* Header overlay */}
+      <div className="absolute top-0 left-0 right-0 z-10 p-6">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-2 text-white drop-shadow-lg">
+            Earthly Relays
+          </h1>
+          <p className="text-lg text-white/80 drop-shadow">
+            Nostr relays visualized around our planet
+          </p>
+        </div>
       </div>
+
+      {/* Instructions overlay */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
+        <div className="text-center text-white/70 text-sm">
+          <p className="mb-2">🌍 Drag to rotate • 🔍 Scroll to zoom • ⚡ Red dots are Nostr relays</p>
+          <p className="text-xs opacity-60">
+            Vibed with <a href="https://soapbox.pub/mkstack" className="underline hover:text-white">MKStack</a>
+          </p>
+        </div>
+      </div>
+
+      {/* 3D Earth Visualization */}
+      <ThreeEarth />
     </div>
   );
 };
