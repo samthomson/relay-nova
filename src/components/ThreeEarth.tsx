@@ -61,185 +61,110 @@ export function ThreeEarth() {
     pointLight.position.set(10, 10, 10);
     scene.add(pointLight);
 
-    // Create Earth
+    // Create Earth with proper satellite imagery texture
     const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
 
-    // Create realistic Earth texture with accurate continents
-    const canvas = document.createElement('canvas');
-    canvas.width = 2048;
-    canvas.height = 1024;
-    const context = canvas.getContext('2d')!;
-
-    // Load and draw a realistic Earth day texture
-    const createEarthTexture = () => {
-      // Use NASA's Blue Marble data for accurate Earth appearance
-      // Create a detailed texture with accurate landmasses
-
-      // Ocean base
-      const oceanGradient = context.createLinearGradient(0, 0, 0, canvas.height);
-      oceanGradient.addColorStop(0, '#2563eb'); // Deep blue at poles
-      oceanGradient.addColorStop(0.5, '#1e40af'); // Medium blue at equator
-      oceanGradient.addColorStop(1, '#2563eb'); // Deep blue at poles
-      context.fillStyle = oceanGradient;
-      context.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw accurate continental shapes
-      context.fillStyle = '#166534'; // Base land color
-
-      // North America
-      context.beginPath();
-      context.moveTo(0.15 * canvas.width, 0.25 * canvas.height);
-      context.quadraticCurveTo(0.18 * canvas.width, 0.20 * canvas.height, 0.25 * canvas.width, 0.22 * canvas.height);
-      context.lineTo(0.35 * canvas.width, 0.28 * canvas.height);
-      context.quadraticCurveTo(0.38 * canvas.width, 0.35 * canvas.height, 0.35 * canvas.width, 0.45 * canvas.height);
-      context.lineTo(0.28 * canvas.width, 0.50 * canvas.height);
-      context.quadraticCurveTo(0.20 * canvas.width, 0.48 * canvas.height, 0.15 * canvas.width, 0.42 * canvas.height);
-      context.closePath();
-      context.fill();
-
-      // Add Greenland
-      context.beginPath();
-      context.arc(0.38 * canvas.width, 0.15 * canvas.height, 0.03 * canvas.width, 0, Math.PI * 2);
-      context.fill();
-
-      // South America
-      context.beginPath();
-      context.moveTo(0.28 * canvas.width, 0.52 * canvas.height);
-      context.quadraticCurveTo(0.32 * canvas.width, 0.50 * canvas.height, 0.34 * canvas.width, 0.55 * canvas.height);
-      context.lineTo(0.36 * canvas.width, 0.70 * canvas.height);
-      context.quadraticCurveTo(0.34 * canvas.width, 0.85 * canvas.height, 0.30 * canvas.width, 0.88 * canvas.height);
-      context.lineTo(0.26 * canvas.width, 0.85 * canvas.height);
-      context.quadraticCurveTo(0.24 * canvas.width, 0.70 * canvas.height, 0.26 * canvas.width, 0.55 * canvas.height);
-      context.closePath();
-      context.fill();
-
-      // Africa
-      context.beginPath();
-      context.moveTo(0.48 * canvas.width, 0.30 * canvas.height);
-      context.quadraticCurveTo(0.52 * canvas.width, 0.28 * canvas.height, 0.58 * canvas.width, 0.32 * canvas.height);
-      context.lineTo(0.60 * canvas.width, 0.45 * canvas.height);
-      context.quadraticCurveTo(0.58 * canvas.width, 0.65 * canvas.height, 0.55 * canvas.width, 0.75 * canvas.height);
-      context.lineTo(0.50 * canvas.width, 0.78 * canvas.height);
-      context.quadraticCurveTo(0.46 * canvas.width, 0.70 * canvas.height, 0.45 * canvas.width, 0.50 * canvas.height);
-      context.quadraticCurveTo(0.46 * canvas.width, 0.35 * canvas.height, 0.48 * canvas.width, 0.30 * canvas.height);
-      context.closePath();
-      context.fill();
-
-      // Europe
-      context.beginPath();
-      context.moveTo(0.48 * canvas.width, 0.25 * canvas.height);
-      context.lineTo(0.58 * canvas.width, 0.22 * canvas.height);
-      context.lineTo(0.60 * canvas.width, 0.30 * canvas.height);
-      context.lineTo(0.52 * canvas.width, 0.32 * canvas.height);
-      context.closePath();
-      context.fill();
-
-      // Asia
-      context.beginPath();
-      context.moveTo(0.60 * canvas.width, 0.18 * canvas.height);
-      context.lineTo(0.85 * canvas.width, 0.20 * canvas.height);
-      context.quadraticCurveTo(0.90 * canvas.width, 0.25 * canvas.height, 0.88 * canvas.width, 0.35 * canvas.height);
-      context.lineTo(0.85 * canvas.width, 0.45 * canvas.height);
-      context.quadraticCurveTo(0.80 * canvas.width, 0.50 * canvas.height, 0.70 * canvas.width, 0.48 * canvas.height);
-      context.lineTo(0.62 * canvas.width, 0.40 * canvas.height);
-      context.quadraticCurveTo(0.58 * canvas.width, 0.30 * canvas.height, 0.60 * canvas.width, 0.18 * canvas.height);
-      context.closePath();
-      context.fill();
-
-      // India subcontinent
-      context.beginPath();
-      context.moveTo(0.68 * canvas.width, 0.48 * canvas.height);
-      context.quadraticCurveTo(0.72 * canvas.width, 0.45 * canvas.height, 0.75 * canvas.width, 0.50 * canvas.height);
-      context.lineTo(0.74 * canvas.width, 0.58 * canvas.height);
-      context.quadraticCurveTo(0.70 * canvas.width, 0.60 * canvas.height, 0.68 * canvas.width, 0.55 * canvas.height);
-      context.closePath();
-      context.fill();
-
-      // Australia
-      context.beginPath();
-      context.ellipse(0.85 * canvas.width, 0.72 * canvas.height, 0.08 * canvas.width, 0.05 * canvas.height, 0, 0, Math.PI * 2);
-      context.fill();
-
-      // Antarctica
-      context.fillRect(0, 0.90 * canvas.height, canvas.width, 0.10 * canvas.height);
-
-      // Add terrain details
-      context.fillStyle = '#22c55e'; // Forests/vegetation
-
-      // Amazon rainforest
-      context.beginPath();
-      context.ellipse(0.30 * canvas.width, 0.58 * canvas.height, 0.04 * canvas.width, 0.08 * canvas.height, 0, 0, Math.PI * 2);
-      context.fill();
-
-      // Congo Basin
-      context.beginPath();
-      context.ellipse(0.52 * canvas.width, 0.55 * canvas.height, 0.03 * canvas.width, 0.05 * canvas.height, 0, 0, Math.PI * 2);
-      context.fill();
-
-      // Siberian forests
-      context.beginPath();
-      context.ellipse(0.75 * canvas.width, 0.28 * canvas.height, 0.10 * canvas.width, 0.04 * canvas.height, 0, 0, Math.PI * 2);
-      context.fill();
-
-      // Mountain ranges
-      context.fillStyle = '#8b4513'; // Brown for mountains
-
-      // Andes
-      context.fillRect(0.28 * canvas.width, 0.55 * canvas.height, 0.01 * canvas.width, 0.30 * canvas.height);
-
-      // Himalayas
-      context.fillRect(0.70 * canvas.width, 0.42 * canvas.height, 0.08 * canvas.width, 0.02 * canvas.height);
-
-      // Rocky Mountains
-      context.fillRect(0.22 * canvas.width, 0.28 * canvas.height, 0.02 * canvas.width, 0.15 * canvas.height);
-
-      // Deserts
-      context.fillStyle = '#daa520'; // Gold for deserts
-
-      // Sahara
-      context.beginPath();
-      context.ellipse(0.52 * canvas.width, 0.42 * canvas.height, 0.06 * canvas.width, 0.04 * canvas.height, 0, 0, Math.PI * 2);
-      context.fill();
-
-      // Gobi Desert
-      context.beginPath();
-      context.ellipse(0.78 * canvas.width, 0.38 * canvas.height, 0.04 * canvas.width, 0.02 * canvas.height, 0, 0, Math.PI * 2);
-      context.fill();
-
-      // Ice caps with realistic gradients
-      const arcticGradient = context.createRadialGradient(
-        canvas.width / 2, 0, 0,
-        canvas.width / 2, 0, canvas.height * 0.15
-      );
-      arcticGradient.addColorStop(0, '#ffffff');
-      arcticGradient.addColorStop(0.7, '#e6f3ff');
-      arcticGradient.addColorStop(1, 'rgba(230, 243, 255, 0)');
-
-      context.fillStyle = arcticGradient;
-      context.fillRect(0, 0, canvas.width, canvas.height * 0.15);
-
-      const antarcticGradient = context.createRadialGradient(
-        canvas.width / 2, canvas.height, 0,
-        canvas.width / 2, canvas.height, canvas.height * 0.15
-      );
-      antarcticGradient.addColorStop(0, '#ffffff');
-      antarcticGradient.addColorStop(0.7, '#e6f3ff');
-      antarcticGradient.addColorStop(1, 'rgba(230, 243, 255, 0)');
-
-      context.fillStyle = antarcticGradient;
-      context.fillRect(0, canvas.height * 0.85, canvas.width, canvas.height * 0.15);
-    };
-
-    createEarthTexture();
-    const earthTexture = new THREE.CanvasTexture(canvas);
+    // Start with a basic material, we'll update it when texture loads
     const earthMaterial = new THREE.MeshPhongMaterial({
-      map: earthTexture,
+      color: 0x4444aa,
       shininess: 10
     });
 
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earth);
     earthRef.current = earth;
+
+    // Load real Earth texture asynchronously
+    const textureLoader = new THREE.TextureLoader();
+
+    // Try multiple Earth texture sources
+    const earthTextureSources = [
+      // High quality NASA Blue Marble textures
+      'https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg',
+      'https://raw.githubusercontent.com/turban/webgl-earth/master/images/2_no_clouds_4k.jpg',
+      // Wikimedia Commons Earth textures
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Land_ocean_ice_cloud_2048.jpg/2048px-Land_ocean_ice_cloud_2048.jpg',
+      // Backup sources
+      'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
+      'https://unpkg.com/three-globe/example/img/earth-dark.jpg'
+    ];
+
+    let textureLoaded = false;
+
+    const loadTexture = (sourceIndex: number) => {
+      if (sourceIndex >= earthTextureSources.length || textureLoaded) return;
+
+      textureLoader.load(
+        earthTextureSources[sourceIndex],
+        (texture) => {
+          if (!textureLoaded && earthRef.current) {
+            textureLoaded = true;
+            earthMaterial.map = texture;
+            earthMaterial.needsUpdate = true;
+            console.log('Earth texture loaded successfully');
+
+            // Also try to load night texture for city lights
+            textureLoader.load(
+              'https://www.solarsystemscope.com/textures/download/2k_earth_nightmap.jpg',
+              (nightTexture) => {
+                // Create a shader material that blends day and night
+                const earthShaderMaterial = new THREE.ShaderMaterial({
+                  uniforms: {
+                    dayTexture: { value: texture },
+                    nightTexture: { value: nightTexture },
+                    sunDirection: { value: new THREE.Vector3(1, 0, 0) }
+                  },
+                  vertexShader: `
+                    varying vec2 vUv;
+                    varying vec3 vNormal;
+                    void main() {
+                      vUv = uv;
+                      vNormal = normalize(normalMatrix * normal);
+                      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                  `,
+                  fragmentShader: `
+                    uniform sampler2D dayTexture;
+                    uniform sampler2D nightTexture;
+                    uniform vec3 sunDirection;
+                    varying vec2 vUv;
+                    varying vec3 vNormal;
+
+                    void main() {
+                      vec4 dayColor = texture2D(dayTexture, vUv);
+                      vec4 nightColor = texture2D(nightTexture, vUv);
+
+                      float intensity = dot(vNormal, sunDirection);
+                      intensity = smoothstep(-0.2, 0.2, intensity);
+
+                      gl_FragColor = mix(nightColor, dayColor, intensity);
+                    }
+                  `
+                });
+
+                if (earthRef.current) {
+                  earthRef.current.material = earthShaderMaterial;
+                  console.log('Night texture also loaded, using day/night shader');
+                }
+              },
+              undefined,
+              (nightError) => {
+                console.log('Night texture failed to load, using day texture only');
+              }
+            );
+          }
+        },
+        undefined,
+        (error) => {
+          console.warn(`Failed to load Earth texture from source ${sourceIndex}:`, error);
+          loadTexture(sourceIndex + 1);
+        }
+      );
+    };
+
+    // Start loading textures
+    loadTexture(0);
+
 
     // Create atmosphere
     const atmosphereGeometry = new THREE.SphereGeometry(2.05, 64, 32);
@@ -326,12 +251,23 @@ export function ThreeEarth() {
         const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
 
         if (intersects.length > 0) {
-          const intersectedObject = intersects[0].object;
-          const relayData = (intersectedObject as any).relayData;
+          let relayData = null;
+
+          // Check the intersected object and its parent for relay data
+          let currentObject = intersects[0].object;
+          while (currentObject && !relayData) {
+            relayData = (currentObject as any).relayData;
+            currentObject = currentObject.parent as THREE.Object3D;
+          }
 
           if (relayData) {
+            console.log('Clicked on relay:', relayData.url);
             setHoveredRelay(relayData);
             setTooltipPosition({ x: event.clientX, y: event.clientY });
+          } else {
+            console.log('Clicked on object without relay data');
+            setHoveredRelay(null);
+            setTooltipPosition(null);
           }
         } else {
           setHoveredRelay(null);
@@ -366,9 +302,23 @@ export function ThreeEarth() {
       // Pulse relay markers
       if (relayMarkersRef.current) {
         const time = Date.now() * 0.003;
-        relayMarkersRef.current.children.forEach((marker, index) => {
-          const scale = 1 + Math.sin(time + index * 0.5) * 0.3;
-          marker.scale.setScalar(scale);
+        relayMarkersRef.current.children.forEach((child, index) => {
+          if (child instanceof THREE.Group) {
+            // Animate marker groups
+            const pulseScale = 1 + Math.sin(time + index * 0.5) * 0.2;
+            child.children.forEach((marker, subIndex) => {
+              if (subIndex === 0) {
+                // Main marker - subtle pulse
+                marker.scale.setScalar(pulseScale);
+              } else if (subIndex === 1 && marker instanceof THREE.Mesh) {
+                // Glow effect - more dramatic pulse
+                const glowScale = 1 + Math.sin(time + index * 0.7) * 0.4;
+                marker.scale.setScalar(glowScale);
+                const material = marker.material as THREE.MeshBasicMaterial;
+                material.opacity = 0.3 + Math.sin(time + index * 0.8) * 0.2;
+              }
+            });
+          }
         });
       }
 
@@ -421,70 +371,77 @@ export function ThreeEarth() {
     }
 
     // Add new markers with corrected positioning
-    relayLocations.forEach((relay) => {
-      const radius = 2.02;
+    console.log('Adding relay markers for', relayLocations.length, 'relays');
 
-      // Convert lat/lng to spherical coordinates
-      // Latitude: -90 to +90 (South to North)
-      // Longitude: -180 to +180 (West to East)
-      const lat = relay.lat * (Math.PI / 180); // Convert to radians
-      const lng = relay.lng * (Math.PI / 180); // Convert to radians
+    relayLocations.forEach((relay, index) => {
+      console.log(`Placing relay ${index}: ${relay.url} at lat=${relay.lat}, lng=${relay.lng}`);
 
-      // Spherical to Cartesian conversion
-      // Note: Three.js uses Y-up coordinate system
-      const x = radius * Math.cos(lat) * Math.cos(lng);
-      const y = radius * Math.sin(lat);
-      const z = -radius * Math.cos(lat) * Math.sin(lng); // Negative Z for correct orientation
+      const radius = 2.05; // Slightly above Earth surface
 
-      // Create marker
-      const markerGeometry = new THREE.SphereGeometry(0.02, 12, 8);
+      // Convert lat/lng to spherical coordinates (standard geographic to 3D conversion)
+      const latRad = relay.lat * (Math.PI / 180);
+      const lngRad = relay.lng * (Math.PI / 180);
+
+      // Standard spherical to cartesian conversion for a sphere
+      // X = r * cos(lat) * cos(lng)
+      // Y = r * sin(lat)
+      // Z = r * cos(lat) * sin(lng)
+      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
+      const y = radius * Math.sin(latRad);
+      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+
+      console.log(`  Calculated position: x=${x.toFixed(2)}, y=${y.toFixed(2)}, z=${z.toFixed(2)}`);
+
+      // Create marker group for easier management
+      const markerGroup = new THREE.Group();
+
+      // Main marker sphere
+      const markerGeometry = new THREE.SphereGeometry(0.03, 16, 12);
       const markerMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff3333,
-        transparent: true,
-        opacity: 0.9
+        color: 0xff0000,
+        transparent: false
       });
       const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-      marker.position.set(x, y, z);
 
       // Store relay data for tooltip
       (marker as any).relayData = relay;
+      (markerGroup as any).relayData = relay;
 
-      relayMarkersRef.current!.add(marker);
+      markerGroup.add(marker);
 
-      // Create glow effect
-      const glowGeometry = new THREE.SphereGeometry(0.03, 12, 8);
+      // Create pulsing glow effect
+      const glowGeometry = new THREE.SphereGeometry(0.045, 16, 12);
       const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff6666,
+        color: 0xff4444,
+        transparent: true,
+        opacity: 0.4
+      });
+      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+      markerGroup.add(glow);
+
+      // Position the entire group
+      markerGroup.position.set(x, y, z);
+
+      relayMarkersRef.current!.add(markerGroup);
+
+      // Create connection line (optional, for visual effect)
+      const lineGeometry = new THREE.BufferGeometry();
+      const linePositions = new Float32Array([
+        0, 0, 0,  // Earth center
+        x, y, z   // Marker position
+      ]);
+      lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0xff3333,
         transparent: true,
         opacity: 0.3
       });
-      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-      glow.position.set(x, y, z);
-      relayMarkersRef.current!.add(glow);
-
-      // Create connection line pointing toward Earth center
-      const lineGeometry = new THREE.CylinderGeometry(0.002, 0.005, 0.1);
-      const lineMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff3333,
-        transparent: true,
-        opacity: 0.7
-      });
-      const line = new THREE.Mesh(lineGeometry, lineMaterial);
-
-      // Position line between marker and Earth surface
-      const lineRadius = radius - 0.05;
-      const lineX = lineRadius * Math.cos(lat) * Math.cos(lng);
-      const lineY = lineRadius * Math.sin(lat);
-      const lineZ = -lineRadius * Math.cos(lat) * Math.sin(lng);
-
-      line.position.set(lineX, lineY, lineZ);
-
-      // Orient line toward Earth center
-      line.lookAt(0, 0, 0);
-      line.rotateX(Math.PI / 2); // Adjust orientation
-
+      const line = new THREE.Line(lineGeometry, lineMaterial);
       relayMarkersRef.current!.add(line);
     });
+
+    console.log('Finished adding relay markers. Total objects in markers group:', relayMarkersRef.current?.children.length);
   }, [relayLocations]);
 
   return (
