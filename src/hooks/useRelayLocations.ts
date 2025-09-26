@@ -13,8 +13,6 @@ interface RelayLocation {
 // Removed getRelayLocation function to prevent API rate limiting and CORS errors
 
 async function fetchRelayLocations(): Promise<RelayLocation[]> {
-  console.log('fetchRelayLocations called');
-
   // Static relay locations - no API calls to avoid rate limiting
   const locations = [
       // North America
@@ -51,7 +49,6 @@ async function fetchRelayLocations(): Promise<RelayLocation[]> {
       { url: 'wss://relay.8333.space', lat: 25.2048, lng: 55.2708, city: 'Dubai', country: 'UAE' },
     ];
 
-  console.log('Returning', locations.length, 'relay locations');
   return locations;
 }
 

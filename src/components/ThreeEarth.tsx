@@ -110,34 +110,61 @@ export function ThreeEarth() {
       (dayTexture) => {
         console.log('Earth texture loaded successfully');
 
-        // Load night texture
-        textureLoader.load(
-          'https://unpkg.com/three-globe/example/img/earth-night.jpg',
-          (nightTexture) => {
-            if (earthRef.current) {
-              // Create a more sophisticated material with day/night transition
-              const newMaterial = new THREE.MeshLambertMaterial({
-                map: dayTexture,
-                emissiveMap: nightTexture,
-                emissive: new THREE.Color(0x444444),
-                emissiveIntensity: 0.1
-              });
-              earthRef.current.material = newMaterial;
-              console.log('Night texture loaded successfully');
-            }
-          },
-          undefined,
-          () => {
-            console.log('Night texture failed to load, using day texture only');
-            // Just use day texture
-            if (earthRef.current) {
-              const newMaterial = new THREE.MeshLambertMaterial({
-                map: dayTexture
-              });
-              earthRef.current.material = newMaterial;
-            }
-          }
-        );
+        // Create programmatic night texture with city lights
+        const createNightTexture = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 1024;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d')!;
+
+          // Black background
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Add city lights as small bright spots
+          ctx.fillStyle = '#ffff88';
+
+          // Major cities with approximate coordinates on texture
+          const cities = [
+            { x: 0.13, y: 0.35 }, // US West Coast
+            { x: 0.17, y: 0.33 }, // US East Coast
+            { x: 0.47, y: 0.32 }, // Europe
+            { x: 0.70, y: 0.35 }, // East Asia
+            { x: 0.80, y: 0.70 }, // Australia
+            { x: 0.30, y: 0.60 }, // South America
+            { x: 0.50, y: 0.50 }, // Africa
+          ];
+
+          cities.forEach(city => {
+            // Create glowing spots for major city clusters
+            const gradient = ctx.createRadialGradient(
+              city.x * canvas.width, city.y * canvas.height, 0,
+              city.x * canvas.width, city.y * canvas.height, 20
+            );
+            gradient.addColorStop(0, '#ffff88');
+            gradient.addColorStop(0.5, '#ffaa44');
+            gradient.addColorStop(1, 'rgba(255, 170, 68, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(city.x * canvas.width, city.y * canvas.height, 20, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          return new THREE.CanvasTexture(canvas);
+        };
+
+        if (earthRef.current) {
+          const nightTexture = createNightTexture();
+          const newMaterial = new THREE.MeshLambertMaterial({
+            map: dayTexture,
+            emissiveMap: nightTexture,
+            emissive: new THREE.Color(0xffff88),
+            emissiveIntensity: 0.2
+          });
+          earthRef.current.material = newMaterial;
+          console.log('Night texture created successfully');
+        }
       },
       undefined,
       (error) => {
@@ -300,23 +327,20 @@ export function ThreeEarth() {
         earthRef.current.rotation.y += 0.002;
       }
 
-      // Pulse relay markers
+      // Subtle relay marker animation
       if (relayMarkersRef.current) {
-        const time = Date.now() * 0.003;
+        const time = Date.now() * 0.001; // Slower animation
         relayMarkersRef.current.children.forEach((child, index) => {
           if (child instanceof THREE.Group) {
-            // Animate marker groups
-            const pulseScale = 1 + Math.sin(time + index * 0.5) * 0.2;
             child.children.forEach((marker, subIndex) => {
               if (subIndex === 0) {
-                // Main marker - subtle pulse
+                // Main marker - very subtle pulse
+                const pulseScale = 1 + Math.sin(time + index * 0.3) * 0.05;
                 marker.scale.setScalar(pulseScale);
               } else if (subIndex === 1 && marker instanceof THREE.Mesh) {
-                // Glow effect - more dramatic pulse
-                const glowScale = 1 + Math.sin(time + index * 0.7) * 0.4;
-                marker.scale.setScalar(glowScale);
+                // Glow ring - gentle fade
                 const material = marker.material as THREE.MeshBasicMaterial;
-                material.opacity = 0.3 + Math.sin(time + index * 0.8) * 0.2;
+                material.opacity = 0.4 + Math.sin(time + index * 0.4) * 0.15;
               }
             });
           }
@@ -409,9 +433,7 @@ export function ThreeEarth() {
 
   // Update relay markers when data changes and scene is ready
   useEffect(() => {
-    console.log('Relay markers effect triggered. Data:', relayLocations?.length, 'markers ref:', !!relayMarkersRef.current, 'scene ready:', sceneReady);
     if (!relayLocations || !relayMarkersRef.current || !sceneReady) {
-      console.log('Relay markers not ready yet - waiting...');
       return;
     }
 
@@ -420,32 +442,31 @@ export function ThreeEarth() {
       relayMarkersRef.current.remove(relayMarkersRef.current.children[0]);
     }
 
-    // Add new markers with corrected positioning
-    console.log('Adding relay markers for', relayLocations.length, 'relays');
+    // Add relay markers with refined design
 
     relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
       // Convert lat/lng to spherical coordinates
-      // Three.js uses Y-up coordinate system, standard geographic coordinates
-      const latRad = (90 - relay.lat) * (Math.PI / 180); // Convert to polar angle (0 = North Pole)
-      const lngRad = relay.lng * (Math.PI / 180); // Convert longitude to radians
+      // Standard geographic to Three.js coordinate system conversion
+      const latRad = relay.lat * (Math.PI / 180); // Latitude in radians
+      const lngRad = relay.lng * (Math.PI / 180); // Longitude in radians
 
-      // Spherical to Cartesian conversion for Three.js coordinate system
-      const x = radius * Math.sin(latRad) * Math.cos(lngRad);
-      const y = radius * Math.cos(latRad);
-      const z = radius * Math.sin(latRad) * Math.sin(lngRad);
+      // Spherical to Cartesian conversion (geographic coordinates)
+      // X = east/west, Y = up/down, Z = north/south
+      const x = radius * Math.cos(latRad) * Math.sin(lngRad);
+      const y = radius * Math.sin(latRad);
+      const z = radius * Math.cos(latRad) * Math.cos(lngRad);
 
-      console.log(`Placing relay ${index}: ${relay.url} at lat=${relay.lat}, lng=${relay.lng}`);
-      console.log(`  Calculated position: x=${x.toFixed(2)}, y=${y.toFixed(2)}, z=${z.toFixed(2)}`);
+      // Position calculated for relay at ${relay.city}, ${relay.country}
 
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
-      // Main marker sphere - made larger for better visibility
-      const markerGeometry = new THREE.SphereGeometry(0.08, 16, 12); // Increased size
+      // Main marker - refined and smaller
+      const markerGeometry = new THREE.SphereGeometry(0.03, 12, 8);
       const markerMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff0000,
+        color: 0xff3030,
         transparent: false
       });
       const marker = new THREE.Mesh(markerGeometry, markerMaterial);
@@ -456,14 +477,18 @@ export function ThreeEarth() {
 
       markerGroup.add(marker);
 
-      // Create pulsing glow effect - made larger
-      const glowGeometry = new THREE.SphereGeometry(0.12, 16, 12); // Increased size
+      // Create subtle glow ring
+      const glowGeometry = new THREE.RingGeometry(0.04, 0.06, 16);
       const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff4444,
+        color: 0xff6666,
         transparent: true,
-        opacity: 0.4
+        opacity: 0.6,
+        side: THREE.DoubleSide
       });
       const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+
+      // Orient the ring to face outward from Earth center
+      glow.lookAt(new THREE.Vector3(x * 2, y * 2, z * 2));
       markerGroup.add(glow);
 
       // Position the entire group
@@ -471,24 +496,10 @@ export function ThreeEarth() {
 
       relayMarkersRef.current!.add(markerGroup);
 
-      // Create connection line (optional, for visual effect)
-      const lineGeometry = new THREE.BufferGeometry();
-      const linePositions = new Float32Array([
-        0, 0, 0,  // Earth center
-        x, y, z   // Marker position
-      ]);
-      lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-
-      const lineMaterial = new THREE.LineBasicMaterial({
-        color: 0xff3333,
-        transparent: true,
-        opacity: 0.3
-      });
-      const line = new THREE.Line(lineGeometry, lineMaterial);
-      relayMarkersRef.current!.add(line);
+      // Removed connection lines for cleaner appearance
     });
 
-    console.log('Finished adding relay markers. Total objects in markers group:', relayMarkersRef.current?.children.length);
+    // Relay markers created successfully
   }, [relayLocations, sceneReady]);
 
   return (
