@@ -114,6 +114,10 @@ export function ThreeEarth() {
       document.addEventListener('wheel', wheelEventHandlerRef.current, { passive: false });
     }
 
+    // Reset all mouse states to ensure auto rotation works
+    isMouseDown.current = false;
+    isDragging.current = false;
+
     // Resume auto mode immediately after closing
     resumeAutoMode();
   };
