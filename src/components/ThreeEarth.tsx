@@ -32,6 +32,9 @@ export function ThreeEarth() {
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
   const lastInteraction = useRef(Date.now());
 
+  // Track if mouse is over relay panel for scroll handling
+  const isMouseOverRelayPanel = useRef(false);
+
   // Function to open relay panel and determine side
   const openRelayPanel = (relay: RelayLocation, camera: THREE.PerspectiveCamera) => {
     setOpenRelay(relay);
@@ -68,6 +71,7 @@ export function ThreeEarth() {
   // Function to close relay panel
   const closeRelayPanel = () => {
     setOpenRelay(null);
+    isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
     // Resume auto mode after closing
     setManualMode();
   };
@@ -349,8 +353,8 @@ export function ThreeEarth() {
     };
 
     const onWheel = (event: WheelEvent) => {
-      // Don't process globe events when relay panel is open
-      if (openRelayRef.current) return;
+      // Don't process globe events when relay panel is open OR when mouse is over relay panel
+      if (openRelayRef.current || isMouseOverRelayPanel.current) return;
 
       event.preventDefault();
       const zoomSpeed = 0.2;
@@ -604,6 +608,8 @@ export function ThreeEarth() {
           relay={openRelay}
           side={relaySide}
           onClose={closeRelayPanel}
+          onMouseEnter={() => isMouseOverRelayPanel.current = true}
+          onMouseLeave={() => isMouseOverRelayPanel.current = false}
         />
       )}
 

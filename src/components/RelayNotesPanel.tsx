@@ -21,9 +21,11 @@ interface RelayNotesPanelProps {
   relay: RelayLocation;
   side: 'left' | 'right' | 'bottom';
   onClose: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) {
+export function RelayNotesPanel({ relay, side, onClose, onMouseEnter, onMouseLeave }: RelayNotesPanelProps) {
   const { nostr } = useNostr();
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +77,11 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   };
 
   return (
-    <div className={getPanelClasses()}>
+    <div
+      className={getPanelClasses()}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
