@@ -400,18 +400,11 @@ export function ThreeEarth() {
     relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
-      // Convert geographic coordinates to Three.js Cartesian coordinates
-      // Geographic: lat (-90 to +90), lng (-180 to +180)
-      // Three.js: Y up (north), X right, Z towards viewer
-
-      const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = relay.lng * (Math.PI / 180);
-
-      // Standard conversion used in Three.js Earth visualizations:
-      // This properly maps geographic coordinates to 3D space
-      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
-      const y = radius * Math.sin(latRad);
-      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+      // Use coordinates directly without conversion - they're already in correct format
+      // Try direct mapping: lat maps to Y, lng maps to X, Z for depth
+      const x = (relay.lng / 180) * radius;  // Map -180 to +180 to -radius to +radius
+      const y = (relay.lat / 90) * radius;   // Map -90 to +90 to -radius to +radius
+      const z = 0; // Start with Z=0, adjust if needed
 
       // Relay positioned at ${relay.city}, ${relay.country}
 
