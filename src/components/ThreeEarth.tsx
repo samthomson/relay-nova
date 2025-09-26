@@ -44,6 +44,9 @@ export function ThreeEarth() {
   // Store the wheel event handler for removal
   const wheelEventHandlerRef = useRef<((event: WheelEvent) => void) | null>(null);
 
+  // Track clicks outside the relay panel
+  const relayPanelContainerRef = useRef<HTMLDivElement>(null);
+
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
     if (!relayPanelRef.current || !openRelayRef.current) return false;
@@ -551,6 +554,29 @@ export function ThreeEarth() {
     };
   }, []);
 
+  // Add click-outside-to-close functionality
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Only close if relay panel is open
+      if (!openRelay) return;
+
+      // Check if click is outside the relay panel
+      if (relayPanelContainerRef.current && !relayPanelContainerRef.current.contains(event.target as Node)) {
+        closeRelayPanel();
+      }
+    };
+
+    // Add event listener when relay panel is open
+    if (openRelay) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Clean up event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openRelay]);
+
   // Update relay markers when data changes and scene is ready
   useEffect(() => {
     if (!relayLocations || !relayMarkersRef.current || !sceneReady) {
@@ -666,14 +692,16 @@ export function ThreeEarth() {
 
       {/* Relay Notes Panel */}
       {openRelay && (
-        <RelayNotesPanel
-          ref={relayPanelRef}
-          relay={openRelay}
-          side={relaySide}
-          onClose={closeRelayPanel}
-          onMouseEnter={() => isMouseOverRelayPanel.current = true}
-          onMouseLeave={() => isMouseOverRelayPanel.current = false}
-        />
+        <div ref={relayPanelContainerRef}>
+          <RelayNotesPanel
+            ref={relayPanelRef}
+            relay={openRelay}
+            side={relaySide}
+            onClose={closeRelayPanel}
+            onMouseEnter={() => isMouseOverRelayPanel.current = true}
+            onMouseLeave={() => isMouseOverRelayPanel.current = false}
+          />
+        </div>
       )}
 
       {/* Tooltip */}
