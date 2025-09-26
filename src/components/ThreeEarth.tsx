@@ -96,6 +96,11 @@ export function ThreeEarth() {
     relayMarkersRef.current = relayMarkersGroup;
 
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+
+    // Rotate Earth to align with standard coordinate system
+    // This rotates the entire mesh so that 0° longitude faces the correct direction
+    earth.rotation.y = -Math.PI / 2; // Rotate -90 degrees around Y axis
+
     scene.add(earth);
     earthRef.current = earth;
 
@@ -400,12 +405,12 @@ export function ThreeEarth() {
     relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
-      // Use coordinates directly with simple spherical projection
-      // Map lat/lon to sphere surface - add longitude offset
+      // Use standard spherical coordinate conversion
+      // This is the mathematically correct way to convert lat/lon to 3D coordinates
       const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = (relay.lng + 90) * (Math.PI / 180); // Add 90 degree offset
+      const lngRad = relay.lng * (Math.PI / 180);
 
-      // Try with longitude offset to align east-west positioning
+      // Standard spherical to Cartesian conversion
       const x = radius * Math.cos(latRad) * Math.cos(lngRad);
       const y = radius * Math.sin(latRad);
       const z = radius * Math.cos(latRad) * Math.sin(lngRad);
