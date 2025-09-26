@@ -29,12 +29,6 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Debug: log when panel opens
-  useEffect(() => {
-    console.log('RelayNotesPanel opened for:', relay.url);
-    console.log('Notes count:', notes.length);
-  }, [relay.url, notes.length]);
-
   useEffect(() => {
     const fetchNotes = async () => {
       if (!nostr) return;
@@ -72,19 +66,16 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
     const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[9999] pointer-events-auto';
 
     if (side === 'bottom') {
-      return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2 overflow-hidden`;
+      return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2`;
     } else {
       return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] h-[70vh] rounded-2xl border-2 ${
         side === 'right' ? 'right-4' : 'left-4'
-      } overflow-hidden`;
+      }`;
     }
   };
 
   return (
-    <div className={getPanelClasses()} onClick={(e) => {
-      console.log('Panel clicked');
-      e.stopPropagation();
-    }}>
+    <div className={getPanelClasses()}>
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
@@ -107,22 +98,6 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
           >
             <X className="w-4 h-4" />
           </Button>
-        </div>
-
-        <div className="mt-2 flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            {notes.length} notes
-          </Badge>
-          {isLoading && (
-            <Badge variant="secondary" className="text-xs">
-              Loading...
-            </Badge>
-          )}
-          {error && (
-            <Badge variant="destructive" className="text-xs">
-              Error
-            </Badge>
-          )}
         </div>
       </div>
 
@@ -152,20 +127,10 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
           </div>
         ) : (
           <div className="h-full flex flex-col">
-            <div
-              className="flex-1 overflow-y-auto bg-red-500/10"
-              style={{ minHeight: '0' }}
-              onWheel={(e) => {
-                e.stopPropagation();
-                console.log('Scroll event detected:', e.deltaY);
-              }}
-            >
+            <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-3">
-                {notes.map((note, index) => (
-                  <div key={note.id} className="bg-blue-500/10 p-2">
-                    <div className="text-xs text-gray-400 mb-1">Note #{index + 1}</div>
-                    <NoteCard note={note} />
-                  </div>
+                {notes.map((note) => (
+                  <NoteCard key={note.id} note={note} />
                 ))}
               </div>
             </div>
@@ -187,37 +152,32 @@ function NoteCard({ note }: { note: NostrEvent }) {
   return (
     <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Avatar */}
-            {metadata?.picture ? (
-              <img
-                src={metadata.picture}
-                alt={displayName}
-                className="w-8 h-8 rounded-full object-cover border border-white/20 flex-shrink-0"
-                onError={(e) => {
-                  // Fallback to gradient if image fails
-                  const target = e.currentTarget as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
-                  if (fallback) fallback.classList.remove('hidden');
-                }}
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0 avatar-fallback">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <CardTitle className="text-sm font-medium text-white truncate">
-                {isLoadingAuthor ? 'Loading...' : displayName}
-              </CardTitle>
-              <p className="text-xs text-gray-400">{timeAgo}</p>
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Avatar */}
+          {metadata?.picture ? (
+            <img
+              src={metadata.picture}
+              alt={displayName}
+              className="w-8 h-8 rounded-full object-cover border border-white/20 flex-shrink-0"
+              onError={(e) => {
+                // Fallback to gradient if image fails
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
+                const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                if (fallback) fallback.classList.remove('hidden');
+              }}
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0 avatar-fallback">
+              {displayName.charAt(0).toUpperCase()}
             </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-sm font-medium text-white truncate">
+              {isLoadingAuthor ? 'Loading...' : displayName}
+            </CardTitle>
+            <p className="text-xs text-gray-400">{timeAgo}</p>
           </div>
-          <Badge variant="outline" className="text-xs flex-shrink-0 ml-2">
-            Note
-          </Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
