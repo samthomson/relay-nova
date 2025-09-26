@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 import { RelayInfoModal } from './RelayInfoModal';
-import { createEarthTexture } from '@/lib/earthTexture';
 
 interface RelayLocation {
   url: string;
@@ -90,10 +89,9 @@ export function ThreeEarth() {
     // Create Earth with proper satellite imagery texture
     const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
 
-    // Start with a good fallback texture
-    const fallbackTexture = createEarthTexture();
+    // Start with a simple material (no fallback texture to avoid flash)
     const earthMaterial = new THREE.MeshLambertMaterial({
-      map: fallbackTexture
+      color: 0x1a1a2e // Dark blue color as placeholder
     });
 
     // Create relay markers group first
@@ -131,7 +129,8 @@ export function ThreeEarth() {
       },
       undefined,
       (error) => {
-        // Fallback texture is already applied, no action needed
+        console.error('Failed to load Earth texture:', error);
+        // Keep the dark blue placeholder if texture fails to load
       }
     );
 
