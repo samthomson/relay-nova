@@ -41,6 +41,9 @@ export function ThreeEarth() {
   // Track whether wheel events should be enabled
   const wheelEventsEnabled = useRef(true);
 
+  // Store the wheel event handler for removal
+  const wheelEventHandlerRef = useRef<((event: WheelEvent) => void) | null>(null);
+
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
     if (!relayPanelRef.current || !openRelayRef.current) return false;
@@ -55,6 +58,11 @@ export function ThreeEarth() {
 
     // Disable wheel events when relay panel opens
     wheelEventsEnabled.current = false;
+
+    // Remove wheel event listener from document
+    if (wheelEventHandlerRef.current) {
+      document.removeEventListener('wheel', wheelEventHandlerRef.current);
+    }
 
     // Pause auto mode when relay panel is open
     isAutoMode.current = false;
@@ -91,6 +99,12 @@ export function ThreeEarth() {
     isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
     relayPanelRef.current = null; // Clear the panel ref
     wheelEventsEnabled.current = true; // Re-enable wheel events when panel closes
+
+    // Re-attach wheel event listener to document
+    if (wheelEventHandlerRef.current) {
+      document.addEventListener('wheel', wheelEventHandlerRef.current, { passive: false });
+    }
+
     // Resume auto mode after closing
     setManualMode();
   };
@@ -372,8 +386,10 @@ export function ThreeEarth() {
     };
 
     const onWheel = (event: WheelEvent) => {
-      // Only handle zoom if wheel events are enabled and mouse is over globe
-      if (!wheelEventsEnabled.current) return;
+      // Completely ignore wheel events when relay panel is open
+      if (!wheelEventsEnabled.current) {
+        return; // Let events bubble through to relay panel
+      }
 
       // Check if the mouse is over a relay panel using multiple methods
       const isOverRelayPanel = isMouseOverRelayPanel.current ||
@@ -407,8 +423,9 @@ export function ThreeEarth() {
     renderer.domElement.addEventListener('mouseup', onMouseUp);
     renderer.domElement.addEventListener('click', onMouseClick);
 
-    // Attach wheel event to document for better control
-    document.addEventListener('wheel', onWheel, { passive: false });
+    // Store the wheel event handler and attach to document
+    wheelEventHandlerRef.current = onWheel;
+    document.addEventListener('wheel', wheelEventHandlerRef.current, { passive: false });
 
     // Animation loop
     const animate = () => {
@@ -518,7 +535,9 @@ export function ThreeEarth() {
       }
 
       // Remove document wheel event
-      document.removeEventListener('wheel', onWheel);
+      if (wheelEventHandlerRef.current) {
+        document.removeEventListener('wheel', wheelEventHandlerRef.current);
+      }
 
       window.removeEventListener('resize', handleResize);
 

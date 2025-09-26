@@ -132,74 +132,79 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full p-4">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-              <p className="text-sm text-gray-400">Fetching latest notes...</p>
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Scroll buttons - always show when not loading or in error state */}
+        {!isLoading && !error && (
+          <div className="flex justify-center p-2 border-b border-white/10 flex-shrink-0">
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={scrollUp}
+                className="text-white/70 hover:text-white hover:bg-white/10"
+                disabled={notes.length === 0}
+                title="Scroll up"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={scrollDown}
+                className="text-white/70 hover:text-white hover:bg-white/10"
+                disabled={notes.length === 0}
+                title="Scroll down"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-        ) : error ? (
-          <div className="flex items-center justify-center h-full p-4">
-            <div className="text-center">
-              <p className="text-sm text-red-400 mb-2">{error}</p>
-              <p className="text-xs text-gray-500">This relay may be offline or not responding</p>
-            </div>
-          </div>
-        ) : notes.length === 0 ? (
-          <div className="flex items-center justify-center h-full p-4">
-            <div className="text-center">
-              <MessageCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">No notes found on this relay</p>
-              <p className="text-xs text-gray-500 mt-1">This relay might not have public content</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Scroll buttons */}
-            <div className="flex justify-center p-2 border-b border-white/10">
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={scrollUp}
-                  className="text-white/70 hover:text-white hover:bg-white/10"
-                  disabled={notes.length === 0}
-                >
-                  <ChevronUp className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={scrollDown}
-                  className="text-white/70 hover:text-white hover:bg-white/10"
-                  disabled={notes.length === 0}
-                >
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Scrollable content */}
-            <div
-              ref={scrollableRef}
-              className="flex-1 overflow-y-auto"
-              data-scrollable="true"
-              style={{
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch',
-                scrollBehavior: 'smooth'
-              }}
-            >
-              <div className="p-4 space-y-3">
-                {notes.map((note) => (
-                  <NoteCard key={note.id} note={note} />
-                ))}
-              </div>
-            </div>
-          </>
         )}
+
+        {/* Scrollable content area */}
+        <div
+          ref={scrollableRef}
+          className="flex-1 overflow-y-auto"
+          data-scrollable="true"
+          style={{
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            scrollBehavior: 'smooth'
+          }}
+          onWheel={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full p-4">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                <p className="text-sm text-gray-400">Fetching latest notes...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-full p-4">
+              <div className="text-center">
+                <p className="text-sm text-red-400 mb-2">{error}</p>
+                <p className="text-xs text-gray-500">This relay may be offline or not responding</p>
+              </div>
+            </div>
+          ) : notes.length === 0 ? (
+            <div className="flex items-center justify-center h-full p-4">
+              <div className="text-center">
+                <MessageCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No notes found on this relay</p>
+                <p className="text-xs text-gray-500 mt-1">This relay might not have public content</p>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 space-y-3">
+              {notes.map((note) => (
+                <NoteCard key={note.id} note={note} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
