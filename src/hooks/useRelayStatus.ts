@@ -19,13 +19,13 @@ async function checkRelayStatus(relayUrl: string): Promise<boolean> {
   try {
     // Import nostr dynamically to avoid issues
     const { SimplePool } = await import('nostr-tools');
-    
+
     // Create a pool with just this relay
     const pool = new SimplePool();
-    
-    // Try to connect with a timeout
-    const timeoutPromise = new Promise<boolean>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 3000);
+
+    // Set up timeout
+    const timeoutPromise = new Promise<boolean>((resolve) => {
+      setTimeout(() => resolve(false), 3000);
     });
 
     const connectPromise = new Promise<boolean>(async (resolve) => {
@@ -36,21 +36,27 @@ async function checkRelayStatus(relayUrl: string): Promise<boolean> {
           [relayUrl],
           { signal: AbortSignal.timeout(2500) }
         );
-        
+
         // If we get any events, the relay is online
         resolve(events.length > 0);
       } catch (error) {
+        // Silently handle connection failures - this is expected for offline relays
         resolve(false);
       }
     });
 
     const result = await Promise.race([connectPromise, timeoutPromise]);
-    
+
     // Close the pool connection
-    pool.close([relayUrl]);
-    
+    try {
+      pool.close([relayUrl]);
+    } catch (closeError) {
+      // Silently handle pool close errors
+    }
+
     return result;
   } catch (error) {
+    // Silently handle any other errors - relay is considered offline
     return false;
   }
 }
@@ -72,7 +78,7 @@ async function checkAllRelayStatus(relays: RelayLocation[]): Promise<RelayStatus
 
   try {
     const results = await Promise.allSettled(statusPromises);
-    
+
     return results.map((result, index) => {
       if (result.status === 'fulfilled') {
         return result.value;

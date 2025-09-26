@@ -76,7 +76,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
         const sortedEvents = events.sort((a, b) => b.created_at - a.created_at);
         setNotes(sortedEvents);
       } catch (err) {
-        console.error('Error fetching notes from relay:', err);
+        // Silently handle relay connection failures - this is expected for offline relays
         setError('Failed to fetch notes from this relay');
       } finally {
         setIsLoading(false);
