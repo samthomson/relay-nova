@@ -26,7 +26,7 @@ const Index = () => {
         <div className="text-center text-white/70 text-sm">
           <p className="mb-2">🌍 Drag to rotate • 🔍 Scroll to zoom • ⚡ Click dots for relay info • ℹ️ Use info button for full list</p>
           <p className="text-xs opacity-60">
-            Green dots: online relays • Red dots: offline relays •
+            Green: online • Orange: retrying • Red: offline • Yellow: checking •
             Vibed with <a href="https://soapbox.pub/mkstack" className="underline hover:text-white">MKStack</a>
           </p>
         </div>

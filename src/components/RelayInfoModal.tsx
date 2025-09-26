@@ -4,6 +4,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Info, MapPin, Globe, Signal, Wifi, WifiOff } from 'lucide-react';
 
+import { RelayStatus } from '@/hooks/useRelayStatus';
+
 interface RelayLocation {
   url: string;
   lat: number;
@@ -12,6 +14,8 @@ interface RelayLocation {
   country?: string;
   isOnline?: boolean;
   checked?: boolean;
+  isRetrying?: boolean;
+  retryCount?: number;
 }
 
 interface RelayInfoModalProps {
@@ -21,7 +25,8 @@ interface RelayInfoModalProps {
 
 export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
   const onlineRelays = relays.filter(r => r.isOnline).length;
-  const offlineRelays = relays.filter(r => r.checked && !r.isOnline).length;
+  const offlineRelays = relays.filter(r => r.checked && !r.isOnline && !r.isRetrying).length;
+  const retryingRelays = relays.filter(r => r.isRetrying).length;
   const uncheckedRelays = relays.filter(r => !r.checked).length;
 
   const groupedRelays = relays.reduce((acc, relay) => {
@@ -67,7 +72,7 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
           ) : (
             <div className="space-y-6">
               {/* Summary Statistics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border border-white/20 rounded-lg bg-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 border border-white/20 rounded-lg bg-white/5">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-400">{onlineRelays}</div>
                   <div className="text-sm text-gray-400">Online</div>
@@ -75,6 +80,10 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-400">{offlineRelays}</div>
                   <div className="text-sm text-gray-400">Offline</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-400">{retryingRelays}</div>
+                  <div className="text-sm text-gray-400">Retrying</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">{uncheckedRelays}</div>
@@ -109,18 +118,23 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                {relay.checked ? (
-                                  relay.isOnline ? (
-                                    <Wifi className="w-4 h-4 text-green-400" />
-                                  ) : (
-                                    <WifiOff className="w-4 h-4 text-red-400" />
-                                  )
-                                ) : (
+                                {!relay.checked ? (
                                   <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+                                ) : relay.isRetrying ? (
+                                  <div className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                                ) : relay.isOnline ? (
+                                  <Wifi className="w-4 h-4 text-green-400" />
+                                ) : (
+                                  <WifiOff className="w-4 h-4 text-red-400" />
                                 )}
                                 <div className="font-mono text-sm truncate">
                                   {relay.url}
                                 </div>
+                                {relay.retryCount && relay.retryCount > 0 && (
+                                  <span className="text-xs text-orange-400">
+                                    (retry {relay.retryCount}/2)
+                                  </span>
+                                )}
                               </div>
                               {relay.city && (
                                 <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 ml-6">

@@ -156,9 +156,11 @@ export function ThreeEarth() {
   const { data: relayLocations, isLoading: isLoadingLocations } = useRelayLocations();
   const { data: relayStatuses, isLoading: isLoadingStatus } = useRelayStatus(relayLocations);
 
-  // Calculate online count for display
+  // Calculate counts for display
   const onlineCount = relayStatuses?.filter(r => r.isOnline).length || 0;
   const totalCount = relayStatuses?.length || 0;
+  const checkedCount = relayStatuses?.filter(r => r.checked).length || 0;
+  const retryingCount = relayStatuses?.filter(r => r.isRetrying).length || 0;
   const isLoading = isLoadingLocations || isLoadingStatus;
 
   useEffect(() => {
@@ -677,7 +679,12 @@ export function ThreeEarth() {
 
       // Main marker - small and refined, color based on status
       const markerGeometry = new THREE.SphereGeometry(0.02, 16, 12);
-      const markerColor = relay.isOnline ? 0x44ff44 : 0xff4444; // Green for online, red for offline
+      let markerColor;
+      if (relay.isRetrying) {
+        markerColor = 0xff8844; // Orange for retrying
+      } else {
+        markerColor = relay.isOnline ? 0x44ff44 : 0xff4444; // Green for online, red for offline
+      }
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: markerColor,
         transparent: false
@@ -692,7 +699,12 @@ export function ThreeEarth() {
 
       // Create subtle outer ring for elegance, color based on status
       const ringGeometry = new THREE.RingGeometry(0.025, 0.035, 24);
-      const ringColor = relay.isOnline ? 0x66ff66 : 0xff6666; // Lighter green for online, lighter red for offline
+      let ringColor;
+      if (relay.isRetrying) {
+        ringColor = 0xffaa66; // Lighter orange for retrying
+      } else {
+        ringColor = relay.isOnline ? 0x66ff66 : 0xff6666; // Lighter green for online, lighter red for offline
+      }
       const ringMaterial = new THREE.MeshBasicMaterial({
         color: ringColor,
         transparent: true,
@@ -742,8 +754,20 @@ export function ThreeEarth() {
       <div className="absolute top-20 right-6 z-20 space-y-3">
         {relayStatuses && (
           <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3">
-            <div className="text-white text-sm">
-              <span className="font-semibold">{onlineCount}</span> of <span className="font-semibold">{totalCount}</span> relays online
+            <div className="text-white text-sm space-y-1">
+              <div>
+                <span className="font-semibold">{onlineCount}</span> of <span className="font-semibold">{totalCount}</span> relays online
+              </div>
+              {checkedCount < totalCount && (
+                <div className="text-xs text-gray-400">
+                  Checked <span className="font-semibold">{checkedCount}</span> of <span className="font-semibold">{totalCount}</span> relays
+                  {retryingCount > 0 && (
+                    <span className="text-orange-400 ml-2">
+                      • {retryingCount} retrying
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
