@@ -400,11 +400,15 @@ export function ThreeEarth() {
     relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
-      // Use coordinates directly without conversion - they're already in correct format
-      // Try direct mapping: lat maps to Y, lng maps to X, Z for depth
-      const x = (relay.lng / 180) * radius;  // Map -180 to +180 to -radius to +radius
-      const y = (relay.lat / 90) * radius;   // Map -90 to +90 to -radius to +radius
-      const z = 0; // Start with Z=0, adjust if needed
+      // Use coordinates directly with simple spherical projection
+      // Map lat/lon to sphere surface
+      const latRad = relay.lat * (Math.PI / 180);
+      const lngRad = relay.lng * (Math.PI / 180);
+
+      // Simple spherical coordinates - place on surface
+      const x = radius * Math.cos(latRad) * Math.sin(lngRad);
+      const y = radius * Math.sin(latRad);
+      const z = radius * Math.cos(latRad) * Math.cos(lngRad);
 
       // Relay positioned at ${relay.city}, ${relay.country}
 
