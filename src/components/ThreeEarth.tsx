@@ -96,11 +96,6 @@ export function ThreeEarth() {
     relayMarkersRef.current = relayMarkersGroup;
 
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-
-    // Apply rotation to align Earth texture with geographic coordinates
-    // Many Earth textures need a 180-degree rotation to align properly
-    earth.rotation.y = Math.PI; // 180 degrees around Y axis
-
     scene.add(earth);
     earthRef.current = earth;
 
@@ -406,12 +401,11 @@ export function ThreeEarth() {
       const radius = 2.05; // Slightly above Earth surface
 
       // Convert geographic coordinates to Three.js Cartesian coordinates
-      // Accounting for Earth's 180-degree rotation
       // Geographic: lat (-90 to +90), lng (-180 to +180)
       // Three.js: Y up (north), X right, Z towards viewer
 
       const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = (relay.lng + 180) * (Math.PI / 180); // Adjust for Earth rotation
+      const lngRad = relay.lng * (Math.PI / 180);
 
       // Standard conversion used in Three.js Earth visualizations:
       // This properly maps geographic coordinates to 3D space

@@ -51,7 +51,7 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
             </Badge>
           </DialogTitle>
         </DialogHeader>
-        
+
         <ScrollArea className="h-[60vh] pr-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
@@ -92,7 +92,7 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                           {countryRelays.length} relay{countryRelays.length !== 1 ? 's' : ''}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid gap-2">
                         {countryRelays.map((relay, index) => (
                           <div
@@ -111,8 +111,11 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                               )}
                             </div>
                             <div className="text-right text-xs text-gray-500 ml-4">
-                              <div>{relay.lat.toFixed(2)}°N</div>
-                              <div>{relay.lng.toFixed(2)}°E</div>
+                              <div>{Math.abs(relay.lat).toFixed(2)}°{relay.lat >= 0 ? 'N' : 'S'}</div>
+                              <div>{Math.abs(relay.lng).toFixed(2)}°{relay.lng >= 0 ? 'E' : 'W'}</div>
+                              <div className="text-xs text-gray-400 mt-1">
+                                Raw: {relay.lat}, {relay.lng}
+                              </div>
                             </div>
                           </div>
                         ))}
