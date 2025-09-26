@@ -27,6 +27,11 @@ export function ThreeEarth() {
   const dragStartPosition = useRef({ x: 0, y: 0 });
   const DRAG_THRESHOLD = 5; // Minimum pixels to count as drag vs click
 
+  // Auto/manual mode management
+  const isAutoMode = useRef(true);
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastInteraction = useRef(Date.now());
+
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
@@ -174,7 +179,23 @@ export function ThreeEarth() {
     const mouse = new THREE.Vector2();
 
     // Mouse controls
+    const setManualMode = () => {
+      isAutoMode.current = false;
+      lastInteraction.current = Date.now();
+
+      // Clear any existing timer
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current);
+      }
+
+      // Set timer to return to auto mode after 5 seconds
+      inactivityTimer.current = setTimeout(() => {
+        isAutoMode.current = true;
+      }, 5000);
+    };
+
     const onMouseDown = (event: MouseEvent) => {
+      setManualMode();
       isMouseDown.current = true;
       previousMouse.current = { x: event.clientX, y: event.clientY };
       dragStartPosition.current = { x: event.clientX, y: event.clientY };
@@ -197,6 +218,7 @@ export function ThreeEarth() {
       }
 
       if (isDragging.current && earthRef.current) {
+        setManualMode();
         const deltaX = event.clientX - previousMouse.current.x;
         const deltaY = event.clientY - previousMouse.current.y;
 
@@ -216,6 +238,8 @@ export function ThreeEarth() {
     };
 
     const onMouseClick = (event: MouseEvent) => {
+      setManualMode();
+
       // Only handle click if we didn't drag
       const dragDistance = Math.sqrt(
         Math.pow(event.clientX - dragStartPosition.current.x, 2) +
@@ -263,6 +287,7 @@ export function ThreeEarth() {
     };
 
     const onWheel = (event: WheelEvent) => {
+      setManualMode();
       event.preventDefault();
       const zoomSpeed = 0.2;
       const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
@@ -280,8 +305,8 @@ export function ThreeEarth() {
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
 
-      // Auto rotation when not dragging
-      if (!isDragging.current && earthRef.current) {
+      // Auto rotation only when in auto mode
+      if (isAutoMode.current && !isDragging.current && earthRef.current) {
         earthRef.current.rotation.y += 0.002;
       }
 
@@ -405,23 +430,31 @@ export function ThreeEarth() {
     relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
-      // Use standard spherical coordinate conversion
-      // This is the mathematically correct way to convert lat/lon to 3D coordinates
+      // Convert geographic coordinates to 3D Cartesian coordinates properly
+      // Geographic: latitude (-90 to +90), longitude (-180 to +180)
+      // Three.js: Y up, need to convert to spherical coordinates correctly
+
       const latRad = relay.lat * (Math.PI / 180);
       const lngRad = relay.lng * (Math.PI / 180);
 
-      // Standard spherical to Cartesian conversion
-      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
-      const y = radius * Math.sin(latRad);
-      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+      // Correct spherical coordinate conversion for Earth:
+      // phi = polar angle from north pole (90° - latitude)
+      // theta = azimuthal angle (longitude)
+      const phi = (90 - relay.lat) * (Math.PI / 180);
+      const theta = relay.lng * (Math.PI / 180);
+
+      // Convert to Cartesian coordinates
+      const x = radius * Math.sin(phi) * Math.cos(theta);
+      const y = radius * Math.cos(phi);
+      const z = radius * Math.sin(phi) * Math.sin(theta);
 
       // Relay positioned at ${relay.city}, ${relay.country}
 
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
-      // Main marker - refined and smaller
-      const markerGeometry = new THREE.SphereGeometry(0.03, 12, 8);
+      // Main marker - larger for easier clicking
+      const markerGeometry = new THREE.SphereGeometry(0.08, 12, 8);
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: 0xff3030,
         transparent: false
@@ -434,8 +467,8 @@ export function ThreeEarth() {
 
       markerGroup.add(marker);
 
-      // Create subtle glow ring
-      const glowGeometry = new THREE.RingGeometry(0.04, 0.06, 16);
+      // Create larger glow ring for better visibility
+      const glowGeometry = new THREE.RingGeometry(0.10, 0.15, 16);
       const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0xff6666,
         transparent: true,
