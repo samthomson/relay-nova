@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <defs>
+    <radialGradient id="oceanGradient16" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" style="stop-color:#4FC3F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </radialGradient>
+    <linearGradient id="landGradient16" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#66BB6A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2E7D32;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow16">
+      <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <circle cx="8" cy="8" r="7" fill="url(#oceanGradient16)" filter="url(#shadow16)"/>
+  
+  <g fill="url(#landGradient16)">
+    <path d="M 4 4 Q 5 3, 6 4 L 5.5 6 Q 4.5 7, 3.5 6 Z"/>
+    <path d="M 5 7 Q 6 8, 5.5 10 L 5 11 Q 4 10, 4.5 8 Z"/>
+    <path d="M 7 5 Q 8 4, 9 5 L 8.5 7 Q 8 8, 7.5 7 L 7 6 Z"/>
+    <path d="M 9 4 Q 11 5, 12 7 L 11 8 Q 10 7, 9 6 Z"/>
+    <ellipse cx="11" cy="10" rx="1.5" ry="1"/>
+  </g>
+  
+  <ellipse cx="6" cy="5" rx="3" ry="2" fill="white" opacity="0.2"/>
+  
+  <circle cx="8" cy="8" r="7.5" fill="none" stroke="white" stroke-width="0.3" opacity="0.3"/>
+</svg>

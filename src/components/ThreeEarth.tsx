@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 import { RelayInfoModal } from './RelayInfoModal';
+import { RelayNotesPanel } from './RelayNotesPanel';
 
 interface RelayLocation {
   url: string;
@@ -31,9 +32,51 @@ export function ThreeEarth() {
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
   const lastInteraction = useRef(Date.now());
 
+  // Function to open relay panel and determine side
+  const openRelayPanel = (relay: RelayLocation, camera: THREE.PerspectiveCamera) => {
+    setOpenRelay(relay);
+
+    // Pause auto mode when relay panel is open
+    isAutoMode.current = false;
+
+    // Determine which side to show panel based on relay position
+    // Convert relay 3D position to screen coordinates
+    const latRad = relay.lat * (Math.PI / 180);
+    const lngRad = -relay.lng * (Math.PI / 180);
+
+    const radius = 2.05;
+    const x = radius * Math.cos(latRad) * Math.cos(lngRad);
+    const y = radius * Math.sin(latRad);
+    const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+
+    // Project 3D position to screen coordinates
+    const vector = new THREE.Vector3(x, y, z);
+    vector.project(camera);
+
+    const screenX = (vector.x * 0.5 + 0.5) * window.innerWidth;
+
+    // Determine side based on screen position
+    if (window.innerWidth < 768) {
+      // Mobile: show at bottom
+      setRelaySide('bottom');
+    } else {
+      // Desktop: show on opposite side of relay
+      setRelaySide(screenX < window.innerWidth / 2 ? 'right' : 'left');
+    }
+  };
+
+  // Function to close relay panel
+  const closeRelayPanel = () => {
+    setOpenRelay(null);
+    // Resume auto mode after closing
+    setManualMode();
+  };
+
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
+  const [openRelay, setOpenRelay] = useState<RelayLocation | null>(null);
+  const [relaySide, setRelaySide] = useState<'left' | 'right' | 'bottom'>('right');
 
   const { data: relayLocations, isLoading } = useRelayLocations();
 
@@ -273,6 +316,9 @@ export function ThreeEarth() {
           if (relayData) {
             setHoveredRelay(relayData);
             setTooltipPosition({ x: event.clientX, y: event.clientY });
+
+            // Open relay panel
+            openRelayPanel(relayData, camera);
           } else {
             // Clicked on a line or other non-marker object - just clear selection
             setHoveredRelay(null);
@@ -531,6 +577,15 @@ export function ThreeEarth() {
 
       {/* Three.js mount point */}
       <div ref={mountRef} className="w-full h-full" />
+
+      {/* Relay Notes Panel */}
+      {openRelay && (
+        <RelayNotesPanel
+          relay={openRelay}
+          side={relaySide}
+          onClose={closeRelayPanel}
+        />
+      )}
 
       {/* Tooltip */}
       {hoveredRelay && tooltipPosition && (
