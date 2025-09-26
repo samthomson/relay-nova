@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
+import { useRelayStatus } from '@/hooks/useRelayStatus';
 import { RelayInfoModal } from './RelayInfoModal';
 import { RelayNotesPanel } from './RelayNotesPanel';
 
@@ -10,6 +11,11 @@ interface RelayLocation {
   lng: number;
   city?: string;
   country?: string;
+}
+
+interface RelayStatus extends RelayLocation {
+  isOnline: boolean;
+  checked: boolean;
 }
 
 export function ThreeEarth() {
@@ -105,6 +111,8 @@ export function ThreeEarth() {
   // Function to close relay panel
   const closeRelayPanel = () => {
     setOpenRelay(null);
+    setHoveredRelay(null); // Clear the hovered relay to remove tooltip
+    setTooltipPosition(null); // Clear tooltip position
     isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
     relayPanelRef.current = null; // Clear the panel ref
     wheelEventsEnabled.current = true; // Re-enable wheel events when panel closes
@@ -118,8 +126,17 @@ export function ThreeEarth() {
     isMouseDown.current = false;
     isDragging.current = false;
 
-    // Resume auto mode immediately after closing
-    resumeAutoMode();
+    // Immediately enable auto mode and clear any timers
+    isAutoMode.current = true;
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = null;
+    }
+
+    // Force a small rotation to kickstart the auto rotation
+    if (earthRef.current) {
+      earthRef.current.rotation.y += 0.001;
+    }
   };
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
@@ -136,7 +153,13 @@ export function ThreeEarth() {
     openRelayRef.current = openRelay;
   }, [openRelay]);
 
-  const { data: relayLocations, isLoading } = useRelayLocations();
+  const { data: relayLocations, isLoading: isLoadingLocations } = useRelayLocations();
+  const { data: relayStatuses, isLoading: isLoadingStatus } = useRelayStatus(relayLocations);
+
+  // Calculate online count for display
+  const onlineCount = relayStatuses?.filter(r => r.isOnline).length || 0;
+  const totalCount = relayStatuses?.length || 0;
+  const isLoading = isLoadingLocations || isLoadingStatus;
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -296,7 +319,9 @@ export function ThreeEarth() {
 
     // Function to immediately resume auto mode
     const resumeAutoMode = () => {
+      console.log('resumeAutoMode called - setting isAutoMode to true');
       isAutoMode.current = true;
+      console.log('isAutoMode.current is now:', isAutoMode.current);
 
       // Clear any existing timer
       if (inactivityTimer.current) {
@@ -307,9 +332,16 @@ export function ThreeEarth() {
       // Reset dragging state to ensure auto rotation works
       isDragging.current = false;
       isMouseDown.current = false;
+      console.log('Drag states reset - isDragging:', isDragging.current, 'isMouseDown:', isMouseDown.current);
 
       // Update last interaction time
       lastInteraction.current = Date.now();
+
+      // Force a small rotation to kickstart auto mode
+      if (earthRef.current) {
+        earthRef.current.rotation.y += 0.001;
+        console.log('Forced small rotation, new rotation:', earthRef.current.rotation.y);
+      }
     };
 
     const onMouseDown = (event: MouseEvent) => {
@@ -612,7 +644,7 @@ export function ThreeEarth() {
 
   // Update relay markers when data changes and scene is ready
   useEffect(() => {
-    if (!relayLocations || !relayMarkersRef.current || !sceneReady) {
+    if (!relayStatuses || !relayMarkersRef.current || !sceneReady) {
       return;
     }
 
@@ -623,7 +655,7 @@ export function ThreeEarth() {
 
     // Add relay markers with refined design
 
-    relayLocations.forEach((relay, index) => {
+    relayStatuses.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
       // Convert geographic coordinates to 3D Cartesian coordinates
@@ -643,10 +675,11 @@ export function ThreeEarth() {
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
-      // Main marker - small and refined
+      // Main marker - small and refined, color based on status
       const markerGeometry = new THREE.SphereGeometry(0.02, 16, 12);
+      const markerColor = relay.isOnline ? 0x44ff44 : 0xff4444; // Green for online, red for offline
       const markerMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff4444,
+        color: markerColor,
         transparent: false
       });
       const marker = new THREE.Mesh(markerGeometry, markerMaterial);
@@ -657,10 +690,11 @@ export function ThreeEarth() {
 
       markerGroup.add(marker);
 
-      // Create subtle outer ring for elegance
+      // Create subtle outer ring for elegance, color based on status
       const ringGeometry = new THREE.RingGeometry(0.025, 0.035, 24);
+      const ringColor = relay.isOnline ? 0x66ff66 : 0xff6666; // Lighter green for online, lighter red for offline
       const ringMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff6666,
+        color: ringColor,
         transparent: true,
         opacity: 0.8,
         side: THREE.DoubleSide
@@ -690,7 +724,7 @@ export function ThreeEarth() {
     });
 
     // Relay markers created successfully
-  }, [relayLocations, sceneReady]);
+  }, [relayStatuses, sceneReady]);
 
   return (
     <div className="relative w-full h-screen">
@@ -706,16 +740,16 @@ export function ThreeEarth() {
 
       {/* Controls and Info */}
       <div className="absolute top-20 right-6 z-20 space-y-3">
-        {relayLocations && (
+        {relayStatuses && (
           <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3">
             <div className="text-white text-sm">
-              <span className="font-semibold">{relayLocations.length}</span> relays discovered
+              <span className="font-semibold">{onlineCount}</span> of <span className="font-semibold">{totalCount}</span> relays online
             </div>
           </div>
         )}
 
         <RelayInfoModal
-          relays={relayLocations || []}
+          relays={relayStatuses || []}
           isLoading={isLoading}
         />
       </div>

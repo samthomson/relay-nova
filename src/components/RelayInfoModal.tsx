@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Info, MapPin, Globe, Signal } from 'lucide-react';
+import { Info, MapPin, Globe, Signal, Wifi, WifiOff } from 'lucide-react';
 
 interface RelayLocation {
   url: string;
@@ -10,6 +10,8 @@ interface RelayLocation {
   lng: number;
   city?: string;
   country?: string;
+  isOnline?: boolean;
+  checked?: boolean;
 }
 
 interface RelayInfoModalProps {
@@ -18,6 +20,10 @@ interface RelayInfoModalProps {
 }
 
 export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
+  const onlineRelays = relays.filter(r => r.isOnline).length;
+  const offlineRelays = relays.filter(r => r.checked && !r.isOnline).length;
+  const uncheckedRelays = relays.filter(r => !r.checked).length;
+
   const groupedRelays = relays.reduce((acc, relay) => {
     const country = relay.country || 'Unknown';
     if (!acc[country]) {
@@ -61,20 +67,22 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
           ) : (
             <div className="space-y-6">
               {/* Summary Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-white/20 rounded-lg bg-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border border-white/20 rounded-lg bg-white/5">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-400">{relays.length}</div>
-                  <div className="text-sm text-gray-400">Total Relays</div>
+                  <div className="text-2xl font-bold text-green-400">{onlineRelays}</div>
+                  <div className="text-sm text-gray-400">Online</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-400">{offlineRelays}</div>
+                  <div className="text-sm text-gray-400">Offline</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-400">{uncheckedRelays}</div>
+                  <div className="text-sm text-gray-400">Checking</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-400">{totalCountries}</div>
                   <div className="text-sm text-gray-400">Countries</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">
-                    {Object.values(groupedRelays).some(relays => relays.length > 0) ? 'Live' : 'Unknown'}
-                  </div>
-                  <div className="text-sm text-gray-400">Network Status</div>
                 </div>
               </div>
 
@@ -100,11 +108,22 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                             className="flex items-center justify-between p-3 border border-white/10 rounded bg-white/5 hover:bg-white/10 transition-colors"
                           >
                             <div className="flex-1 min-w-0">
-                              <div className="font-mono text-sm text-green-400 truncate">
-                                {relay.url}
+                              <div className="flex items-center gap-2">
+                                {relay.checked ? (
+                                  relay.isOnline ? (
+                                    <Wifi className="w-4 h-4 text-green-400" />
+                                  ) : (
+                                    <WifiOff className="w-4 h-4 text-red-400" />
+                                  )
+                                ) : (
+                                  <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+                                )}
+                                <div className="font-mono text-sm truncate">
+                                  {relay.url}
+                                </div>
                               </div>
                               {relay.city && (
-                                <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                                <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 ml-6">
                                   <MapPin className="w-3 h-3" />
                                   {relay.city}
                                 </div>
