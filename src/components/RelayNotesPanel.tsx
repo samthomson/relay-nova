@@ -29,6 +29,12 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Debug: log when panel opens
+  useEffect(() => {
+    console.log('RelayNotesPanel opened for:', relay.url);
+    console.log('Notes count:', notes.length);
+  }, [relay.url, notes.length]);
+
   useEffect(() => {
     const fetchNotes = async () => {
       if (!nostr) return;
@@ -75,7 +81,10 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   };
 
   return (
-    <div className={getPanelClasses()}>
+    <div className={getPanelClasses()} onClick={(e) => {
+      console.log('Panel clicked');
+      e.stopPropagation();
+    }}>
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
@@ -143,10 +152,20 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
           </div>
         ) : (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+            <div
+              className="flex-1 overflow-y-auto bg-red-500/10"
+              style={{ minHeight: '0' }}
+              onWheel={(e) => {
+                e.stopPropagation();
+                console.log('Scroll event detected:', e.deltaY);
+              }}
+            >
               <div className="p-4 space-y-3">
-                {notes.map((note) => (
-                  <NoteCard key={note.id} note={note} />
+                {notes.map((note, index) => (
+                  <div key={note.id} className="bg-blue-500/10 p-2">
+                    <div className="text-xs text-gray-400 mb-1">Note #{index + 1}</div>
+                    <NoteCard note={note} />
+                  </div>
                 ))}
               </div>
             </div>
