@@ -39,7 +39,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
       try {
         // Connect to the specific relay
         const relayConnection = nostr.relay(relay.url);
-        
+
         // Query for latest 20 notes (kind:1 events)
         const events = await relayConnection.query([
           {
@@ -64,12 +64,12 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
 
   const getPanelClasses = () => {
     const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300';
-    
+
     if (side === 'bottom') {
-      return `${baseClasses} bottom-0 left-0 right-0 h-80 rounded-t-xl border-t-2 border-l-0 border-r-0`;
+      return `${baseClasses} bottom-8 left-8 right-8 h-[50vh] rounded-2xl border-2`;
     } else {
-      return `${baseClasses} top-20 bottom-0 w-96 rounded-l-xl border-l-2 border-t-0 border-b-0 ${
-        side === 'right' ? 'right-0 rounded-l-none rounded-r-xl' : 'left-0 rounded-r-none'
+      return `${baseClasses} top-24 bottom-8 w-[400px] max-w-[40vw] rounded-2xl border-2 ${
+        side === 'right' ? 'right-8' : 'left-8'
       }`;
     }
   };
@@ -99,7 +99,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
             <X className="w-4 h-4" />
           </Button>
         </div>
-        
+
         <div className="mt-2 flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
             {notes.length} notes
@@ -118,23 +118,23 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center h-40">
+          <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
               <p className="text-sm text-gray-400">Fetching latest notes...</p>
             </div>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-40">
+          <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <p className="text-sm text-red-400 mb-2">{error}</p>
               <p className="text-xs text-gray-500">This relay may be offline or not responding</p>
             </div>
           </div>
         ) : notes.length === 0 ? (
-          <div className="flex items-center justify-center h-40">
+          <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <MessageCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
               <p className="text-sm text-gray-400">No notes found on this relay</p>
@@ -142,8 +142,8 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
             </div>
           </div>
         ) : (
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-4">
+          <ScrollArea className="h-full pr-2">
+            <div className="space-y-3 pb-2">
               {notes.map((note) => (
                 <NoteCard key={note.id} note={note} />
               ))}
@@ -163,28 +163,41 @@ function NoteCard({ note }: { note: NostrEvent }) {
   const timeAgo = new Date(note.created_at * 1000).toLocaleDateString();
 
   return (
-    <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+    <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-semibold text-white">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar */}
+            {metadata?.picture ? (
+              <img
+                src={metadata.picture}
+                alt={displayName}
+                className="w-8 h-8 rounded-full object-cover border border-white/20 flex-shrink-0"
+                onError={(e) => {
+                  // Fallback to gradient if image fails
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement?.querySelector('.avatar-fallback')?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0 avatar-fallback">
               {displayName.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <CardTitle className="text-sm font-medium">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-sm font-medium truncate">
                 {displayName}
               </CardTitle>
-              <p className="text-xs text-gray-400">{timeAgo}</p>
+              <p className="text-xs text-gray-400 truncate">{timeAgo}</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs flex-shrink-0 ml-2">
             Note
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="text-sm text-gray-300 leading-relaxed">
-          <NoteContent event={note} />
+        <div className="text-sm text-gray-300 leading-relaxed break-words">
+          <NoteContent event={note} className="[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_img]:my-2" />
         </div>
       </CardContent>
     </Card>
