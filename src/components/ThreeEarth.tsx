@@ -70,6 +70,12 @@ export function ThreeEarth() {
     // Pause auto mode when relay panel is open
     isAutoMode.current = false;
 
+    // Clear any existing auto mode timer
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = null;
+    }
+
     // Determine which side to show panel based on relay position
     // Convert relay 3D position to screen coordinates
     const latRad = relay.lat * (Math.PI / 180);
@@ -108,8 +114,8 @@ export function ThreeEarth() {
       document.addEventListener('wheel', wheelEventHandlerRef.current, { passive: false });
     }
 
-    // Resume auto mode after closing
-    setManualMode();
+    // Resume auto mode immediately after closing
+    resumeAutoMode();
   };
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
@@ -282,6 +288,17 @@ export function ThreeEarth() {
       inactivityTimer.current = setTimeout(() => {
         isAutoMode.current = true;
       }, 3000);
+    };
+
+    // Function to immediately resume auto mode
+    const resumeAutoMode = () => {
+      isAutoMode.current = true;
+
+      // Clear any existing timer
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current);
+        inactivityTimer.current = null;
+      }
     };
 
     const onMouseDown = (event: MouseEvent) => {
