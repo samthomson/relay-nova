@@ -8,90 +8,14 @@ interface RelayLocation {
   country?: string;
 }
 
-// Comprehensive seed list of known Nostr relays
-const KNOWN_RELAYS = [
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-  'wss://nos.lol',
-  'wss://relay.primal.net',
-  'wss://relay.snort.social',
-  'wss://nostr.wine',
-  'wss://relay.current.fyi',
-  'wss://nostr-pub.wellorder.net',
-  'wss://relay.orangepill.dev',
-  'wss://relay.nostrati.com',
-  'wss://eden.nostr.land',
-  'wss://nostr.fmt.wiz.biz',
-  'wss://relay.nostr.info',
-  'wss://offchain.pub',
-  'wss://brb.io',
-  'wss://relay.nostrich.de',
-  'wss://relay.plebstr.com',
-  'wss://nostr.oxtr.dev',
-  'wss://relay.nostr.wirednet.jp',
-  'wss://relay.nostr.au',
-  'wss://soloco.nl',
-  'wss://relay.wellorder.net',
-  'wss://nostr.sandwich.farm',
-  'wss://relay.nostrgraph.net',
-  'wss://relay.nostrplebs.com',
-  'wss://relay.minds.com',
-  'wss://nostr.fmt.wiz.biz',
-  'wss://nostr-relay.wlvs.space',
-  'wss://relay.nostr.net',
-  'wss://relay.farscapian.com',
-  'wss://relay.nostr.vet',
-  'wss://relay.nostr.com.au',
-  'wss://nostr.lu.ke',
-  'wss://relay.nostr.ro',
-  'wss://relay.kronkltd.net',
-  'wss://relay.nostr.ch',
-  'wss://relay.nostr.vision',
-  'wss://relay.nostr.moe',
-  'wss://puravida.nostr.land',
-  'wss://relay.nostr.com.es',
-  'wss://relay.nostr.bg',
-  'wss://relay.nostr.hu',
-  'wss://nostr.klabo.blog',
-  'wss://relay.nostr.nu',
-  'wss://relay.nostr.se',
-  'wss://relay.nostr.dk',
-  'wss://relay.nostr.fi',
-  'wss://relay.nostr.no',
-  'wss://relay.8333.space'
-];
+// Using static relay locations to avoid API rate limiting
 
-async function getRelayLocation(relayUrl: string): Promise<RelayLocation | null> {
-  try {
-    // Extract hostname from relay URL
-    const hostname = relayUrl.replace('wss://', '').replace('ws://', '').split('/')[0];
-
-    // Use ipapi.co for IP geolocation (free service)
-    const response = await fetch(`https://ipapi.co/${hostname}/json/`);
-    const data = await response.json();
-
-    if (data.latitude && data.longitude) {
-      return {
-        url: relayUrl,
-        lat: data.latitude,
-        lng: data.longitude,
-        city: data.city,
-        country: data.country_name,
-      };
-    }
-
-    return null;
-  } catch (error) {
-    console.warn(`Failed to get location for ${relayUrl}:`, error);
-    return null;
-  }
-}
+// Removed getRelayLocation function to prevent API rate limiting and CORS errors
 
 async function fetchRelayLocations(): Promise<RelayLocation[]> {
-  // Skip API calls due to rate limiting - use fallback data directly
-  console.log('Using fallback relay locations due to API rate limits');
+  console.log('Using static relay locations');
 
-  // Enhanced fallback locations with more global coverage
+  // Static relay locations - no API calls to avoid rate limiting
   return [
       // North America
       { url: 'wss://relay.damus.io', lat: 37.7749, lng: -122.4194, city: 'San Francisco', country: 'USA' },

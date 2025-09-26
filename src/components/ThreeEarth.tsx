@@ -34,8 +34,6 @@ export function ThreeEarth() {
   useEffect(() => {
     if (!mountRef.current) return;
 
-    console.log('ThreeEarth: Starting initialization');
-
     // Small delay to ensure DOM is ready and properly sized
     const initTimeout = setTimeout(() => {
       if (!mountRef.current) return;
@@ -46,6 +44,10 @@ export function ThreeEarth() {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000033); // Slightly lighter space background
     sceneRef.current = scene;
+
+    // Ensure we have proper dimensions first
+    const width = mountRef.current.clientWidth || window.innerWidth;
+    const height = mountRef.current.clientHeight || window.innerHeight;
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
@@ -59,12 +61,6 @@ export function ThreeEarth() {
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-
-    // Ensure we have proper dimensions
-    const width = mountRef.current.clientWidth || window.innerWidth;
-    const height = mountRef.current.clientHeight || window.innerHeight;
-
-    console.log('ThreeEarth: Setting renderer size to', width, 'x', height);
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     mountRef.current.appendChild(renderer.domElement);
@@ -87,25 +83,20 @@ export function ThreeEarth() {
     const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
 
     // Start with a good fallback texture
-    console.log('ThreeEarth: Creating fallback texture');
     const fallbackTexture = createEarthTexture();
-    console.log('ThreeEarth: Creating Earth material');
     const earthMaterial = new THREE.MeshLambertMaterial({
       map: fallbackTexture
     });
 
     // Create relay markers group first
-    console.log('ThreeEarth: Creating relay markers group');
     const relayMarkersGroup = new THREE.Group();
     relayMarkersRef.current = relayMarkersGroup;
 
-    console.log('ThreeEarth: Creating Earth mesh');
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earth);
     earthRef.current = earth;
 
     // Add relay markers as children of Earth so they rotate together
-    console.log('ThreeEarth: Adding relay markers to Earth');
     earth.add(relayMarkersGroup);
 
     // Load real Earth texture asynchronously
@@ -121,13 +112,11 @@ export function ThreeEarth() {
             map: texture
           });
           earthRef.current.material = newMaterial;
-          console.log('High-quality Earth texture loaded successfully');
         }
       },
       undefined,
       (error) => {
-        console.log('External texture failed to load, using fallback texture');
-        // Fallback texture is already applied
+        // Fallback texture is already applied, no action needed
       }
     );
 
@@ -244,11 +233,10 @@ export function ThreeEarth() {
           }
 
           if (relayData) {
-            console.log('Clicked on relay:', relayData.url);
             setHoveredRelay(relayData);
             setTooltipPosition({ x: event.clientX, y: event.clientY });
           } else {
-            console.log('Clicked on object without relay data');
+            // Clicked on a line or other non-marker object - just clear selection
             setHoveredRelay(null);
             setTooltipPosition(null);
           }
@@ -398,8 +386,6 @@ export function ThreeEarth() {
     console.log('Adding relay markers for', relayLocations.length, 'relays');
 
     relayLocations.forEach((relay, index) => {
-      console.log(`Placing relay ${index}: ${relay.url} at lat=${relay.lat}, lng=${relay.lng} in ${relay.city}, ${relay.country}`);
-
       const radius = 2.05; // Slightly above Earth surface
 
       // Convert lat/lng to spherical coordinates
@@ -411,19 +397,6 @@ export function ThreeEarth() {
       const x = -radius * Math.sin(latRad) * Math.cos(lngRad);
       const y = radius * Math.cos(latRad);
       const z = radius * Math.sin(latRad) * Math.sin(lngRad);
-
-      console.log(`  Position: x=${x.toFixed(2)}, y=${y.toFixed(2)}, z=${z.toFixed(2)}`);
-
-      // Verify expected locations for known cities
-      if (relay.city === 'San Francisco') {
-        console.log('  ✓ San Francisco should be on the left side (negative X, positive Y)');
-      } else if (relay.city === 'London') {
-        console.log('  ✓ London should be on the front-right (positive X, positive Y, near Z=0)');
-      } else if (relay.city === 'Tokyo') {
-        console.log('  ✓ Tokyo should be on the back-right (negative X, positive Y, positive Z)');
-      } else if (relay.city === 'Sydney') {
-        console.log('  ✓ Sydney should be on the back-bottom (negative X, negative Y, positive Z)');
-      }
 
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
