@@ -64,8 +64,7 @@ export function NoteContent({
             </div>
           );
         } else {
-          // Handle regular URLs - truncate long URLs but keep them clickable
-          const displayUrl = url.length > 50 ? url.substring(0, 50) + '...' : url;
+          // Handle regular URLs - show full URL without truncation
           parts.push(
             <a
               key={`url-${keyCounter++}`}
@@ -75,7 +74,7 @@ export function NoteContent({
               className="text-blue-500 hover:underline break-all inline-block max-w-full align-top"
               title={url}
             >
-              {displayUrl}
+              {url}
             </a>
           );
         }

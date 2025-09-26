@@ -143,7 +143,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
           </div>
         ) : (
           <div className="h-full flex flex-col p-4">
-            <ScrollArea className="flex-1 min-h-0 [&>div>div]:!block">
+            <ScrollArea className="flex-1 min-h-0 [&>div>div]:!block [&_[data-radix-scroll-area-viewport]]:!block [&_[data-radix-scroll-area-scrollbar]]:!block [&_[data-radix-scroll-area-thumb]]:!bg-white/20 [&_[data-radix-scroll-area-thumb]]:hover:!bg-white/30">
               <div className="space-y-3 pr-4">
                 {notes.map((note) => (
                   <NoteCard key={note.id} note={note} />

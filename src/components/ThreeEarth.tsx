@@ -237,6 +237,9 @@ export function ThreeEarth() {
     };
 
     const onMouseDown = (event: MouseEvent) => {
+      // Don't process globe events when relay panel is open
+      if (openRelay) return;
+
       setManualMode();
       isMouseDown.current = true;
       previousMouse.current = { x: event.clientX, y: event.clientY };
@@ -245,6 +248,9 @@ export function ThreeEarth() {
     };
 
     const onMouseMove = (event: MouseEvent) => {
+      // Don't process globe events when relay panel is open
+      if (openRelay) return;
+
       // Only process drag if mouse button is down
       if (!isMouseDown.current) return;
 
@@ -280,6 +286,9 @@ export function ThreeEarth() {
     };
 
     const onMouseClick = (event: MouseEvent) => {
+      // Don't process globe events when relay panel is open
+      if (openRelay) return;
+
       setManualMode();
 
       // Only handle click if we didn't drag
@@ -332,6 +341,9 @@ export function ThreeEarth() {
     };
 
     const onWheel = (event: WheelEvent) => {
+      // Don't process globe events when relay panel is open
+      if (openRelay) return;
+
       event.preventDefault();
       const zoomSpeed = 0.2;
       const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
