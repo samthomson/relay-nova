@@ -404,11 +404,11 @@ export function ThreeEarth() {
       const latRad = relay.lat * (Math.PI / 180);
       const lngRad = relay.lng * (Math.PI / 180);
 
-      // Correct Three.js coordinate mapping:
-      // X = longitude (east/west), Z = longitude depth, Y = latitude (up/down)
-      const x = -radius * Math.cos(latRad) * Math.sin(lngRad);  // Negative for correct east/west
+      // Standard spherical to Cartesian conversion for Three.js:
+      // X = longitude (east/west), Y = latitude (up/down), Z = depth
+      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
       const y = radius * Math.sin(latRad);
-      const z = radius * Math.cos(latRad) * Math.cos(lngRad);
+      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
 
       // Relay positioned at ${relay.city}, ${relay.country}
 
