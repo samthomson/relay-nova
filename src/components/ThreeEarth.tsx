@@ -680,7 +680,9 @@ export function ThreeEarth() {
       // Main marker - small and refined, color based on status
       const markerGeometry = new THREE.SphereGeometry(0.02, 16, 12);
       let markerColor;
-      if (relay.isRetrying) {
+      if (!relay.checked) {
+        markerColor = 0xffff44; // Yellow for unchecked
+      } else if (relay.isRetrying) {
         markerColor = 0xff8844; // Orange for retrying
       } else {
         markerColor = relay.isOnline ? 0x44ff44 : 0xff4444; // Green for online, red for offline
@@ -700,7 +702,9 @@ export function ThreeEarth() {
       // Create subtle outer ring for elegance, color based on status
       const ringGeometry = new THREE.RingGeometry(0.025, 0.035, 24);
       let ringColor;
-      if (relay.isRetrying) {
+      if (!relay.checked) {
+        ringColor = 0xffff66; // Lighter yellow for unchecked
+      } else if (relay.isRetrying) {
         ringColor = 0xffaa66; // Lighter orange for retrying
       } else {
         ringColor = relay.isOnline ? 0x66ff66 : 0xff6666; // Lighter green for online, lighter red for offline
@@ -736,6 +740,46 @@ export function ThreeEarth() {
     });
 
     // Relay markers created successfully
+  }, [relayStatuses, sceneReady]);
+
+  // Update marker colors in real-time when relay statuses change
+  useEffect(() => {
+    if (!relayStatuses || !relayMarkersRef.current || !sceneReady) {
+      return;
+    }
+
+    relayStatuses.forEach((relay, index) => {
+      const markerGroup = relayMarkersRef.current?.children[index];
+      if (!markerGroup) return;
+
+      // Update main marker color
+      const marker = markerGroup.children[0] as THREE.Mesh;
+      if (marker && marker.material) {
+        let markerColor;
+        if (!relay.checked) {
+          markerColor = 0xffff44; // Yellow for unchecked
+        } else if (relay.isRetrying) {
+          markerColor = 0xff8844; // Orange for retrying
+        } else {
+          markerColor = relay.isOnline ? 0x44ff44 : 0xff4444; // Green for online, red for offline
+        }
+        (marker.material as THREE.MeshBasicMaterial).color.setHex(markerColor);
+      }
+
+      // Update ring color
+      const ring = markerGroup.children[1] as THREE.Mesh;
+      if (ring && ring.material) {
+        let ringColor;
+        if (!relay.checked) {
+          ringColor = 0xffff66; // Lighter yellow for unchecked
+        } else if (relay.isRetrying) {
+          ringColor = 0xffaa66; // Lighter orange for retrying
+        } else {
+          ringColor = relay.isOnline ? 0x66ff66 : 0xff6666; // Lighter green for online, lighter red for offline
+        }
+        (ring.material as THREE.MeshBasicMaterial).color.setHex(ringColor);
+      }
+    });
   }, [relayStatuses, sceneReady]);
 
   return (
