@@ -13,10 +13,10 @@ interface RelayLocation {
 // Removed getRelayLocation function to prevent API rate limiting and CORS errors
 
 async function fetchRelayLocations(): Promise<RelayLocation[]> {
-  console.log('Using static relay locations');
+  console.log('fetchRelayLocations called');
 
   // Static relay locations - no API calls to avoid rate limiting
-  return [
+  const locations = [
       // North America
       { url: 'wss://relay.damus.io', lat: 37.7749, lng: -122.4194, city: 'San Francisco', country: 'USA' },
       { url: 'wss://relay.primal.net', lat: 40.7128, lng: -74.0060, city: 'New York', country: 'USA' },
@@ -50,6 +50,9 @@ async function fetchRelayLocations(): Promise<RelayLocation[]> {
       { url: 'wss://relay.nostr.vision', lat: -26.2041, lng: 28.0473, city: 'Johannesburg', country: 'South Africa' },
       { url: 'wss://relay.8333.space', lat: 25.2048, lng: 55.2708, city: 'Dubai', country: 'UAE' },
     ];
+
+  console.log('Returning', locations.length, 'relay locations');
+  return locations;
 }
 
 export function useRelayLocations() {

@@ -22,12 +22,14 @@ export function ThreeEarth() {
   const frameRef = useRef<number | null>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
+  const isMouseDown = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
   const dragStartPosition = useRef({ x: 0, y: 0 });
   const DRAG_THRESHOLD = 5; // Minimum pixels to count as drag vs click
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [sceneReady, setSceneReady] = useState(false);
 
   const { data: relayLocations, isLoading } = useRelayLocations();
 
@@ -56,7 +58,7 @@ export function ThreeEarth() {
       0.1,
       1000
     );
-    camera.position.set(0, 0, 4);
+    camera.position.set(0, 0, 6); // Less zoomed in
     cameraRef.current = camera;
 
     // Renderer setup
@@ -99,20 +101,43 @@ export function ThreeEarth() {
     // Add relay markers as children of Earth so they rotate together
     earth.add(relayMarkersGroup);
 
-    // Load real Earth texture asynchronously
+    // Load real Earth texture asynchronously with day/night cycle
     const textureLoader = new THREE.TextureLoader();
 
-    // Try a CORS-friendly texture source
+    // Load day texture
     textureLoader.load(
-      // Use a reliable CORS-enabled source
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
-      (texture) => {
-        if (earthRef.current) {
-          const newMaterial = new THREE.MeshLambertMaterial({
-            map: texture
-          });
-          earthRef.current.material = newMaterial;
-        }
+      (dayTexture) => {
+        console.log('Earth texture loaded successfully');
+
+        // Load night texture
+        textureLoader.load(
+          'https://unpkg.com/three-globe/example/img/earth-night.jpg',
+          (nightTexture) => {
+            if (earthRef.current) {
+              // Create a more sophisticated material with day/night transition
+              const newMaterial = new THREE.MeshLambertMaterial({
+                map: dayTexture,
+                emissiveMap: nightTexture,
+                emissive: new THREE.Color(0x444444),
+                emissiveIntensity: 0.1
+              });
+              earthRef.current.material = newMaterial;
+              console.log('Night texture loaded successfully');
+            }
+          },
+          undefined,
+          () => {
+            console.log('Night texture failed to load, using day texture only');
+            // Just use day texture
+            if (earthRef.current) {
+              const newMaterial = new THREE.MeshLambertMaterial({
+                map: dayTexture
+              });
+              earthRef.current.material = newMaterial;
+            }
+          }
+        );
       },
       undefined,
       (error) => {
@@ -165,12 +190,16 @@ export function ThreeEarth() {
 
     // Mouse controls
     const onMouseDown = (event: MouseEvent) => {
+      isMouseDown.current = true;
       previousMouse.current = { x: event.clientX, y: event.clientY };
       dragStartPosition.current = { x: event.clientX, y: event.clientY };
       isDragging.current = false; // Don't set to true immediately
     };
 
     const onMouseMove = (event: MouseEvent) => {
+      // Only process drag if mouse button is down
+      if (!isMouseDown.current) return;
+
       // Check if we've moved enough to start dragging
       if (!isDragging.current) {
         const dragDistance = Math.sqrt(
@@ -197,6 +226,7 @@ export function ThreeEarth() {
     };
 
     const onMouseUp = () => {
+      isMouseDown.current = false;
       isDragging.current = false;
     };
 
@@ -249,9 +279,9 @@ export function ThreeEarth() {
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
-      const zoomSpeed = 0.1;
+      const zoomSpeed = 0.2;
       const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
-      camera.position.z = Math.max(2.5, Math.min(8, newZ));
+      camera.position.z = Math.max(4, Math.min(12, newZ)); // Less zoomed in range
     };
 
     // Event listeners
@@ -302,6 +332,9 @@ export function ThreeEarth() {
     // Start animation loop
     animate();
 
+    // Mark scene as ready for relay markers
+    setSceneReady(true);
+
     // Handle resize
     const handleResize = () => {
       if (!mountRef.current || !renderer || !camera) return;
@@ -348,6 +381,7 @@ export function ThreeEarth() {
 
     return () => {
       clearTimeout(initTimeout);
+      setSceneReady(false);
 
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current);
@@ -373,9 +407,13 @@ export function ThreeEarth() {
     };
   }, []);
 
-  // Update relay markers when data changes
+  // Update relay markers when data changes and scene is ready
   useEffect(() => {
-    if (!relayLocations || !relayMarkersRef.current) return;
+    console.log('Relay markers effect triggered. Data:', relayLocations?.length, 'markers ref:', !!relayMarkersRef.current, 'scene ready:', sceneReady);
+    if (!relayLocations || !relayMarkersRef.current || !sceneReady) {
+      console.log('Relay markers not ready yet - waiting...');
+      return;
+    }
 
     // Clear existing markers
     while (relayMarkersRef.current.children.length > 0) {
@@ -391,18 +429,21 @@ export function ThreeEarth() {
       // Convert lat/lng to spherical coordinates
       // Three.js uses Y-up coordinate system, standard geographic coordinates
       const latRad = (90 - relay.lat) * (Math.PI / 180); // Convert to polar angle (0 = North Pole)
-      const lngRad = (relay.lng + 180) * (Math.PI / 180); // Convert to azimuthal angle
+      const lngRad = relay.lng * (Math.PI / 180); // Convert longitude to radians
 
       // Spherical to Cartesian conversion for Three.js coordinate system
-      const x = -radius * Math.sin(latRad) * Math.cos(lngRad);
+      const x = radius * Math.sin(latRad) * Math.cos(lngRad);
       const y = radius * Math.cos(latRad);
       const z = radius * Math.sin(latRad) * Math.sin(lngRad);
+
+      console.log(`Placing relay ${index}: ${relay.url} at lat=${relay.lat}, lng=${relay.lng}`);
+      console.log(`  Calculated position: x=${x.toFixed(2)}, y=${y.toFixed(2)}, z=${z.toFixed(2)}`);
 
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
       // Main marker sphere - made larger for better visibility
-      const markerGeometry = new THREE.SphereGeometry(0.05, 16, 12);
+      const markerGeometry = new THREE.SphereGeometry(0.08, 16, 12); // Increased size
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: 0xff0000,
         transparent: false
@@ -416,7 +457,7 @@ export function ThreeEarth() {
       markerGroup.add(marker);
 
       // Create pulsing glow effect - made larger
-      const glowGeometry = new THREE.SphereGeometry(0.08, 16, 12);
+      const glowGeometry = new THREE.SphereGeometry(0.12, 16, 12); // Increased size
       const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0xff4444,
         transparent: true,
@@ -448,7 +489,7 @@ export function ThreeEarth() {
     });
 
     console.log('Finished adding relay markers. Total objects in markers group:', relayMarkersRef.current?.children.length);
-  }, [relayLocations]);
+  }, [relayLocations, sceneReady]);
 
   return (
     <div className="relative w-full h-screen">
