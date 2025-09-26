@@ -311,18 +311,25 @@ export function ThreeEarth() {
 
       // Subtle relay marker animation
       if (relayMarkersRef.current) {
-        const time = Date.now() * 0.001; // Slower animation
+        const time = Date.now() * 0.001; // Animation time
         relayMarkersRef.current.children.forEach((child, index) => {
           if (child instanceof THREE.Group) {
             child.children.forEach((marker, subIndex) => {
               if (subIndex === 0) {
-                // Main marker - very subtle pulse
-                const pulseScale = 1 + Math.sin(time + index * 0.3) * 0.05;
-                marker.scale.setScalar(pulseScale);
+                // Main marker - very subtle scale animation
+                const scale = 1 + Math.sin(time * 2 + index * 0.5) * 0.1;
+                marker.scale.setScalar(scale);
               } else if (subIndex === 1 && marker instanceof THREE.Mesh) {
-                // Glow ring - gentle fade
+                // Outer ring - gentle opacity pulse
                 const material = marker.material as THREE.MeshBasicMaterial;
-                material.opacity = 0.4 + Math.sin(time + index * 0.4) * 0.15;
+                material.opacity = 0.6 + Math.sin(time * 1.5 + index * 0.3) * 0.3;
+              } else if (subIndex === 2 && marker instanceof THREE.Mesh) {
+                // Inner pulse point - bright white pulse
+                const material = marker.material as THREE.MeshBasicMaterial;
+                const pulse = Math.sin(time * 3 + index * 0.7) * 0.5 + 0.5;
+                material.opacity = 0.3 + pulse * 0.7;
+                const scale = 1 + pulse * 0.5;
+                marker.scale.setScalar(scale);
               }
             });
           }
@@ -446,10 +453,10 @@ export function ThreeEarth() {
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
-      // Main marker - smaller but still clickable
-      const markerGeometry = new THREE.SphereGeometry(0.05, 12, 8);
+      // Main marker - small and refined
+      const markerGeometry = new THREE.SphereGeometry(0.02, 16, 12);
       const markerMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff3030,
+        color: 0xff4444,
         transparent: false
       });
       const marker = new THREE.Mesh(markerGeometry, markerMaterial);
@@ -460,19 +467,29 @@ export function ThreeEarth() {
 
       markerGroup.add(marker);
 
-      // Create smaller glow ring
-      const glowGeometry = new THREE.RingGeometry(0.06, 0.09, 16);
-      const glowMaterial = new THREE.MeshBasicMaterial({
+      // Create subtle outer ring for elegance
+      const ringGeometry = new THREE.RingGeometry(0.025, 0.035, 24);
+      const ringMaterial = new THREE.MeshBasicMaterial({
         color: 0xff6666,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.8,
         side: THREE.DoubleSide
       });
-      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
 
       // Orient the ring to face outward from Earth center
-      glow.lookAt(new THREE.Vector3(x * 2, y * 2, z * 2));
-      markerGroup.add(glow);
+      ring.lookAt(new THREE.Vector3(x * 2, y * 2, z * 2));
+      markerGroup.add(ring);
+
+      // Create tiny inner pulse point
+      const pulseGeometry = new THREE.SphereGeometry(0.008, 8, 6);
+      const pulseMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.9
+      });
+      const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
+      markerGroup.add(pulse);
 
       // Position the entire group
       markerGroup.position.set(x, y, z);
