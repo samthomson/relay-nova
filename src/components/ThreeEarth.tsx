@@ -36,6 +36,10 @@ export function ThreeEarth() {
 
     console.log('ThreeEarth: Starting initialization');
 
+    // Small delay to ensure DOM is ready and properly sized
+    const initTimeout = setTimeout(() => {
+      if (!mountRef.current) return;
+
     try {
 
     // Scene setup with lighter background
@@ -46,7 +50,7 @@ export function ThreeEarth() {
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
       50,
-      mountRef.current.clientWidth / mountRef.current.clientHeight,
+      width / height,
       0.1,
       1000
     );
@@ -55,7 +59,13 @@ export function ThreeEarth() {
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+
+    // Ensure we have proper dimensions
+    const width = mountRef.current.clientWidth || window.innerWidth;
+    const height = mountRef.current.clientHeight || window.innerHeight;
+
+    console.log('ThreeEarth: Setting renderer size to', width, 'x', height);
+    renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -298,6 +308,10 @@ export function ThreeEarth() {
       renderer.render(scene, camera);
     };
 
+    // Force an immediate render to avoid white screen
+    renderer.render(scene, camera);
+
+    // Start animation loop
     animate();
 
     // Handle resize
@@ -310,28 +324,12 @@ export function ThreeEarth() {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+
+      // Force render after resize
+      renderer.render(scene, camera);
     };
 
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-
-      renderer.domElement.removeEventListener('mousedown', onMouseDown);
-      renderer.domElement.removeEventListener('mousemove', onMouseMove);
-      renderer.domElement.removeEventListener('mouseup', onMouseUp);
-      renderer.domElement.removeEventListener('click', onMouseClick);
-      renderer.domElement.removeEventListener('wheel', onWheel);
-      window.removeEventListener('resize', handleResize);
-
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-
-      renderer.dispose();
-    };
 
     } catch (error) {
       console.error('ThreeEarth initialization failed:', error);
@@ -358,6 +356,33 @@ export function ThreeEarth() {
         `;
       }
     }
+    }, 10); // Small delay to ensure DOM is ready
+
+    return () => {
+      clearTimeout(initTimeout);
+
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+
+      if (rendererRef.current) {
+        rendererRef.current.domElement.removeEventListener('mousedown', onMouseDown);
+        rendererRef.current.domElement.removeEventListener('mousemove', onMouseMove);
+        rendererRef.current.domElement.removeEventListener('mouseup', onMouseUp);
+        rendererRef.current.domElement.removeEventListener('click', onMouseClick);
+        rendererRef.current.domElement.removeEventListener('wheel', onWheel);
+      }
+
+      window.removeEventListener('resize', handleResize);
+
+      if (mountRef.current && rendererRef.current?.domElement) {
+        mountRef.current.removeChild(rendererRef.current.domElement);
+      }
+
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+      }
+    };
   }, []);
 
   // Update relay markers when data changes
