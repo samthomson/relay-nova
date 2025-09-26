@@ -75,7 +75,12 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   };
 
   return (
-    <div className={getPanelClasses()}>
+    <div
+      className={getPanelClasses()}
+      onWheel={(e) => {
+        e.stopPropagation();
+      }}
+    >
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
@@ -127,7 +132,12 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
           </div>
         ) : (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+            <div
+              className="flex-1 overflow-y-auto"
+              onWheel={(e) => {
+                e.stopPropagation();
+              }}
+            >
               <div className="p-4 space-y-3">
                 {notes.map((note) => (
                   <NoteCard key={note.id} note={note} />
