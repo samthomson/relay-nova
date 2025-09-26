@@ -66,9 +66,9 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
     const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 overflow-hidden';
 
     if (side === 'bottom') {
-      return `${baseClasses} bottom-8 left-4 right-4 max-h-[60vh] rounded-2xl border-2`;
+      return `${baseClasses} bottom-8 left-4 right-4 max-h-[70vh] rounded-2xl border-2`;
     } else {
-      return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] rounded-2xl border-2 ${
+      return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] max-h-[70vh] rounded-2xl border-2 ${
         side === 'right' ? 'right-4' : 'left-4'
       }`;
     }
@@ -143,8 +143,8 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
           </div>
         ) : (
           <div className="h-full flex flex-col p-4">
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="space-y-3 pr-2">
+            <ScrollArea className="flex-1 min-h-0 [&>div>div]:!block">
+              <div className="space-y-3 pr-4">
                 {notes.map((note) => (
                   <NoteCard key={note.id} note={note} />
                 ))}
@@ -160,8 +160,9 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
 function NoteCard({ note }: { note: NostrEvent }) {
   const author = useAuthor(note.pubkey);
   const metadata = author.data?.metadata;
+  const isLoadingAuthor = author.isLoading;
 
-  const displayName = metadata?.name || `@${note.pubkey.slice(0, 8)}`;
+  const displayName = metadata?.name || metadata?.display_name || `@${note.pubkey.slice(0, 8)}`;
   const timeAgo = new Date(note.created_at * 1000).toLocaleDateString();
 
   return (
@@ -189,8 +190,8 @@ function NoteCard({ note }: { note: NostrEvent }) {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <CardTitle className="text-sm font-medium truncate">
-                {displayName}
+              <CardTitle className="text-sm font-medium text-white truncate">
+                {isLoadingAuthor ? 'Loading...' : displayName}
               </CardTitle>
               <p className="text-xs text-gray-400">{timeAgo}</p>
             </div>
