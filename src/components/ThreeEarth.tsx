@@ -28,7 +28,6 @@ export function ThreeEarth() {
   const DRAG_THRESHOLD = 5; // Minimum pixels to count as drag vs click
 
   // Auto/manual mode management
-  const [autoMode, setAutoMode] = useState(true);
   const isAutoMode = useRef(true);
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
   const lastInteraction = useRef(Date.now());
@@ -70,7 +69,6 @@ export function ThreeEarth() {
 
     // Pause auto mode when relay panel is open
     isAutoMode.current = false;
-    setAutoMode(false); // Also update state to trigger re-render
 
     // Clear any existing auto mode timer
     if (inactivityTimer.current) {
@@ -279,7 +277,6 @@ export function ThreeEarth() {
     // Mouse controls
     const setManualMode = () => {
       isAutoMode.current = false;
-      setAutoMode(false); // Also update state to trigger re-render
       lastInteraction.current = Date.now();
 
       // Clear any existing timer
@@ -290,14 +287,12 @@ export function ThreeEarth() {
       // Set timer to return to auto mode after 3 seconds
       inactivityTimer.current = setTimeout(() => {
         isAutoMode.current = true;
-        setAutoMode(true); // Also update state to trigger re-render
       }, 3000);
     };
 
     // Function to immediately resume auto mode
     const resumeAutoMode = () => {
       isAutoMode.current = true;
-      setAutoMode(true); // Also update state to trigger re-render
 
       // Clear any existing timer
       if (inactivityTimer.current) {
@@ -311,11 +306,6 @@ export function ThreeEarth() {
 
       // Update last interaction time
       lastInteraction.current = Date.now();
-
-      // Force a small manual rotation to kickstart auto mode
-      if (earthRef.current) {
-        earthRef.current.rotation.y += 0.001;
-      }
     };
 
     const onMouseDown = (event: MouseEvent) => {
@@ -586,6 +576,11 @@ export function ThreeEarth() {
         rendererRef.current.dispose();
       }
     };
+  }, []);
+
+  // Ensure auto mode is properly initialized
+  useEffect(() => {
+    isAutoMode.current = true;
   }, []);
 
   // Add click-outside-to-close functionality
