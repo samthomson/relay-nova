@@ -430,14 +430,13 @@ export function ThreeEarth() {
       const radius = 2.05; // Slightly above Earth surface
 
       // Convert geographic coordinates to 3D Cartesian coordinates
-      // Using standard Three.js Earth coordinate conversion
       // Geographic: latitude (-90 to +90), longitude (-180 to +180)
       // Three.js: Y up, X right, Z towards viewer
 
       const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = relay.lng * (Math.PI / 180);
+      const lngRad = -relay.lng * (Math.PI / 180); // Invert longitude for correct direction
 
-      // Standard conversion used in most Three.js Earth visualizations
+      // Standard conversion with inverted longitude
       const x = radius * Math.cos(latRad) * Math.cos(lngRad);
       const y = radius * Math.sin(latRad);
       const z = radius * Math.cos(latRad) * Math.sin(lngRad);
