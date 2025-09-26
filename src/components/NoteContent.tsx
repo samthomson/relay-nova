@@ -52,25 +52,30 @@ export function NoteContent({
                 onError={(e) => {
                   const target = e.currentTarget as HTMLImageElement;
                   target.style.display = 'none';
-                  const fallback = document.createElement('div');
+                  const fallback = document.createElement('a');
+                  fallback.href = url;
+                  fallback.target = '_blank';
+                  fallback.rel = 'noopener noreferrer';
                   fallback.textContent = url;
-                  fallback.className = 'text-xs text-blue-500 underline break-all';
+                  fallback.className = 'text-xs text-blue-500 underline break-all block';
                   target.parentElement?.appendChild(fallback);
                 }}
               />
             </div>
           );
         } else {
-          // Handle regular URLs
+          // Handle regular URLs - truncate long URLs but keep them clickable
+          const displayUrl = url.length > 50 ? url.substring(0, 50) + '...' : url;
           parts.push(
             <a
               key={`url-${keyCounter++}`}
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-500 hover:underline break-all"
+              className="text-blue-500 hover:underline break-all inline-block max-w-full align-top"
+              title={url}
             >
-              {url}
+              {displayUrl}
             </a>
           );
         }
@@ -108,7 +113,7 @@ export function NoteContent({
           <Link
             key={`hashtag-${keyCounter++}`}
             to={`/t/${tag}`}
-            className="text-blue-500 hover:underline"
+            className="text-blue-500 hover:underline inline-block"
           >
             {hashtag}
           </Link>
@@ -132,7 +137,7 @@ export function NoteContent({
   }, [event]);
 
   return (
-    <div className={cn("whitespace-pre-wrap break-words", className)}>
+    <div className={cn("whitespace-pre-wrap break-words overflow-hidden", className)}>
       {content.length > 0 ? content : event.content}
     </div>
   );
@@ -149,7 +154,7 @@ function NostrMention({ pubkey }: { pubkey: string }) {
     <Link
       to={`/${npub}`}
       className={cn(
-        "font-medium hover:underline",
+        "font-medium hover:underline inline-block max-w-full align-top",
         hasRealName
           ? "text-blue-500"
           : "text-gray-500 hover:text-gray-700"

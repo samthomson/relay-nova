@@ -63,13 +63,13 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   }, [relay.url, nostr]);
 
   const getPanelClasses = () => {
-    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300';
+    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 overflow-hidden';
 
     if (side === 'bottom') {
-      return `${baseClasses} bottom-8 left-8 right-8 h-[50vh] rounded-2xl border-2`;
+      return `${baseClasses} bottom-8 left-4 right-4 max-h-[60vh] rounded-2xl border-2`;
     } else {
-      return `${baseClasses} top-24 bottom-8 w-[400px] max-w-[40vw] rounded-2xl border-2 ${
-        side === 'right' ? 'right-8' : 'left-8'
+      return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] rounded-2xl border-2 ${
+        side === 'right' ? 'right-4' : 'left-4'
       }`;
     }
   };
@@ -118,23 +118,23 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full p-4">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
               <p className="text-sm text-gray-400">Fetching latest notes...</p>
             </div>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
               <p className="text-sm text-red-400 mb-2">{error}</p>
               <p className="text-xs text-gray-500">This relay may be offline or not responding</p>
             </div>
           </div>
         ) : notes.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
               <MessageCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
               <p className="text-sm text-gray-400">No notes found on this relay</p>
@@ -142,13 +142,15 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
             </div>
           </div>
         ) : (
-          <ScrollArea className="h-full pr-2">
-            <div className="space-y-3 pb-2">
-              {notes.map((note) => (
-                <NoteCard key={note.id} note={note} />
-              ))}
-            </div>
-          </ScrollArea>
+          <div className="h-full flex flex-col p-4">
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="space-y-3 pr-2">
+                {notes.map((note) => (
+                  <NoteCard key={note.id} note={note} />
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         )}
       </div>
     </div>
@@ -163,10 +165,10 @@ function NoteCard({ note }: { note: NostrEvent }) {
   const timeAgo = new Date(note.created_at * 1000).toLocaleDateString();
 
   return (
-    <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full">
+    <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {/* Avatar */}
             {metadata?.picture ? (
               <img
@@ -175,19 +177,22 @@ function NoteCard({ note }: { note: NostrEvent }) {
                 className="w-8 h-8 rounded-full object-cover border border-white/20 flex-shrink-0"
                 onError={(e) => {
                   // Fallback to gradient if image fails
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement?.querySelector('.avatar-fallback')?.classList.remove('hidden');
+                  const target = e.currentTarget as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                  if (fallback) fallback.classList.remove('hidden');
                 }}
               />
-            ) : null}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0 avatar-fallback">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0 avatar-fallback">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <CardTitle className="text-sm font-medium truncate">
                 {displayName}
               </CardTitle>
-              <p className="text-xs text-gray-400 truncate">{timeAgo}</p>
+              <p className="text-xs text-gray-400">{timeAgo}</p>
             </div>
           </div>
           <Badge variant="outline" className="text-xs flex-shrink-0 ml-2">
@@ -196,8 +201,8 @@ function NoteCard({ note }: { note: NostrEvent }) {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="text-sm text-gray-300 leading-relaxed break-words">
-          <NoteContent event={note} className="[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_img]:my-2" />
+        <div className="text-sm text-gray-300 leading-relaxed break-words overflow-hidden">
+          <NoteContent event={note} className="[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_img]:my-2 [&_img]:object-contain [&_a]:break-all [&_a]:text-xs [&_*]:max-w-full" />
         </div>
       </CardContent>
     </Card>
