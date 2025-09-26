@@ -341,7 +341,7 @@ export function ThreeEarth() {
         mountRef.current.innerHTML = `
           <div style="
             display: flex;
-            items-align: center;
+            align-items: center;
             justify-content: center;
             height: 100%;
             color: white;
@@ -352,7 +352,7 @@ export function ThreeEarth() {
             <div>
               <h2 style="margin-bottom: 1rem;">3D Earth Loading Error</h2>
               <p>WebGL initialization failed. Your browser may not support 3D graphics.</p>
-              <p style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">Error: ${error.message}</p>
+              <p style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">Error: ${error?.message || 'Unknown error'}</p>
             </div>
           </div>
         `;

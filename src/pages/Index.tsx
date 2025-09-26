@@ -1,5 +1,5 @@
 import { useSeoMeta } from '@unhead/react';
-import { SimpleEarth } from '@/components/SimpleEarth';
+import { ThreeEarth } from '@/components/ThreeEarth';
 
 const Index = () => {
   useSeoMeta({
@@ -32,7 +32,7 @@ const Index = () => {
       </div>
 
       {/* 3D Earth Visualization */}
-      <SimpleEarth />
+      <ThreeEarth />
     </div>
   );
 };
