@@ -401,14 +401,14 @@ export function ThreeEarth() {
       const radius = 2.05; // Slightly above Earth surface
 
       // Use coordinates directly with simple spherical projection
-      // Map lat/lon to sphere surface
+      // Map lat/lon to sphere surface - try swapping X and Z
       const latRad = relay.lat * (Math.PI / 180);
       const lngRad = relay.lng * (Math.PI / 180);
 
-      // Simple spherical coordinates - place on surface
-      const x = radius * Math.cos(latRad) * Math.sin(lngRad);
+      // Try swapping X and Z coordinates for correct orientation
+      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
       const y = radius * Math.sin(latRad);
-      const z = radius * Math.cos(latRad) * Math.cos(lngRad);
+      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
 
       // Relay positioned at ${relay.city}, ${relay.country}
 
