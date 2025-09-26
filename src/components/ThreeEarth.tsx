@@ -68,18 +68,19 @@ export function ThreeEarth() {
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Lighting - much brighter for better visibility
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Increased from 0.3
+    // Day/night lighting effect
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.4); // Base ambient light
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1.5); // Increased intensity
-    pointLight.position.set(10, 10, 10);
-    scene.add(pointLight);
+    // Main directional light acting as the sun
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    sunLight.position.set(8, 2, 8); // Sun position - creates day/night effect
+    scene.add(sunLight);
 
-    // Add another light from the opposite side for even illumination
-    const fillLight = new THREE.PointLight(0xffffff, 0.8);
-    fillLight.position.set(-10, -10, -10);
-    scene.add(fillLight);
+    // Very subtle blue fill light for night side (moonlight effect)
+    const moonLight = new THREE.DirectionalLight(0x4477bb, 0.2);
+    moonLight.position.set(-8, -2, -8); // Opposite side of sun
+    scene.add(moonLight);
 
     // Create Earth with proper satellite imagery texture
     const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
@@ -110,60 +111,12 @@ export function ThreeEarth() {
       (dayTexture) => {
         console.log('Earth texture loaded successfully');
 
-        // Create programmatic night texture with city lights
-        const createNightTexture = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = 1024;
-          canvas.height = 512;
-          const ctx = canvas.getContext('2d')!;
-
-          // Black background
-          ctx.fillStyle = '#000000';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          // Add city lights as small bright spots
-          ctx.fillStyle = '#ffff88';
-
-          // Major cities with approximate coordinates on texture
-          const cities = [
-            { x: 0.13, y: 0.35 }, // US West Coast
-            { x: 0.17, y: 0.33 }, // US East Coast
-            { x: 0.47, y: 0.32 }, // Europe
-            { x: 0.70, y: 0.35 }, // East Asia
-            { x: 0.80, y: 0.70 }, // Australia
-            { x: 0.30, y: 0.60 }, // South America
-            { x: 0.50, y: 0.50 }, // Africa
-          ];
-
-          cities.forEach(city => {
-            // Create glowing spots for major city clusters
-            const gradient = ctx.createRadialGradient(
-              city.x * canvas.width, city.y * canvas.height, 0,
-              city.x * canvas.width, city.y * canvas.height, 20
-            );
-            gradient.addColorStop(0, '#ffff88');
-            gradient.addColorStop(0.5, '#ffaa44');
-            gradient.addColorStop(1, 'rgba(255, 170, 68, 0)');
-
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(city.x * canvas.width, city.y * canvas.height, 20, 0, Math.PI * 2);
-            ctx.fill();
-          });
-
-          return new THREE.CanvasTexture(canvas);
-        };
-
+        // Apply day texture only for now
         if (earthRef.current) {
-          const nightTexture = createNightTexture();
           const newMaterial = new THREE.MeshLambertMaterial({
-            map: dayTexture,
-            emissiveMap: nightTexture,
-            emissive: new THREE.Color(0xffff88),
-            emissiveIntensity: 0.2
+            map: dayTexture
           });
           earthRef.current.material = newMaterial;
-          console.log('Night texture created successfully');
         }
       },
       undefined,
@@ -447,18 +400,17 @@ export function ThreeEarth() {
     relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
-      // Convert lat/lng to spherical coordinates
-      // Standard geographic to Three.js coordinate system conversion
-      const latRad = relay.lat * (Math.PI / 180); // Latitude in radians
-      const lngRad = relay.lng * (Math.PI / 180); // Longitude in radians
+      // Convert lat/lng to spherical coordinates for Three.js
+      const latRad = relay.lat * (Math.PI / 180);
+      const lngRad = relay.lng * (Math.PI / 180);
 
-      // Spherical to Cartesian conversion (geographic coordinates)
-      // X = east/west, Y = up/down, Z = north/south
-      const x = radius * Math.cos(latRad) * Math.sin(lngRad);
+      // Correct Three.js coordinate mapping:
+      // X = longitude (east/west), Z = longitude depth, Y = latitude (up/down)
+      const x = -radius * Math.cos(latRad) * Math.sin(lngRad);  // Negative for correct east/west
       const y = radius * Math.sin(latRad);
       const z = radius * Math.cos(latRad) * Math.cos(lngRad);
 
-      // Position calculated for relay at ${relay.city}, ${relay.country}
+      // Relay positioned at ${relay.city}, ${relay.country}
 
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
