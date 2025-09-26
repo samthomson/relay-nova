@@ -126,13 +126,11 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto">
-              <div className="p-4 space-y-3">
-                {notes.map((note) => (
-                  <NoteCard key={note.id} note={note} />
-                ))}
-              </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-3">
+              {notes.map((note) => (
+                <NoteCard key={note.id} note={note} />
+              ))}
             </div>
           </div>
         )}
