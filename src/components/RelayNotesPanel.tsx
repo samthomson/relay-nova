@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { X, MessageCircle, Loader2 } from 'lucide-react';
@@ -63,7 +63,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   }, [relay.url, nostr]);
 
   const getPanelClasses = () => {
-    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 overflow-hidden';
+    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 overflow-hidden z-50 pointer-events-auto';
 
     if (side === 'bottom') {
       return `${baseClasses} bottom-8 left-4 right-4 max-h-[70vh] rounded-2xl border-2`;
@@ -142,14 +142,14 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
             </div>
           </div>
         ) : (
-          <div className="h-full flex flex-col p-4">
-            <ScrollArea className="flex-1 min-h-0 [&>div>div]:!block [&_[data-radix-scroll-area-viewport]]:!block [&_[data-radix-scroll-area-scrollbar]]:!block [&_[data-radix-scroll-area-thumb]]:!bg-white/20 [&_[data-radix-scroll-area-thumb]]:hover:!bg-white/30">
-              <div className="space-y-3 pr-4">
+          <div className="h-full flex flex-col overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+              <div className="space-y-3">
                 {notes.map((note) => (
                   <NoteCard key={note.id} note={note} />
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         )}
       </div>

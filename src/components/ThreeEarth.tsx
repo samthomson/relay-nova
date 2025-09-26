@@ -78,6 +78,14 @@ export function ThreeEarth() {
   const [openRelay, setOpenRelay] = useState<RelayLocation | null>(null);
   const [relaySide, setRelaySide] = useState<'left' | 'right' | 'bottom'>('right');
 
+  // Create a ref to track the current openRelay state for event handlers
+  const openRelayRef = useRef(openRelay);
+
+  // Update the ref whenever openRelay changes
+  useEffect(() => {
+    openRelayRef.current = openRelay;
+  }, [openRelay]);
+
   const { data: relayLocations, isLoading } = useRelayLocations();
 
   useEffect(() => {
@@ -238,7 +246,7 @@ export function ThreeEarth() {
 
     const onMouseDown = (event: MouseEvent) => {
       // Don't process globe events when relay panel is open
-      if (openRelay) return;
+      if (openRelayRef.current) return;
 
       setManualMode();
       isMouseDown.current = true;
@@ -249,7 +257,7 @@ export function ThreeEarth() {
 
     const onMouseMove = (event: MouseEvent) => {
       // Don't process globe events when relay panel is open
-      if (openRelay) return;
+      if (openRelayRef.current) return;
 
       // Only process drag if mouse button is down
       if (!isMouseDown.current) return;
@@ -287,7 +295,7 @@ export function ThreeEarth() {
 
     const onMouseClick = (event: MouseEvent) => {
       // Don't process globe events when relay panel is open
-      if (openRelay) return;
+      if (openRelayRef.current) return;
 
       setManualMode();
 
@@ -342,7 +350,7 @@ export function ThreeEarth() {
 
     const onWheel = (event: WheelEvent) => {
       // Don't process globe events when relay panel is open
-      if (openRelay) return;
+      if (openRelayRef.current) return;
 
       event.preventDefault();
       const zoomSpeed = 0.2;
