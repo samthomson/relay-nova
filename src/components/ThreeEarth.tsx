@@ -596,10 +596,7 @@ export function ThreeEarth() {
       </div>
 
       {/* Three.js mount point */}
-      <div
-        ref={mountRef}
-        className={`w-full h-full ${openRelay ? 'pointer-events-none' : ''}`}
-      />
+      <div ref={mountRef} className="w-full h-full" />
 
       {/* Relay Notes Panel */}
       {openRelay && (

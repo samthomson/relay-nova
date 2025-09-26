@@ -63,21 +63,21 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   }, [relay.url, nostr]);
 
   const getPanelClasses = () => {
-    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 overflow-hidden z-[9999] pointer-events-auto';
+    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[9999] pointer-events-auto';
 
     if (side === 'bottom') {
-      return `${baseClasses} bottom-8 left-4 right-4 max-h-[70vh] rounded-2xl border-2`;
+      return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2 overflow-hidden`;
     } else {
-      return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] max-h-[70vh] rounded-2xl border-2 ${
+      return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] h-[70vh] rounded-2xl border-2 ${
         side === 'right' ? 'right-4' : 'left-4'
-      }`;
+      } overflow-hidden`;
     }
   };
 
   return (
     <div className={getPanelClasses()}>
       {/* Header */}
-      <div className="p-4 border-b border-white/20">
+      <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <MessageCircle className="w-5 h-5 text-blue-400" />
@@ -118,7 +118,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="flex flex-col items-center gap-3">
@@ -142,9 +142,9 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
             </div>
           </div>
         ) : (
-          <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 min-h-0 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
-              <div className="space-y-3 pr-4">
+          <div className="h-full flex flex-col">
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 space-y-3">
                 {notes.map((note) => (
                   <NoteCard key={note.id} note={note} />
                 ))}
