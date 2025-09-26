@@ -14,54 +14,50 @@ interface RelayStatus extends RelayLocation {
   checked: boolean;
 }
 
-// Check if a relay is online by attempting to fetch a single event
+// Check if a relay is online by attempting to connect and fetch a single event
+// Using the same approach as RelayNotesPanel which works
 async function checkRelayStatus(relayUrl: string): Promise<boolean> {
   try {
-    // Import nostr dynamically to avoid issues
-    const { SimplePool } = await import('nostr-tools');
+    // Use the same approach as the working RelayNotesPanel
+    // Import nostrify dynamically
+    const { Nostr } = await import('@nostrify/nostrify');
 
-    // Create a pool with just this relay
-    const pool = new SimplePool();
-
-    // Set up timeout
-    const timeoutPromise = new Promise<boolean>((resolve) => {
-      setTimeout(() => resolve(false), 3000);
+    // Create a Nostr instance with just this relay
+    const nostr = new Nostr({
+      relays: [relayUrl],
     });
 
-    const connectPromise = new Promise<boolean>(async (resolve) => {
-      try {
-        // Try to fetch a single recent event (kind 1) with limit 1
-        const events = await pool.query(
-          [{ kinds: [1], limit: 1 }],
-          [relayUrl],
-          { signal: AbortSignal.timeout(2500) }
-        );
-
-        // If we get any events, the relay is online
-        resolve(events.length > 0);
-      } catch (error) {
-        // Silently handle connection failures - this is expected for offline relays
-        resolve(false);
-      }
-    });
-
-    const result = await Promise.race([connectPromise, timeoutPromise]);
-
-    // Close the pool connection
     try {
-      pool.close([relayUrl]);
-    } catch (closeError) {
-      // Silently handle pool close errors
-    }
+      console.log(`Checking relay: ${relayUrl}`);
+      // Try to fetch a single recent event (kind:1) with limit 1
+      // This mirrors exactly what RelayNotesPanel does successfully
+      const events = await nostr.query([
+        {
+          kinds: [1],
+          limit: 1,
+        }
+      ], { signal: AbortSignal.timeout(3000) });
 
-    return result;
+      console.log(`Relay ${relayUrl} returned ${events.length} events`);
+      // If we get any events, the relay is online
+      return events.length > 0;
+    } catch (error) {
+      console.log(`Relay ${relayUrl} failed:`, error);
+      // Silently handle connection failures - this is expected for offline relays
+      return false;
+    } finally {
+      // Clean up the nostr instance
+      await nostr.close();
+    }
   } catch (error) {
+    console.log(`Relay ${relayUrl} setup failed:`, error);
     // Silently handle any other errors - relay is considered offline
     return false;
   }
 }
 
 async function checkAllRelayStatus(relays: RelayLocation[]): Promise<RelayStatus[]> {
+  console.log('Checking relay status for', relays?.length, 'relays');
   if (!relays || relays.length === 0) {
     return [];
   }
@@ -78,6 +74,7 @@ async function checkAllRelayStatus(relays: RelayLocation[]): Promise<RelayStatus
 
   try {
     const results = await Promise.allSettled(statusPromises);
+    console.log('Relay status check results:', results);
 
     return results.map((result, index) => {
       if (result.status === 'fulfilled') {
@@ -92,6 +89,7 @@ async function checkAllRelayStatus(relays: RelayLocation[]): Promise<RelayStatus
       }
     });
   } catch (error) {
+    console.log('Relay status check failed:', error);
     // Fallback: mark all as offline if something goes wrong
     return relays.map(relay => ({
       ...relay,
