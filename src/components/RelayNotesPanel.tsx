@@ -63,7 +63,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   }, [relay.url, nostr]);
 
   const getPanelClasses = () => {
-    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 overflow-hidden z-50 pointer-events-auto';
+    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 overflow-hidden z-[9999] pointer-events-auto';
 
     if (side === 'bottom') {
       return `${baseClasses} bottom-8 left-4 right-4 max-h-[70vh] rounded-2xl border-2`;
@@ -143,8 +143,8 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
           </div>
         ) : (
           <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 min-h-0 overflow-y-auto pr-2">
-              <div className="space-y-3">
+            <div className="flex-1 min-h-0 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+              <div className="space-y-3 pr-4">
                 {notes.map((note) => (
                   <NoteCard key={note.id} note={note} />
                 ))}
