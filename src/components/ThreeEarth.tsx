@@ -188,10 +188,10 @@ export function ThreeEarth() {
         clearTimeout(inactivityTimer.current);
       }
 
-      // Set timer to return to auto mode after 5 seconds
+      // Set timer to return to auto mode after 3 seconds
       inactivityTimer.current = setTimeout(() => {
         isAutoMode.current = true;
-      }, 5000);
+      }, 3000);
     };
 
     const onMouseDown = (event: MouseEvent) => {
@@ -287,7 +287,6 @@ export function ThreeEarth() {
     };
 
     const onWheel = (event: WheelEvent) => {
-      setManualMode();
       event.preventDefault();
       const zoomSpeed = 0.2;
       const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
@@ -430,31 +429,26 @@ export function ThreeEarth() {
     relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
-      // Convert geographic coordinates to 3D Cartesian coordinates properly
+      // Convert geographic coordinates to 3D Cartesian coordinates
+      // Using standard Three.js Earth coordinate conversion
       // Geographic: latitude (-90 to +90), longitude (-180 to +180)
-      // Three.js: Y up, need to convert to spherical coordinates correctly
+      // Three.js: Y up, X right, Z towards viewer
 
       const latRad = relay.lat * (Math.PI / 180);
       const lngRad = relay.lng * (Math.PI / 180);
 
-      // Correct spherical coordinate conversion for Earth:
-      // phi = polar angle from north pole (90° - latitude)
-      // theta = azimuthal angle (longitude)
-      const phi = (90 - relay.lat) * (Math.PI / 180);
-      const theta = relay.lng * (Math.PI / 180);
-
-      // Convert to Cartesian coordinates
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.cos(phi);
-      const z = radius * Math.sin(phi) * Math.sin(theta);
+      // Standard conversion used in most Three.js Earth visualizations
+      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
+      const y = radius * Math.sin(latRad);
+      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
 
       // Relay positioned at ${relay.city}, ${relay.country}
 
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
-      // Main marker - larger for easier clicking
-      const markerGeometry = new THREE.SphereGeometry(0.08, 12, 8);
+      // Main marker - smaller but still clickable
+      const markerGeometry = new THREE.SphereGeometry(0.05, 12, 8);
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: 0xff3030,
         transparent: false
@@ -467,8 +461,8 @@ export function ThreeEarth() {
 
       markerGroup.add(marker);
 
-      // Create larger glow ring for better visibility
-      const glowGeometry = new THREE.RingGeometry(0.10, 0.15, 16);
+      // Create smaller glow ring
+      const glowGeometry = new THREE.RingGeometry(0.06, 0.09, 16);
       const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0xff6666,
         transparent: true,
