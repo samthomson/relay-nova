@@ -402,9 +402,9 @@ export function ThreeEarth() {
 
       // Convert lat/lng to spherical coordinates for Three.js
       const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = relay.lng * (Math.PI / 180);
+      const lngRad = (relay.lng + 90) * (Math.PI / 180); // Offset by 90 degrees to align with geographic coordinates
 
-      // Standard spherical to Cartesian conversion for Three.js:
+      // Adjusted spherical to Cartesian conversion for Three.js coordinate system:
       // X = longitude (east/west), Y = latitude (up/down), Z = depth
       const x = radius * Math.cos(latRad) * Math.cos(lngRad);
       const y = radius * Math.sin(latRad);
