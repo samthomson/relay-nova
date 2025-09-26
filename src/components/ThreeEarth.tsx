@@ -35,6 +35,17 @@ export function ThreeEarth() {
   // Track if mouse is over relay panel for scroll handling
   const isMouseOverRelayPanel = useRef(false);
 
+  // Track relay panel element for bounds checking
+  const relayPanelRef = useRef<HTMLElement | null>(null);
+
+  // Function to check if mouse coordinates are within relay panel bounds
+  const isMouseOverRelayPanelBounds = (x: number, y: number) => {
+    if (!relayPanelRef.current || !openRelayRef.current) return false;
+
+    const rect = relayPanelRef.current.getBoundingClientRect();
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  };
+
   // Function to open relay panel and determine side
   const openRelayPanel = (relay: RelayLocation, camera: THREE.PerspectiveCamera) => {
     setOpenRelay(relay);
@@ -72,6 +83,7 @@ export function ThreeEarth() {
   const closeRelayPanel = () => {
     setOpenRelay(null);
     isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
+    relayPanelRef.current = null; // Clear the panel ref
     // Resume auto mode after closing
     setManualMode();
   };
@@ -353,9 +365,31 @@ export function ThreeEarth() {
     };
 
     const onWheel = (event: WheelEvent) => {
-      // Don't process globe events when relay panel is open OR when mouse is over relay panel
-      if (openRelayRef.current || isMouseOverRelayPanel.current) return;
+      // Check if the mouse is over a relay panel using multiple methods
+      const isOverRelayPanel = isMouseOverRelayPanel.current ||
+        (openRelayRef.current && event.target instanceof Element &&
+         event.target.closest('[data-relay-panel]')) ||
+        isMouseOverRelayPanelBounds(event.clientX, event.clientY);
 
+      // Also check if the event target is within a scrollable area
+      const isOverScrollableContent = event.target instanceof Element &&
+        event.target.closest('[data-scrollable="true"]');
+
+      if (isOverRelayPanel || isOverScrollableContent) {
+        // Don't prevent default - let the scroll bubble up to the relay panel
+        return;
+      }
+
+      // Check if the event target is the Three.js renderer or its parent
+      const isOverGlobe = event.target instanceof Element &&
+        (event.target === rendererRef.current?.domElement ||
+         event.target.closest('canvas'));
+
+      if (!isOverGlobe) {
+        return; // Don't handle wheel events outside the globe
+      }
+
+      // Only prevent default if we're going to handle the zoom
       event.preventDefault();
       const zoomSpeed = 0.2;
       const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
@@ -367,7 +401,9 @@ export function ThreeEarth() {
     renderer.domElement.addEventListener('mousemove', onMouseMove);
     renderer.domElement.addEventListener('mouseup', onMouseUp);
     renderer.domElement.addEventListener('click', onMouseClick);
-    renderer.domElement.addEventListener('wheel', onWheel);
+
+    // Attach wheel event to document for better control
+    document.addEventListener('wheel', onWheel, { passive: false });
 
     // Animation loop
     const animate = () => {
@@ -474,8 +510,10 @@ export function ThreeEarth() {
         rendererRef.current.domElement.removeEventListener('mousemove', onMouseMove);
         rendererRef.current.domElement.removeEventListener('mouseup', onMouseUp);
         rendererRef.current.domElement.removeEventListener('click', onMouseClick);
-        rendererRef.current.domElement.removeEventListener('wheel', onWheel);
       }
+
+      // Remove document wheel event
+      document.removeEventListener('wheel', onWheel);
 
       window.removeEventListener('resize', handleResize);
 
@@ -605,11 +643,16 @@ export function ThreeEarth() {
       {/* Relay Notes Panel */}
       {openRelay && (
         <RelayNotesPanel
+          ref={relayPanelRef}
           relay={openRelay}
           side={relaySide}
           onClose={closeRelayPanel}
           onMouseEnter={() => isMouseOverRelayPanel.current = true}
           onMouseLeave={() => isMouseOverRelayPanel.current = false}
+          onWheel={(event) => {
+            // Allow native scrolling in the relay panel
+            event.stopPropagation();
+          }}
         />
       )}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
 
@@ -23,9 +23,11 @@ interface RelayNotesPanelProps {
   onClose: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onWheel?: (event: React.WheelEvent<HTMLDivElement>) => void;
 }
 
-export function RelayNotesPanel({ relay, side, onClose, onMouseEnter, onMouseLeave }: RelayNotesPanelProps) {
+export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
+  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onWheel }, ref) => {
   const { nostr } = useNostr();
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,9 +80,12 @@ export function RelayNotesPanel({ relay, side, onClose, onMouseEnter, onMouseLea
 
   return (
     <div
+      ref={ref}
       className={getPanelClasses()}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onWheel={onWheel}
+      data-relay-panel="true"
     >
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
@@ -132,7 +137,15 @@ export function RelayNotesPanel({ relay, side, onClose, onMouseEnter, onMouseLea
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto">
+          <div
+            className="flex-1 overflow-y-auto"
+            data-scrollable="true"
+            style={{
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'smooth'
+            }}
+          >
             <div className="p-4 space-y-3">
               {notes.map((note) => (
                 <NoteCard key={note.id} note={note} />
@@ -144,6 +157,7 @@ export function RelayNotesPanel({ relay, side, onClose, onMouseEnter, onMouseLea
     </div>
   );
 }
+);
 
 function NoteCard({ note }: { note: NostrEvent }) {
   const author = useAuthor(note.pubkey);
