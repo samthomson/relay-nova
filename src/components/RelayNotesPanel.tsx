@@ -1,6 +1,7 @@
-import { useState, useEffect, forwardRef } from 'react';
+import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,25 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scrollableRef = useRef<HTMLDivElement>(null);
+
+  const scrollUp = () => {
+    if (scrollableRef.current) {
+      scrollableRef.current.scrollBy({
+        top: -200,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollDown = () => {
+    if (scrollableRef.current) {
+      scrollableRef.current.scrollBy({
+        top: 200,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -67,7 +87,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
   }, [relay.url, nostr]);
 
   const getPanelClasses = () => {
-    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[9999] pointer-events-auto flex flex-col';
+    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[99999] pointer-events-auto flex flex-col';
 
     if (side === 'bottom') {
       return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2`;
@@ -84,7 +104,6 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
       className={getPanelClasses()}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      onWheel={onWheel}
       data-relay-panel="true"
     >
       {/* Header */}
@@ -137,21 +156,49 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
             </div>
           </div>
         ) : (
-          <div
-            className="flex-1 overflow-y-auto"
-            data-scrollable="true"
-            style={{
-              overflowY: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              scrollBehavior: 'smooth'
-            }}
-          >
-            <div className="p-4 space-y-3">
-              {notes.map((note) => (
-                <NoteCard key={note.id} note={note} />
-              ))}
+          <>
+            {/* Scroll buttons */}
+            <div className="flex justify-center p-2 border-b border-white/10">
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={scrollUp}
+                  className="text-white/70 hover:text-white hover:bg-white/10"
+                  disabled={notes.length === 0}
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={scrollDown}
+                  className="text-white/70 hover:text-white hover:bg-white/10"
+                  disabled={notes.length === 0}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+
+            {/* Scrollable content */}
+            <div
+              ref={scrollableRef}
+              className="flex-1 overflow-y-auto"
+              data-scrollable="true"
+              style={{
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                scrollBehavior: 'smooth'
+              }}
+            >
+              <div className="p-4 space-y-3">
+                {notes.map((note) => (
+                  <NoteCard key={note.id} note={note} />
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
