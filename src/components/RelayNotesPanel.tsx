@@ -63,7 +63,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   }, [relay.url, nostr]);
 
   const getPanelClasses = () => {
-    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[9999] pointer-events-auto';
+    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[9999] pointer-events-auto flex flex-col';
 
     if (side === 'bottom') {
       return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2`;
@@ -75,12 +75,7 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
   };
 
   return (
-    <div
-      className={getPanelClasses()}
-      onWheel={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <div className={getPanelClasses()}>
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
@@ -131,13 +126,8 @@ export function RelayNotesPanel({ relay, side, onClose }: RelayNotesPanelProps) 
             </div>
           </div>
         ) : (
-          <div className="h-full flex flex-col">
-            <div
-              className="flex-1 overflow-y-auto"
-              onWheel={(e) => {
-                e.stopPropagation();
-              }}
-            >
+          <div className="flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto">
               <div className="p-4 space-y-3">
                 {notes.map((note) => (
                   <NoteCard key={note.id} note={note} />
