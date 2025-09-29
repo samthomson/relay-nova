@@ -24,11 +24,12 @@ interface RelayNotesPanelProps {
   onClose: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onMouseDown?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onWheel?: (event: React.WheelEvent<HTMLDivElement>) => void;
 }
 
 export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
-  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onWheel }, ref) => {
+  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel }, ref) => {
   const { nostr } = useNostr();
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,6 +105,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
       className={getPanelClasses()}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onMouseDown={onMouseDown}
       data-relay-panel="true"
     >
       {/* Header */}
@@ -160,7 +162,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
 
       {/* Content */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        
+
 
         {/* Scrollable content area */}
         <div
