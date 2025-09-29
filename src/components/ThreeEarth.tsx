@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
-import { useRelayStatus } from '@/hooks/useRelayStatus';
 import { RelayInfoModal } from './RelayInfoModal';
 import { RelayNotesPanel } from './RelayNotesPanel';
 
@@ -157,14 +156,10 @@ export function ThreeEarth() {
   }, [openRelay]);
 
   const { data: relayLocations, isLoading: isLoadingLocations } = useRelayLocations();
-  const { data: relayStatuses, isLoading: isLoadingStatus } = useRelayStatus(relayLocations);
 
   // Calculate counts for display
-  const onlineCount = relayStatuses?.filter(r => r.isOnline).length || 0;
-  const totalCount = relayStatuses?.length || 0;
-  const checkedCount = relayStatuses?.filter(r => r.checked).length || 0;
-  const retryingCount = relayStatuses?.filter(r => r.isRetrying).length || 0;
-  const isLoading = isLoadingLocations || isLoadingStatus;
+  const totalCount = relayLocations?.length || 0;
+  const isLoading = isLoadingLocations;
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -592,21 +587,14 @@ export function ThreeEarth() {
         });
       }
 
-      // Animate star system based on relay checking progress
-      if (starLayersRef.current && relayStatuses) {
+      // Animate star system
+      if (starLayersRef.current) {
         const time = Date.now() * 0.001; // Animation time
-        const totalCount = relayStatuses.length || 1;
-        const checkedCount = relayStatuses.filter(r => r.checked).length || 0;
-        const onlineCount = relayStatuses.filter(r => r.isOnline).length || 0;
-        const checkedRatio = checkedCount / totalCount; // 0 to 1
-        const onlineRatio = onlineCount / totalCount; // 0 to 1
 
-        // Update shader uniforms for progressive star visibility
+        // Update shader uniforms for star animation
         const { material } = starLayersRef.current;
         if (material) {
           material.uniforms.time.value = time;
-          material.uniforms.checkedRatio.value = checkedRatio;
-          material.uniforms.onlineRatio.value = onlineRatio;
         }
       }
 
@@ -728,7 +716,7 @@ export function ThreeEarth() {
 
   // Update relay markers when data changes and scene is ready
   useEffect(() => {
-    if (!relayStatuses || !relayMarkersRef.current || !sceneReady) {
+    if (!relayLocations || !relayMarkersRef.current || !sceneReady) {
       return;
     }
 
@@ -739,7 +727,7 @@ export function ThreeEarth() {
 
     // Add relay markers with refined design
 
-    relayStatuses.forEach((relay, index) => {
+    relayLocations.forEach((relay, index) => {
       const radius = 2.05; // Slightly above Earth surface
 
       // Convert geographic coordinates to 3D Cartesian coordinates
@@ -759,16 +747,9 @@ export function ThreeEarth() {
       // Create marker group for easier management
       const markerGroup = new THREE.Group();
 
-      // Main marker - small and refined, color based on status
+      // Main marker - small and refined, default color since we're not checking status
       const markerGeometry = new THREE.SphereGeometry(0.02, 16, 12);
-      let markerColor;
-      if (!relay.checked) {
-        markerColor = 0xffff44; // Yellow for unchecked
-      } else if (relay.isRetrying) {
-        markerColor = 0xff8844; // Orange for retrying
-      } else {
-        markerColor = relay.isOnline ? 0x44ff44 : 0xff4444; // Green for online, red for offline
-      }
+      const markerColor = 0xffff44; // Yellow for all relays (not checking status)
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: markerColor,
         transparent: false
@@ -781,16 +762,9 @@ export function ThreeEarth() {
 
       markerGroup.add(marker);
 
-      // Create subtle outer ring for elegance, color based on status
+      // Create subtle outer ring for elegance, default color since we're not checking status
       const ringGeometry = new THREE.RingGeometry(0.025, 0.035, 24);
-      let ringColor;
-      if (!relay.checked) {
-        ringColor = 0xffff66; // Lighter yellow for unchecked
-      } else if (relay.isRetrying) {
-        ringColor = 0xffaa66; // Lighter orange for retrying
-      } else {
-        ringColor = relay.isOnline ? 0x66ff66 : 0xff6666; // Lighter green for online, lighter red for offline
-      }
+      const ringColor = 0xffff66; // Lighter yellow for all relays (not checking status)
       const ringMaterial = new THREE.MeshBasicMaterial({
         color: ringColor,
         transparent: true,
@@ -822,47 +796,9 @@ export function ThreeEarth() {
     });
 
     // Relay markers created successfully
-  }, [relayStatuses, sceneReady]);
+  }, [relayLocations, sceneReady]);
 
-  // Update marker colors in real-time when relay statuses change
-  useEffect(() => {
-    if (!relayStatuses || !relayMarkersRef.current || !sceneReady) {
-      return;
-    }
 
-    relayStatuses.forEach((relay, index) => {
-      const markerGroup = relayMarkersRef.current?.children[index];
-      if (!markerGroup) return;
-
-      // Update main marker color
-      const marker = markerGroup.children[0] as THREE.Mesh;
-      if (marker && marker.material) {
-        let markerColor;
-        if (!relay.checked) {
-          markerColor = 0xffff44; // Yellow for unchecked
-        } else if (relay.isRetrying) {
-          markerColor = 0xff8844; // Orange for retrying
-        } else {
-          markerColor = relay.isOnline ? 0x44ff44 : 0xff4444; // Green for online, red for offline
-        }
-        (marker.material as THREE.MeshBasicMaterial).color.setHex(markerColor);
-      }
-
-      // Update ring color
-      const ring = markerGroup.children[1] as THREE.Mesh;
-      if (ring && ring.material) {
-        let ringColor;
-        if (!relay.checked) {
-          ringColor = 0xffff66; // Lighter yellow for unchecked
-        } else if (relay.isRetrying) {
-          ringColor = 0xffaa66; // Lighter orange for retrying
-        } else {
-          ringColor = relay.isOnline ? 0x66ff66 : 0xff6666; // Lighter green for online, lighter red for offline
-        }
-        (ring.material as THREE.MeshBasicMaterial).color.setHex(ringColor);
-      }
-    });
-  }, [relayStatuses, sceneReady]);
 
   return (
     <div className="relative w-full h-screen">
@@ -871,35 +807,25 @@ export function ThreeEarth() {
         <div className="absolute top-20 right-6 z-20 bg-black/50 backdrop-blur-sm rounded-lg p-3">
           <div className="flex items-center space-x-2 text-white">
             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            <span className="text-sm">Loading relay locations...</span>
+            <span className="text-sm">Loading relay data...</span>
           </div>
         </div>
       )}
 
       {/* Controls and Info */}
       <div className="absolute top-20 right-6 z-20 space-y-3">
-        {relayStatuses && (
+        {relayLocations && (
           <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3">
             <div className="text-white text-sm space-y-1">
               <div>
-                <span className="font-semibold">{onlineCount}</span> of <span className="font-semibold">{totalCount}</span> relays online
+                <span className="font-semibold">{totalCount}</span> relays loaded
               </div>
-              {checkedCount < totalCount && (
-                <div className="text-xs text-gray-400">
-                  Checked <span className="font-semibold">{checkedCount}</span> of <span className="font-semibold">{totalCount}</span> relays
-                  {retryingCount > 0 && (
-                    <span className="text-orange-400 ml-2">
-                      • {retryingCount} retrying
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         )}
 
         <RelayInfoModal
-          relays={relayStatuses || []}
+          relays={relayLocations || []}
           isLoading={isLoading}
         />
       </div>
