@@ -53,6 +53,9 @@ export function ThreeEarth() {
   // Track clicks outside the relay panel
   const relayPanelContainerRef = useRef<HTMLDivElement>(null);
 
+  // Store star layer references for animation
+  const starLayersRef = useRef<any>(null);
+
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
     if (!relayPanelRef.current || !openRelayRef.current) return false;
@@ -272,30 +275,91 @@ export function ThreeEarth() {
     const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
     scene.add(atmosphere);
 
-    // Create stars
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsCount = 5000;
-    const starsPositions = new Float32Array(starsCount * 3);
+    // Create enhanced starfield with multiple layers for better visual depth
+    const createStarLayer = (count: number, minRadius: number, maxRadius: number, size: number, opacity: number) => {
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
 
-    for (let i = 0; i < starsCount; i++) {
-      const radius = 100 + Math.random() * 200;
+      for (let i = 0; i < count; i++) {
+        const radius = minRadius + Math.random() * (maxRadius - minRadius);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(Math.random() * 2 - 1);
+
+        positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = radius * Math.cos(phi);
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const material = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: size,
+        transparent: true,
+        opacity: opacity,
+        sizeAttenuation: true
+      });
+
+      return new THREE.Points(geometry, material);
+    };
+
+    // Create multiple star layers for depth
+    const farStars = createStarLayer(8000, 200, 400, 0.4, 0.6);  // Distant, small stars
+    const midStars = createStarLayer(4000, 150, 250, 0.8, 0.8); // Medium stars
+    const nearStars = createStarLayer(2000, 100, 180, 1.2, 1.0); // Closer, brighter stars
+
+    // Add some colored stars for visual interest
+    const coloredStarsGeometry = new THREE.BufferGeometry();
+    const coloredStarsPositions = new Float32Array(1000 * 3);
+    const coloredStarColors = new Float32Array(1000 * 3);
+
+    for (let i = 0; i < 1000; i++) {
+      const radius = 120 + Math.random() * 180;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(Math.random() * 2 - 1);
 
-      starsPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      starsPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      starsPositions[i * 3 + 2] = radius * Math.cos(phi);
+      coloredStarsPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      coloredStarsPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      coloredStarsPositions[i * 3 + 2] = radius * Math.cos(phi);
+
+      // Add some color variation (blues, yellows, slight oranges)
+      const colorChoice = Math.random();
+      if (colorChoice < 0.3) {
+        // Blue stars
+        coloredStarColors[i * 3] = 0.7 + Math.random() * 0.3;     // R
+        coloredStarColors[i * 3 + 1] = 0.8 + Math.random() * 0.2; // G
+        coloredStarColors[i * 3 + 2] = 1.0;                          // B
+      } else if (colorChoice < 0.7) {
+        // Yellow-white stars
+        coloredStarColors[i * 3] = 1.0;                          // R
+        coloredStarColors[i * 3 + 1] = 0.9 + Math.random() * 0.1; // G
+        coloredStarColors[i * 3 + 2] = 0.7 + Math.random() * 0.3; // B
+      } else {
+        // Slightly orange stars
+        coloredStarColors[i * 3] = 1.0;                          // R
+        coloredStarColors[i * 3 + 1] = 0.8 + Math.random() * 0.2; // G
+        coloredStarColors[i * 3 + 2] = 0.6 + Math.random() * 0.2; // B
+      }
     }
 
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 1,
+    coloredStarsGeometry.setAttribute('position', new THREE.BufferAttribute(coloredStarsPositions, 3));
+    coloredStarsGeometry.setAttribute('color', new THREE.BufferAttribute(coloredStarColors, 3));
+    const coloredStarsMaterial = new THREE.PointsMaterial({
+      size: 1.5,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.9,
+      vertexColors: true,
+      sizeAttenuation: true
     });
-    const stars = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(stars);
+    const coloredStars = new THREE.Points(coloredStarsGeometry, coloredStarsMaterial);
+
+    // Add all star layers to scene
+    scene.add(farStars);
+    scene.add(midStars);
+    scene.add(nearStars);
+    scene.add(coloredStars);
+
+    // Store references for animation
+    starLayersRef.current = { farStars, midStars, nearStars, coloredStars };
 
     // Relay markers group was already created above
 
@@ -526,6 +590,57 @@ export function ThreeEarth() {
             });
           }
         });
+      }
+
+      // Animate star layers based on relay checking progress
+      if (starLayersRef.current && relayStatuses) {
+        const time = Date.now() * 0.0005; // Slower star animation
+        const totalCount = relayStatuses.length || 1;
+        const checkedCount = relayStatuses.filter(r => r.checked).length || 0;
+        const onlineCount = relayStatuses.filter(r => r.isOnline).length || 0;
+        const checkedRatio = checkedCount / totalCount; // 0 to 1
+        const onlineRatio = onlineCount / totalCount; // 0 to 1
+
+        // Animate star opacity based on checking progress
+        // As more relays are checked, more stars become visible
+        const { farStars, midStars, nearStars, coloredStars } = starLayersRef.current;
+
+        if (farStars && farStars.material) {
+          const farMaterial = farStars.material as THREE.PointsMaterial;
+          // Far stars visible immediately, get brighter as we progress
+          farMaterial.opacity = 0.3 + (checkedRatio * 0.3);
+        }
+
+        if (midStars && midStars.material) {
+          const midMaterial = midStars.material as THREE.PointsMaterial;
+          // Mid stars fade in based on checking progress
+          midMaterial.opacity = 0.2 + (checkedRatio * 0.5);
+        }
+
+        if (nearStars && nearStars.material) {
+          const nearMaterial = nearStars.material as THREE.PointsMaterial;
+          // Near stars appear as relays come online
+          nearMaterial.opacity = 0.1 + (onlineRatio * 0.7);
+        }
+
+        if (coloredStars && coloredStars.material) {
+          const coloredMaterial = coloredStars.material as THREE.PointsMaterial;
+          // Colored stars represent successful connections
+          coloredMaterial.opacity = 0.2 + (onlineRatio * 0.6);
+        }
+
+        // Subtle rotation of star field
+        if (farStars) farStars.rotation.y += 0.0001;
+        if (midStars) midStars.rotation.y += 0.00015;
+        if (nearStars) nearStars.rotation.y += 0.0002;
+        if (coloredStars) coloredStars.rotation.y += 0.00025;
+
+        // Gentle twinkling effect for some stars
+        const twinkleTime = time * 2;
+        if (coloredStars && coloredStars.material) {
+          const coloredMaterial = coloredStars.material as THREE.PointsMaterial;
+          coloredMaterial.opacity = (0.2 + (onlineRatio * 0.6)) * (0.8 + Math.sin(twinkleTime) * 0.2);
+        }
       }
 
       renderer.render(scene, camera);

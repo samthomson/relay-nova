@@ -10,6 +10,17 @@
     }
   },
   {
+    "url": "wss://nostr-pub.wellorder.net",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 45.526,
+      "longitude": -122.9874,
+      "ip": "5.78.98.165"
+    }
+  },
+  {
     "url": "wss://nostr.mom",
     "location": {
       "country": "DE",
@@ -70,6 +81,17 @@
     }
   },
   {
+    "url": "wss://knostr.neutrine.com",
+    "location": {
+      "country": "France",
+      "countryCode": "France",
+      "continent": "Europe",
+      "latitude": 48.8534,
+      "longitude": 2.3488,
+      "ip": "141.145.193.65"
+    }
+  },
+  {
     "url": "wss://nostr.vulpem.com",
     "location": {
       "country": "DE",
@@ -77,6 +99,1161 @@
       "continent": "Unknown",
       "latitude": 49.4527,
       "longitude": 11.0783
+    }
+  },
+  {
+    "url": "wss://nostr-verif.slothy.win",
+    "location": {
+      "country": "Canada",
+      "countryCode": "Canada",
+      "continent": "North America",
+      "latitude": 43.6561,
+      "longitude": -79.3406,
+      "ip": "172.67.131.195"
+    }
+  },
+  {
+    "url": "wss://relay.lexingtonbitcoin.org",
+    "location": {
+      "country": "Canada",
+      "countryCode": "Canada",
+      "continent": "North America",
+      "latitude": 43.6561,
+      "longitude": -79.3406,
+      "ip": "172.67.157.249"
+    }
+  },
+  {
+    "url": "wss://nostr-1.nbo.angani.co",
+    "location": {
+      "country": "Kenya",
+      "countryCode": "Kenya",
+      "continent": "Africa",
+      "latitude": -1.2841,
+      "longitude": 36.8155,
+      "ip": "62.12.112.214"
+    }
+  },
+  {
+    "url": "wss://relay.wellorder.net",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 45.526,
+      "longitude": -122.9874,
+      "ip": "5.78.98.165"
+    }
+  },
+  {
+    "url": "wss://nostr.easydns.ca",
+    "location": {
+      "country": "Canada",
+      "countryCode": "Canada",
+      "continent": "North America",
+      "latitude": 43.6661,
+      "longitude": -79.529,
+      "ip": "64.68.204.22"
+    }
+  },
+  {
+    "url": "wss://relay.dwadziesciajeden.pl",
+    "location": {
+      "country": "Poland",
+      "countryCode": "Poland",
+      "continent": "Europe",
+      "latitude": 52.2299,
+      "longitude": 21.0093,
+      "ip": "151.115.76.107"
+    }
+  },
+  {
+    "url": "wss://nostr.data.haus",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.4777,
+      "longitude": 12.3649,
+      "ip": "5.75.228.192"
+    }
+  },
+  {
+    "url": "wss://nostr.wine",
+    "location": {
+      "country": "Canada",
+      "countryCode": "Canada",
+      "continent": "North America",
+      "latitude": 43.6561,
+      "longitude": -79.3406,
+      "ip": "104.26.3.27"
+    }
+  },
+  {
+    "url": "wss://nostr.koning-degraaf.nl",
+    "location": {
+      "country": "The Netherlands",
+      "countryCode": "The Netherlands",
+      "continent": "Unknown",
+      "latitude": 52.25,
+      "longitude": 5.75,
+      "ip": "81.172.174.239"
+    }
+  },
+  {
+    "url": "wss://nostr21.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.714271545410156,
+      "longitude": -74.00596618652344,
+      "ip": "154.38.191.249"
+    }
+  },
+  {
+    "url": "wss://relay.nostrview.com",
+    "location": {
+      "country": "France",
+      "countryCode": "France",
+      "continent": "Europe",
+      "latitude": 48.85580062866211,
+      "longitude": 2.349400043487549,
+      "ip": "141.145.193.65"
+    }
+  },
+  {
+    "url": "wss://relay.nostromo.social",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 49.45420837402344,
+      "longitude": 11.077520370483398,
+      "ip": "195.201.92.24"
+    }
+  },
+  {
+    "url": "wss://offchain.pub",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 34.05149841308594,
+      "longitude": -118.27069854736328,
+      "ip": "148.135.34.86"
+    }
+  },
+  {
+    "url": "wss://relay.nostr.wirednet.jp",
+    "location": {
+      "country": "Japan",
+      "countryCode": "Japan",
+      "continent": "Asia",
+      "latitude": 35.689998626708984,
+      "longitude": 139.69000244140625,
+      "ip": "153.127.31.45"
+    }
+  },
+  {
+    "url": "wss://bitcoinmaximalists.online",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.91640090942383,
+      "longitude": 6.80709981918335,
+      "ip": "89.163.130.107"
+    }
+  },
+  {
+    "url": "wss://nproxy.kristapsk.lv",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "95.216.174.115"
+    }
+  },
+  {
+    "url": "wss://nostr.bitcoiner.social",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.148399353027344,
+      "longitude": -94.568603515625,
+      "ip": "23.137.254.12"
+    }
+  },
+  {
+    "url": "wss://nostr.roundrockbitcoiners.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.7963981628418,
+      "longitude": -74.02030181884766,
+      "ip": "137.184.108.195"
+    }
+  },
+  {
+    "url": "wss://nostr-dev.wellorder.net",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 45.52288818359375,
+      "longitude": -122.98983001708984,
+      "ip": "5.78.98.165"
+    }
+  },
+  {
+    "url": "wss://nr.yay.so",
+    "location": {
+      "country": "Switzerland",
+      "countryCode": "Switzerland",
+      "continent": "Europe",
+      "latitude": 47.144901275634766,
+      "longitude": 8.155099868774414,
+      "ip": "185.25.224.220"
+    }
+  },
+  {
+    "url": "wss://atlas.nostr.land",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "135.181.56.118"
+    }
+  },
+  {
+    "url": "wss://nostr.pjv.me",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 45.52288818359375,
+      "longitude": -122.98983001708984,
+      "ip": "5.78.90.9"
+    }
+  },
+  {
+    "url": "wss://eden.nostr.land",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "135.181.56.118"
+    }
+  },
+  {
+    "url": "wss://nostr-verified.wellorder.net",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 45.52288818359375,
+      "longitude": -122.98983001708984,
+      "ip": "5.78.98.165"
+    }
+  },
+  {
+    "url": "wss://relay.nostr.nu",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 51.1864013671875,
+      "longitude": 6.862400054931641,
+      "ip": "45.67.216.107"
+    }
+  },
+  {
+    "url": "wss://nostr-relay.bitcoin.ninja",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.7599983215332,
+      "longitude": -98.5,
+      "ip": "208.68.6.73"
+    }
+  },
+  {
+    "url": "wss://paid.no.str.cr",
+    "location": {
+      "country": "Costa Rica",
+      "countryCode": "Costa Rica",
+      "continent": "Unknown",
+      "latitude": 10.002900123596191,
+      "longitude": -84,
+      "ip": "143.202.162.130"
+    }
+  },
+  {
+    "url": "wss://bitcoiner.social",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.148399353027344,
+      "longitude": -94.568603515625,
+      "ip": "23.137.254.12"
+    }
+  },
+  {
+    "url": "wss://nostr.sebastix.dev",
+    "location": {
+      "country": "The Netherlands",
+      "countryCode": "The Netherlands",
+      "continent": "Unknown",
+      "latitude": 51.614898681640625,
+      "longitude": 5.5335001945495605,
+      "ip": "136.144.236.189"
+    }
+  },
+  {
+    "url": "wss://nostr.cizmar.net",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 51.29930114746094,
+      "longitude": 9.491000175476074,
+      "ip": "109.230.195.105"
+    }
+  },
+  {
+    "url": "wss://nostr.asdf.mx",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 32.81370162963867,
+      "longitude": -96.87039947509766,
+      "ip": "104.128.239.225"
+    }
+  },
+  {
+    "url": "wss://nostr.decentony.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 37.39310073852539,
+      "longitude": -121.96199798583984,
+      "ip": "164.92.76.80"
+    }
+  },
+  {
+    "url": "wss://xmr.usenostr.org",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 49.442298889160156,
+      "longitude": 11.019100189208984,
+      "ip": "185.194.143.52"
+    }
+  },
+  {
+    "url": "wss://at.nostrworks.com",
+    "location": {
+      "country": "Austria",
+      "countryCode": "Austria",
+      "continent": "Europe",
+      "latitude": 48.195098876953125,
+      "longitude": 16.34830093383789,
+      "ip": "188.172.228.55"
+    }
+  },
+  {
+    "url": "wss://nostr.sovbit.host",
+    "location": {
+      "country": "Iceland",
+      "countryCode": "Iceland",
+      "continent": "Europe",
+      "latitude": 65,
+      "longitude": -18,
+      "ip": "93.95.231.78"
+    }
+  },
+  {
+    "url": "wss://nostr.1sat.org",
+    "location": {
+      "country": "Singapore",
+      "countryCode": "Singapore",
+      "continent": "Asia",
+      "latitude": 1.3140000104904175,
+      "longitude": 103.68389892578125,
+      "ip": "45.77.255.252"
+    }
+  },
+  {
+    "url": "wss://nostr.256k1.dev",
+    "location": {
+      "country": "United Kingdom",
+      "countryCode": "United Kingdom",
+      "continent": "Europe",
+      "latitude": 51.50809860229492,
+      "longitude": -0.12780000269412994,
+      "ip": "150.228.36.148"
+    }
+  },
+  {
+    "url": "wss://relay.beta.fogtype.com",
+    "location": {
+      "country": "Japan",
+      "countryCode": "Japan",
+      "continent": "Asia",
+      "latitude": 35.81840133666992,
+      "longitude": 140.12319946289062,
+      "ip": "168.138.209.130"
+    }
+  },
+  {
+    "url": "wss://btc.klendazu.com",
+    "location": {
+      "country": "Spain",
+      "countryCode": "Spain",
+      "continent": "Europe",
+      "latitude": 40.32099914550781,
+      "longitude": -3.7225000858306885,
+      "ip": "88.3.210.198"
+    }
+  },
+  {
+    "url": "wss://slick.mjex.me",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.018001556396484,
+      "longitude": -77.53900146484375,
+      "ip": "129.80.219.113"
+    }
+  },
+  {
+    "url": "wss://nostr.lorentz.is",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.05649948120117,
+      "longitude": -86.01589965820312,
+      "ip": "76.248.248.219"
+    }
+  },
+  {
+    "url": "wss://puravida.nostr.land",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "135.181.56.118"
+    }
+  },
+  {
+    "url": "wss://nostr.sectiontwo.org",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 37.39310073852539,
+      "longitude": -121.96199798583984,
+      "ip": "146.190.56.86"
+    }
+  },
+  {
+    "url": "wss://nostr.oxtr.dev",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.47787857055664,
+      "longitude": 12.37129020690918,
+      "ip": "144.76.199.124"
+    }
+  },
+  {
+    "url": "wss://relay.s3x.social",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 37.750999450683594,
+      "longitude": -97.8219985961914,
+      "ip": "208.122.192.13"
+    }
+  },
+  {
+    "url": "wss://relay.nostr.moe",
+    "location": {
+      "country": "Singapore",
+      "countryCode": "Singapore",
+      "continent": "Asia",
+      "latitude": 1.3667000532150269,
+      "longitude": 103.80000305175781,
+      "ip": "43.159.99.7"
+    }
+  },
+  {
+    "url": "wss://nostr.liberty.fans",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 38.800331115722656,
+      "longitude": -90.62651062011719,
+      "ip": "71.86.10.194"
+    }
+  },
+  {
+    "url": "wss://nostr.21crypto.ch",
+    "location": {
+      "country": "Switzerland",
+      "countryCode": "Switzerland",
+      "continent": "Europe",
+      "latitude": 46.235599517822266,
+      "longitude": 6.074699878692627,
+      "ip": "85.195.215.70"
+    }
+  },
+  {
+    "url": "wss://nostr.frostr.xyz",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 32.94818115234375,
+      "longitude": -96.72972106933594,
+      "ip": "45.56.73.85"
+    }
+  },
+  {
+    "url": "wss://nostr.d11n.net",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 53.05540084838867,
+      "longitude": 8.809200286865234,
+      "ip": "84.174.132.193"
+    }
+  },
+  {
+    "url": "wss://relay.nostr.wf",
+    "location": {
+      "country": "France",
+      "countryCode": "France",
+      "continent": "Europe",
+      "latitude": 48.97420120239258,
+      "longitude": 8.185099601745605,
+      "ip": "144.91.98.42"
+    }
+  },
+  {
+    "url": "wss://nostr.land",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "135.181.56.118"
+    }
+  },
+  {
+    "url": "wss://relay.nostrplebs.com",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "37.27.187.0"
+    }
+  },
+  {
+    "url": "wss://yestr.me",
+    "location": {
+      "country": "Canada",
+      "countryCode": "Canada",
+      "continent": "North America",
+      "latitude": 43.631900787353516,
+      "longitude": -79.37159729003906,
+      "ip": "170.75.168.214"
+    }
+  },
+  {
+    "url": "wss://nostr-02.dorafactory.org",
+    "location": {
+      "country": "Singapore",
+      "countryCode": "Singapore",
+      "continent": "Asia",
+      "latitude": 1.2871999740600586,
+      "longitude": 103.85070037841797,
+      "ip": "34.87.152.12"
+    }
+  },
+  {
+    "url": "wss://nostr.zbd.gg",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.04372024536133,
+      "longitude": -77.48748779296875,
+      "ip": "23.23.131.230"
+    }
+  },
+  {
+    "url": "wss://relay.nostr.sc",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 33.80189895629883,
+      "longitude": -84.38610076904297,
+      "ip": "107.130.212.108"
+    }
+  },
+  {
+    "url": "wss://search.nos.today",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 37.750999450683594,
+      "longitude": -97.8219985961914,
+      "ip": "66.241.124.129"
+    }
+  },
+  {
+    "url": "wss://yabu.me",
+    "location": {
+      "country": "Japan",
+      "countryCode": "Japan",
+      "continent": "Asia",
+      "latitude": 35.61640167236328,
+      "longitude": 139.74249267578125,
+      "ip": "149.28.29.200"
+    }
+  },
+  {
+    "url": "wss://nostr.strits.dk",
+    "location": {
+      "country": "Denmark",
+      "countryCode": "Denmark",
+      "continent": "Europe",
+      "latitude": 56.43939971923828,
+      "longitude": 9.409600257873535,
+      "ip": "86.52.57.94"
+    }
+  },
+  {
+    "url": "wss://nostr.xmr.rocks",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 49.45420837402344,
+      "longitude": 11.077520370483398,
+      "ip": "116.203.151.29"
+    }
+  },
+  {
+    "url": "wss://ithurtswhenip.ee",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 51.22172164916992,
+      "longitude": 6.776159763336182,
+      "ip": "149.102.150.253"
+    }
+  },
+  {
+    "url": "wss://nostr.ingwie.me",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.47787857055664,
+      "longitude": 12.37129020690918,
+      "ip": "49.13.8.103"
+    }
+  },
+  {
+    "url": "wss://nostr.gleeze.com",
+    "location": {
+      "country": "Hungary",
+      "countryCode": "Hungary",
+      "continent": "Europe",
+      "latitude": 47.5,
+      "longitude": 19.041200637817383,
+      "ip": "92.249.197.108"
+    }
+  },
+  {
+    "url": "wss://black.nostrcity.club",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 37.750999450683594,
+      "longitude": -97.8219985961914,
+      "ip": "66.241.125.187"
+    }
+  },
+  {
+    "url": "wss://nostr.hifish.org",
+    "location": {
+      "country": "Switzerland",
+      "countryCode": "Switzerland",
+      "continent": "Europe",
+      "latitude": 47.377899169921875,
+      "longitude": 8.523599624633789,
+      "ip": "212.51.141.108"
+    }
+  },
+  {
+    "url": "wss://nostr.hekster.org",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 37.39310073852539,
+      "longitude": -121.96199798583984,
+      "ip": "137.184.114.76"
+    }
+  },
+  {
+    "url": "wss://nostr.reelnetwork.eu",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "65.109.169.117"
+    }
+  },
+  {
+    "url": "wss://relay.wavlake.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 41.25910186767578,
+      "longitude": -95.85169982910156,
+      "ip": "34.59.25.35"
+    }
+  },
+  {
+    "url": "wss://relay.nostr.lighting",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 49.45420837402344,
+      "longitude": 11.077520370483398,
+      "ip": "142.132.160.186"
+    }
+  },
+  {
+    "url": "wss://nostr.sagaciousd.com",
+    "location": {
+      "country": "Canada",
+      "countryCode": "Canada",
+      "continent": "North America",
+      "latitude": 49.24861145019531,
+      "longitude": -123.10784149169922,
+      "ip": "38.175.134.90"
+    }
+  },
+  {
+    "url": "wss://nostr-01.yakihonne.com",
+    "location": {
+      "country": "Singapore",
+      "countryCode": "Singapore",
+      "continent": "Asia",
+      "latitude": 1.3140000104904175,
+      "longitude": 103.68389892578125,
+      "ip": "45.77.255.109"
+    }
+  },
+  {
+    "url": "wss://nostr.fort-btc.club",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 33.465599060058594,
+      "longitude": -111.99559783935547,
+      "ip": "129.146.239.110"
+    }
+  },
+  {
+    "url": "wss://relay.bitcoinpark.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.961181640625,
+      "longitude": -82.99878692626953,
+      "ip": "3.17.141.204"
+    }
+  },
+  {
+    "url": "wss://nostr01.counterclockwise.io",
+    "location": {
+      "country": "United Kingdom",
+      "countryCode": "United Kingdom",
+      "continent": "Europe",
+      "latitude": 51.5177001953125,
+      "longitude": -0.6215000152587891,
+      "ip": "165.232.33.156"
+    }
+  },
+  {
+    "url": "wss://christpill.nostr1.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 41.04460144042969,
+      "longitude": -73.95919799804688,
+      "ip": "82.197.67.43"
+    }
+  },
+  {
+    "url": "wss://nostr.sathoarder.com",
+    "location": {
+      "country": "France",
+      "countryCode": "France",
+      "continent": "Europe",
+      "latitude": 48.584800720214844,
+      "longitude": 7.7418999671936035,
+      "ip": "87.119.220.6"
+    }
+  },
+  {
+    "url": "wss://nostr.sudocarlos.com",
+    "location": {
+      "country": "Canada",
+      "countryCode": "Canada",
+      "continent": "North America",
+      "latitude": 43.631900787353516,
+      "longitude": -79.37159729003906,
+      "ip": "170.75.168.159"
+    }
+  },
+  {
+    "url": "wss://wbc.nostr1.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.714271545410156,
+      "longitude": -74.00596618652344,
+      "ip": "154.38.180.90"
+    }
+  },
+  {
+    "url": "wss://nostr-relay.psfoundation.info",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.04372024536133,
+      "longitude": -77.48748779296875,
+      "ip": "5.161.72.148"
+    }
+  },
+  {
+    "url": "wss://purplerelay.com",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.11552047729492,
+      "longitude": 8.68416976928711,
+      "ip": "3.78.120.163"
+    }
+  },
+  {
+    "url": "wss://relay.orangepill.ovh",
+    "location": {
+      "country": "France",
+      "countryCode": "France",
+      "continent": "Europe",
+      "latitude": 48.85820007324219,
+      "longitude": 2.33870005607605,
+      "ip": "82.67.102.15"
+    }
+  },
+  {
+    "url": "wss://relay.ingwie.me",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.47787857055664,
+      "longitude": 12.37129020690918,
+      "ip": "49.13.8.103"
+    }
+  },
+  {
+    "url": "wss://nostr.2b9t.xyz",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 34.05223083496094,
+      "longitude": -118.24368286132812,
+      "ip": "172.233.142.111"
+    }
+  },
+  {
+    "url": "wss://nostr.bitcoinist.org",
+    "location": {
+      "country": "Finland",
+      "countryCode": "Finland",
+      "continent": "Europe",
+      "latitude": 60.16952133178711,
+      "longitude": 24.935449600219727,
+      "ip": "135.181.215.176"
+    }
+  },
+  {
+    "url": "wss://nostr.cloud.vinney.xyz",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.83639907836914,
+      "longitude": -74.14029693603516,
+      "ip": "45.55.46.243"
+    }
+  },
+  {
+    "url": "wss://nostr.8777.ch",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.606300354003906,
+      "longitude": -74.17739868164062,
+      "ip": "198.98.61.88"
+    }
+  },
+  {
+    "url": "wss://nostr.stakey.net",
+    "location": {
+      "country": "The Netherlands",
+      "countryCode": "The Netherlands",
+      "continent": "Unknown",
+      "latitude": 52.53779983520508,
+      "longitude": 5.696599960327148,
+      "ip": "5.255.109.114"
+    }
+  },
+  {
+    "url": "wss://relay.guggero.org",
+    "location": {
+      "country": "Switzerland",
+      "countryCode": "Switzerland",
+      "continent": "Europe",
+      "latitude": 47.051700592041016,
+      "longitude": 8.330300331115723,
+      "ip": "80.253.94.252"
+    }
+  },
+  {
+    "url": "wss://pyramid.fiatjaf.com",
+    "location": {
+      "country": "France",
+      "countryCode": "France",
+      "continent": "Europe",
+      "latitude": 48.97420120239258,
+      "longitude": 8.185099601745605,
+      "ip": "144.91.118.169"
+    }
+  },
+  {
+    "url": "wss://frens.nostr1.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.714271545410156,
+      "longitude": -74.00596618652344,
+      "ip": "154.38.180.90"
+    }
+  },
+  {
+    "url": "wss://a.nos.lol",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.47787857055664,
+      "longitude": 12.37129020690918,
+      "ip": "5.9.78.12"
+    }
+  },
+  {
+    "url": "wss://relay.weloveit.info",
+    "location": {
+      "country": "France",
+      "countryCode": "France",
+      "continent": "Europe",
+      "latitude": 48.85820007324219,
+      "longitude": 2.33870005607605,
+      "ip": "146.59.155.110"
+    }
+  },
+  {
+    "url": "wss://relay.magiccity.live",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 25.774269104003906,
+      "longitude": -80.19365692138672,
+      "ip": "45.32.170.237"
+    }
+  },
+  {
+    "url": "wss://nostr.notribe.net",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.83639907836914,
+      "longitude": -74.14029693603516,
+      "ip": "157.245.120.150"
+    }
+  },
+  {
+    "url": "wss://relay.westernbtc.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 37.750999450683594,
+      "longitude": -97.8219985961914,
+      "ip": "69.59.196.28"
+    }
+  },
+  {
+    "url": "wss://theforest.nostr1.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 41.04460144042969,
+      "longitude": -73.95919799804688,
+      "ip": "82.197.67.43"
+    }
+  },
+  {
+    "url": "wss://problematic.network",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 39.961181640625,
+      "longitude": -82.99878692626953,
+      "ip": "18.188.54.16"
+    }
+  },
+  {
+    "url": "wss://relay.noderunners.network",
+    "location": {
+      "country": "Poland",
+      "countryCode": "Poland",
+      "continent": "Europe",
+      "latitude": 52.23939895629883,
+      "longitude": 21.03619956970215,
+      "ip": "146.59.44.3"
+    }
+  },
+  {
+    "url": "wss://relay.azzamo.net",
+    "location": {
+      "country": "Poland",
+      "countryCode": "Poland",
+      "continent": "Europe",
+      "latitude": 52.23939895629883,
+      "longitude": 21.03619956970215,
+      "ip": "146.59.44.3"
+    }
+  },
+  {
+    "url": "wss://bevo.nostr1.com",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 40.714271545410156,
+      "longitude": -74.00596618652344,
+      "ip": "154.38.180.90"
+    }
+  },
+  {
+    "url": "wss://freelay.sovbit.host",
+    "location": {
+      "country": "Iceland",
+      "countryCode": "Iceland",
+      "continent": "Europe",
+      "latitude": 65,
+      "longitude": -18,
+      "ip": "93.95.231.78"
+    }
+  },
+  {
+    "url": "wss://relay.usefusion.ai",
+    "location": {
+      "country": "United States",
+      "countryCode": "United States",
+      "continent": "North America",
+      "latitude": 38.70949935913086,
+      "longitude": -78.15390014648438,
+      "ip": "20.168.234.5"
+    }
+  },
+  {
+    "url": "wss://relay.varke.eu",
+    "location": {
+      "country": "The Netherlands",
+      "countryCode": "The Netherlands",
+      "continent": "Unknown",
+      "latitude": 52.695831298828125,
+      "longitude": 6.194439888000488,
+      "ip": "89.116.139.176"
+    }
+  },
+  {
+    "url": "wss://relay.camelus.app",
+    "location": {
+      "country": "Germany",
+      "countryCode": "Germany",
+      "continent": "Europe",
+      "latitude": 50.11690139770508,
+      "longitude": 8.683699607849121,
+      "ip": "165.22.86.24"
     }
   }
 ]
