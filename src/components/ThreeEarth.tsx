@@ -716,13 +716,13 @@ export function ThreeEarth() {
 
 
 
-  // Update marker sizes when zoom level changes
+  // Update marker sizes and clustering when zoom level changes
   useEffect(() => {
     if (!relayLocations || !relayMarkersRef.current || !sceneReady || !cameraRef.current) {
       return;
     }
 
-    const updateMarkerSizes = () => {
+    const updateMarkers = () => {
       const cameraDistance = cameraRef.current!.position.z;
       const baseSize = 0.008; // Much smaller base size
       // Stronger inverse relationship: much smaller when zoomed in
@@ -779,9 +779,73 @@ export function ThreeEarth() {
     };
   }, [relayLocations, sceneReady]);
 
+  // Function to calculate distance between two geographic points
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Function to detect and cluster relays (only when zoomed in)
+  const clusterRelays = (locations: typeof relayLocations, cameraDistance: number) => {
+    if (!locations) return [];
+
+    // Only cluster when zoomed in close (cameraDistance < 5)
+    if (cameraDistance >= 5) {
+      return locations.map(relay => ({ ...relay, clusterIndex: 0, clusterSize: 1 }));
+    }
+
+    const processed = [...locations];
+    const clusterThreshold = 50; // km - distance threshold for clustering
+    const used = new Set<number>();
+    const clusters: typeof locations[][] = [];
+
+    for (let i = 0; i < processed.length; i++) {
+      if (used.has(i)) continue;
+
+      const cluster = [processed[i]];
+      used.add(i);
+
+      for (let j = i + 1; j < processed.length; j++) {
+        if (used.has(j)) continue;
+
+        const distance = calculateDistance(
+          processed[i].lat, processed[i].lng,
+          processed[j].lat, processed[j].lng
+        );
+
+        if (distance < clusterThreshold) {
+          cluster.push(processed[j]);
+          used.add(j);
+        }
+      }
+
+      clusters.push(cluster);
+    }
+
+    // Apply z-axis offsets to clustered markers
+    return clusters.flatMap((cluster, clusterIndex) => {
+      if (cluster.length === 1) {
+        return [{ ...cluster[0], clusterIndex: 0, clusterSize: 1 }];
+      }
+
+      return cluster.map((relay, markerIndex) => ({
+        ...relay,
+        clusterIndex: markerIndex,
+        clusterSize: cluster.length,
+        zOffset: markerIndex * 0.15 // Stack along z-axis away from Earth center
+      }));
+    });
+  };
+
   // Update relay markers when data changes and scene is ready
   useEffect(() => {
-    if (!relayLocations || !relayMarkersRef.current || !sceneReady) {
+    if (!relayLocations || !relayMarkersRef.current || !sceneReady || !cameraRef.current) {
       return;
     }
 
@@ -790,8 +854,12 @@ export function ThreeEarth() {
       relayMarkersRef.current.remove(relayMarkersRef.current.children[0]);
     }
 
-    // Add relay markers with simple, clean design
-    relayLocations.forEach((relay, index) => {
+    // Cluster relays based on zoom level
+    const cameraDistance = cameraRef.current.position.z;
+    const clusteredRelays = clusterRelays(relayLocations, cameraDistance);
+
+    // Add relay markers with smart clustering
+    clusteredRelays.forEach((relay, index) => {
       // Calculate marker size inversely based on camera zoom level
       const cameraDistance = cameraRef.current?.position.z || 6;
       const baseSize = 0.008; // Much smaller base size
@@ -865,8 +933,9 @@ export function ThreeEarth() {
       const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
       markerGroup.add(pulse);
 
-      // Position the entire group
-      markerGroup.position.set(x, y, z);
+      // Position the entire group with z-axis offset for clustering
+      const zOffset = relay.zOffset || 0;
+      markerGroup.position.set(x, y, z + zOffset);
 
       relayMarkersRef.current!.add(markerGroup);
 

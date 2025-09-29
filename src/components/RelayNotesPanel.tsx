@@ -109,22 +109,49 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <MessageCircle className="w-5 h-5 text-blue-400" />
-            <div>
-              <h3 className="font-semibold text-lg">
-                {relay.city ? `${relay.city}, ${relay.country}` : 'Relay Notes'}
-              </h3>
-              <p className="text-sm text-gray-400 font-mono">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <MessageCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-lg truncate">
                 {relay.url.replace('wss://', '').replace('ws://', '')}
-              </p>
+              </h3>
+              {relay.city && (
+                <p className="text-sm text-gray-400 truncate">
+                  {relay.city}, {relay.country}
+                </p>
+              )}
             </div>
           </div>
+
+          {/* Up/Down buttons */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={scrollUp}
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              disabled={notes.length === 0}
+              title="Scroll up"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={scrollDown}
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              disabled={notes.length === 0}
+              title="Scroll down"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </div>
+
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-white/70 hover:text-white hover:bg-white/10"
+            className="text-white/70 hover:text-white hover:bg-white/10 flex-shrink-0"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -133,33 +160,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
 
       {/* Content */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Scroll buttons - always show when not loading or in error state */}
-        {!isLoading && !error && (
-          <div className="flex justify-center p-2 border-b border-white/10 flex-shrink-0">
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={scrollUp}
-                className="text-white/70 hover:text-white hover:bg-white/10"
-                disabled={notes.length === 0}
-                title="Scroll up"
-              >
-                <ChevronUp className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={scrollDown}
-                className="text-white/70 hover:text-white hover:bg-white/10"
-                disabled={notes.length === 0}
-                title="Scroll down"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+        
 
         {/* Scrollable content area */}
         <div
