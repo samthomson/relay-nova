@@ -852,8 +852,10 @@ export function ThreeEarth() {
         if (relay.clusterSize && relay.clusterSize > 1) {
           // Only clustered markers get tiny altitude offset
           const normalVector = new THREE.Vector3(x, y, z).normalize();
-          const altitudePosition = normalVector.multiplyScalar(earthRadius + altitudeOffset);
-          markerGroup.position.copy(altitudePosition);
+          // First position at Earth surface, then add altitude offset
+          const surfacePosition = normalVector.multiplyScalar(earthRadius);
+          const altitudeVector = normalVector.multiplyScalar(altitudeOffset);
+          markerGroup.position.addVectors(surfacePosition, altitudeVector);
         } else {
           // Single relays stay exactly on Earth surface
           markerGroup.position.set(x, y, z);
