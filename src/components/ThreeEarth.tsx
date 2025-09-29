@@ -714,74 +714,7 @@ export function ThreeEarth() {
     };
   }, [openRelay]);
 
-  // Function to calculate distance between two geographic points
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-    const R = 6371; // Earth's radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
 
-  // Function to detect and handle overlapping markers
-  const processRelayLocations = (locations: typeof relayLocations) => {
-    if (!locations) return [];
-
-    const processed = [...locations];
-    const clusterThreshold = 50; // km - distance threshold for clustering
-    const offsetDistance = 0.1; // 3D offset distance for overlapping markers
-
-    // Group nearby relays
-    const clusters: typeof locations[][] = [];
-    const used = new Set<number>();
-
-    for (let i = 0; i < processed.length; i++) {
-      if (used.has(i)) continue;
-
-      const cluster = [processed[i]];
-      used.add(i);
-
-      for (let j = i + 1; j < processed.length; j++) {
-        if (used.has(j)) continue;
-
-        const distance = calculateDistance(
-          processed[i].lat, processed[i].lng,
-          processed[j].lat, processed[j].lng
-        );
-
-        if (distance < clusterThreshold) {
-          cluster.push(processed[j]);
-          used.add(j);
-        }
-      }
-
-      clusters.push(cluster);
-    }
-
-    // Apply offsets to clustered markers
-    return clusters.flatMap((cluster, clusterIndex) => {
-      if (cluster.length === 1) {
-        return cluster; // Single marker, no offset needed
-      }
-
-      return cluster.map((relay, markerIndex) => {
-        // Stack markers vertically for cleaner appearance
-        const verticalOffset = markerIndex * offsetDistance;
-
-        return {
-          ...relay,
-          offsetLat: relay.lat,
-          offsetLng: relay.lng,
-          verticalOffset: verticalOffset,
-          clusterSize: cluster.length,
-          clusterIndex: markerIndex
-        };
-      });
-    });
-  };
 
   // Update marker sizes when zoom level changes
   useEffect(() => {
@@ -791,11 +724,12 @@ export function ThreeEarth() {
 
     const updateMarkerSizes = () => {
       const cameraDistance = cameraRef.current!.position.z;
-      const baseSize = 0.02;
-      const zoomFactor = Math.max(0.3, Math.min(1.5, cameraDistance / 6));
+      const baseSize = 0.008; // Much smaller base size
+      // Stronger inverse relationship: much smaller when zoomed in
+      const zoomFactor = Math.max(0.3, Math.min(3.0, cameraDistance / 3));
       const markerSize = baseSize * zoomFactor;
 
-      relayMarkersRef.current!.children.forEach((markerGroup, index) => {
+      relayMarkersRef.current!.children.forEach((markerGroup) => {
         if (markerGroup instanceof THREE.Group) {
           // Update main marker size
           const mainMarker = markerGroup.children[0] as THREE.Mesh;
@@ -808,33 +742,17 @@ export function ThreeEarth() {
           const ring = markerGroup.children[1] as THREE.Mesh;
           if (ring.geometry instanceof THREE.RingGeometry) {
             ring.geometry.dispose();
-            const ringInnerRadius = markerSize * 1.25;
-            const ringOuterRadius = markerSize * 1.75;
-            ring.geometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 24);
+            const ringInnerRadius = markerSize * 1.5;
+            const ringOuterRadius = markerSize * 2.5;
+            ring.geometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 16);
           }
 
           // Update pulse size
           const pulse = markerGroup.children[2] as THREE.Mesh;
           if (pulse.geometry instanceof THREE.SphereGeometry) {
             pulse.geometry.dispose();
-            const pulseSize = markerSize * 0.4;
-            pulse.geometry = new THREE.SphereGeometry(pulseSize, 8, 6);
-          }
-
-          // Update cluster indicator if present
-          if (markerGroup.children.length > 3) {
-            const clusterIndicator = markerGroup.children[3] as THREE.Mesh;
-            if (clusterIndicator.geometry instanceof THREE.SphereGeometry) {
-              clusterIndicator.geometry.dispose();
-              const clusterSize = markerSize * 0.3;
-              clusterIndicator.geometry = new THREE.SphereGeometry(clusterSize, 8, 6);
-              clusterIndicator.position.x = markerSize * 3;
-              // Update vertical position based on cluster index
-              const processedRelay = processedRelays[index];
-              if (processedRelay.clusterSize && processedRelay.clusterSize > 1) {
-                clusterIndicator.position.y = (processedRelay.clusterIndex! / (processedRelay.clusterSize! - 1)) * 0.1 - 0.05;
-              }
-            }
+            const pulseSize = markerSize * 0.6;
+            pulse.geometry = new THREE.SphereGeometry(pulseSize, 6, 4);
           }
         }
       });
@@ -872,15 +790,13 @@ export function ThreeEarth() {
       relayMarkersRef.current.remove(relayMarkersRef.current.children[0]);
     }
 
-    // Process relay locations to handle clustering
-    const processedRelays = processRelayLocations(relayLocations);
-
-    // Add relay markers with clustering support
-    processedRelays.forEach((relay, index) => {
-      // Calculate marker size based on camera zoom level
+    // Add relay markers with simple, clean design
+    relayLocations.forEach((relay, index) => {
+      // Calculate marker size inversely based on camera zoom level
       const cameraDistance = cameraRef.current?.position.z || 6;
-      const baseSize = 0.02;
-      const zoomFactor = Math.max(0.3, Math.min(1.5, cameraDistance / 6));
+      const baseSize = 0.008; // Much smaller base size
+      // Stronger inverse relationship: much smaller when zoomed in
+      const zoomFactor = Math.max(0.3, Math.min(3.0, cameraDistance / 3));
       const markerSize = baseSize * zoomFactor;
 
       const radius = 2.05; // Slightly above Earth surface
@@ -889,12 +805,12 @@ export function ThreeEarth() {
       // Geographic: latitude (-90 to +90), longitude (-180 to +180)
       // Three.js: Y up, X right, Z towards viewer
 
-      // Use offset coordinates if they exist (for clustered markers)
-      const lat = relay.offsetLat || relay.lat;
-      const lng = relay.offsetLng || relay.lng;
+      // Convert geographic coordinates to 3D Cartesian coordinates
+      // Geographic: latitude (-90 to +90), longitude (-180 to +180)
+      // Three.js: Y up, X right, Z towards viewer
 
-      const latRad = lat * (Math.PI / 180);
-      const lngRad = -lng * (Math.PI / 180); // Invert longitude for correct direction
+      const latRad = relay.lat * (Math.PI / 180);
+      const lngRad = -relay.lng * (Math.PI / 180); // Invert longitude for correct direction
 
       // Standard conversion with inverted longitude
       const x = radius * Math.cos(latRad) * Math.cos(lngRad);
@@ -922,9 +838,9 @@ export function ThreeEarth() {
       markerGroup.add(marker);
 
       // Create subtle outer ring for elegance, size varies with zoom level
-      const ringInnerRadius = markerSize * 1.25;
-      const ringOuterRadius = markerSize * 1.75;
-      const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 24);
+      const ringInnerRadius = markerSize * 1.5;
+      const ringOuterRadius = markerSize * 2.5;
+      const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 16);
       const ringColor = 0x66ff66; // Lighter green for all relays (not checking status)
       const ringMaterial = new THREE.MeshBasicMaterial({
         color: ringColor,
@@ -939,34 +855,18 @@ export function ThreeEarth() {
       markerGroup.add(ring);
 
       // Create tiny inner pulse point, size varies with zoom level
-      const pulseSize = markerSize * 0.4;
-      const pulseGeometry = new THREE.SphereGeometry(pulseSize, 8, 6);
+      const pulseSize = markerSize * 0.6;
+      const pulseGeometry = new THREE.SphereGeometry(pulseSize, 6, 4);
       const pulseMaterial = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.7
       });
       const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
       markerGroup.add(pulse);
 
-      // Add cluster indicator if this is part of a cluster
-      if (relay.clusterSize && relay.clusterSize > 1) {
-        const clusterGeometry = new THREE.SphereGeometry(markerSize * 0.3, 8, 6);
-        const clusterMaterial = new THREE.MeshBasicMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.8
-        });
-        const clusterIndicator = new THREE.Mesh(clusterGeometry, clusterMaterial);
-        // Position cluster indicator to the side of stacked markers
-        clusterIndicator.position.x = markerSize * 3;
-        clusterIndicator.position.y = (relay.clusterIndex! / (relay.clusterSize! - 1)) * 0.1 - 0.05; // Center vertically
-        markerGroup.add(clusterIndicator);
-      }
-
-      // Position the entire group with vertical offset for clustered markers
-      const verticalOffset = relay.verticalOffset || 0;
-      markerGroup.position.set(x, y + verticalOffset, z);
+      // Position the entire group
+      markerGroup.position.set(x, y, z);
 
       relayMarkersRef.current!.add(markerGroup);
 
