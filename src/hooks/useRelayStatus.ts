@@ -18,7 +18,7 @@ export interface RelayStatus {
 async function checkRelayStatus(relayUrl: string, nostr: any): Promise<boolean> {
   try {
     console.log(`Checking relay: ${relayUrl}`);
-    
+
     // Use the same approach as RelayNotesPanel - use nostr.relay()
     const relayConnection = nostr.relay(relayUrl);
 
@@ -29,7 +29,7 @@ async function checkRelayStatus(relayUrl: string, nostr: any): Promise<boolean> 
         kinds: [1],
         limit: 1,
       }
-    ], { signal: AbortSignal.timeout(3000) });
+    ], { signal: AbortSignal.timeout(5000) }); // Increased timeout from 3s to 5s
 
     console.log(`Relay ${relayUrl} returned ${events.length} events`);
     // If we get any events, the relay is online
@@ -68,7 +68,7 @@ export function useRelayStatus(relays: RelayLocation[] | undefined) {
     const checkRelays = async () => {
       try {
         console.log('Starting initial relay checks...');
-        
+
         // Create a copy of the current statuses
         let currentStatuses = [...initialStatuses];
 
@@ -102,18 +102,18 @@ export function useRelayStatus(relays: RelayLocation[] | undefined) {
 
         // Filter out relays that failed (are offline) and need retrying
         const failedRelays = currentStatuses.filter(status => !status.isOnline);
-        
+
         if (failedRelays.length > 0) {
           console.log(`Retrying ${failedRelays.length} failed relays after 3 seconds...`);
-          
+
           // Mark relays as retrying
           failedRelays.forEach(failedRelay => {
             const index = currentStatuses.findIndex(r => r.url === failedRelay.url);
             if (index !== -1) {
-              currentStatuses[index] = { 
-                ...currentStatuses[index], 
-                isRetrying: true, 
-                retryCount: 1 
+              currentStatuses[index] = {
+                ...currentStatuses[index],
+                isRetrying: true,
+                retryCount: 1
               };
             }
           });
@@ -123,7 +123,7 @@ export function useRelayStatus(relays: RelayLocation[] | undefined) {
 
           // Wait 3 seconds before first retry
           await new Promise(resolve => setTimeout(resolve, 3000));
-          
+
           const firstRetryPromises = failedRelays.map(async (relay) => {
             const isOnline = await checkRelayStatus(relay.url, nostr);
             return {
@@ -155,18 +155,18 @@ export function useRelayStatus(relays: RelayLocation[] | undefined) {
 
           // Filter out relays that still failed after first retry
           const stillFailedRelays = currentStatuses.filter(status => !status.isOnline && status.retryCount === 1);
-          
+
           if (stillFailedRelays.length > 0) {
             console.log(`Retrying ${stillFailedRelays.length} still-failed relays after another 3 seconds...`);
-            
+
             // Mark relays as retrying again
             stillFailedRelays.forEach(stillFailedRelay => {
               const index = currentStatuses.findIndex(r => r.url === stillFailedRelay.url);
               if (index !== -1) {
-                currentStatuses[index] = { 
-                  ...currentStatuses[index], 
-                  isRetrying: true, 
-                  retryCount: 2 
+                currentStatuses[index] = {
+                  ...currentStatuses[index],
+                  isRetrying: true,
+                  retryCount: 2
                 };
               }
             });
@@ -176,7 +176,7 @@ export function useRelayStatus(relays: RelayLocation[] | undefined) {
 
             // Wait another 3 seconds before second retry
             await new Promise(resolve => setTimeout(resolve, 3000));
-            
+
             const secondRetryPromises = stillFailedRelays.map(async (relay) => {
               const isOnline = await checkRelayStatus(relay.url, nostr);
               return {
