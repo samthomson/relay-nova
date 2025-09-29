@@ -8,35 +8,31 @@ export interface RelayStatus {
   city?: string;
   country?: string;
   isOnline: boolean;
-  checked: boolean;
-  isRetrying?: boolean;
-  retryCount?: number;
+  checked: boolean; // true = has been attempted at least once
+  isRetrying?: boolean; // true = currently being retried after failure
+  attemptCount: number; // 1 = first attempt, 2 = retry, 3 = final retry
 }
 
 // Check if a relay is online by attempting to connect and fetch a single event
-// Using the same approach as RelayNotesPanel which works
 async function checkRelayStatus(relayUrl: string, nostr: any): Promise<boolean> {
   try {
     console.log(`Checking relay: ${relayUrl}`);
-
-    // Use the same approach as RelayNotesPanel - use nostr.relay()
+    
+    // Use same approach as RelayNotesPanel - use nostr.relay()
     const relayConnection = nostr.relay(relayUrl);
 
     // Try to fetch a single recent event (kind:1) with limit 1
-    // This mirrors exactly what RelayNotesPanel does successfully
     const events = await relayConnection.query([
       {
         kinds: [1],
         limit: 1,
       }
-    ], { signal: AbortSignal.timeout(5000) }); // Increased timeout from 3s to 5s
+    ], { signal: AbortSignal.timeout(5000) });
 
     console.log(`Relay ${relayUrl} returned ${events.length} events`);
-    // If we get any events, the relay is online
     return events.length > 0;
   } catch (error) {
     console.log(`Relay ${relayUrl} failed:`, error);
-    // Silently handle connection failures - this is expected for offline relays
     return false;
   }
 }
@@ -51,171 +47,227 @@ export function useRelayStatus(relays: RelayLocation[] | undefined) {
       return;
     }
 
-    console.log('Starting relay status check for', relays.length, 'relays');
+    console.log('Starting SINGLE CYCLE relay status check for', relays.length, 'relays');
 
-    // Initialize all relays as unchecked
+    // Initialize all relays as not checked, 0 attempts
     const initialStatuses: RelayStatus[] = relays.map(relay => ({
       ...relay,
       isOnline: false,
       checked: false,
       isRetrying: false,
-      retryCount: 0
+      attemptCount: 0
     }));
 
     setRelayStatuses(initialStatuses);
 
-    // Start the checking process
-    const checkRelays = async () => {
-      try {
-        console.log('Starting initial relay checks...');
+    // Single cycle: check all relays once, then retry failures (within same cycle)
+    const singleCycleCheck = async () => {
+      let currentStatuses = [...initialStatuses];
+      
+      // === FIRST: Check all relays that haven't been attempted ===
+      const unattemptedRelays = currentStatuses.filter(status => status.attemptCount === 0);
+      console.log(`First attempt: checking ${unattemptedRelays.length} relays`);
+      
+      // Mark as currently checking (retrying = true for visual feedback)
+      unattemptedRelays.forEach(relay => {
+        const index = currentStatuses.findIndex(r => r.url === relay.url);
+        if (index !== -1) {
+          currentStatuses[index] = { 
+            ...currentStatuses[index], 
+            isRetrying: true,
+            attemptCount: 1 
+          };
+        }
+      });
+      setRelayStatuses([...currentStatuses]);
 
-        // Create a copy of the current statuses
-        let currentStatuses = [...initialStatuses];
-
-        // Initial check for all relays
-        const initialCheckPromises = relays.map(async (relay, index) => {
+      // Check in batches of 20 for performance
+      const batchSize = 20;
+      for (let i = 0; i < unattemptedRelays.length; i += batchSize) {
+        const batch = unattemptedRelays.slice(i, i + batchSize);
+        console.log(`First attempt batch ${Math.floor(i/batchSize) + 1}: relays ${i + 1}-${Math.min(i + batchSize, unattemptedRelays.length)}`);
+        
+        // Check current batch in parallel
+        const batchPromises = batch.map(async (relay) => {
           const isOnline = await checkRelayStatus(relay.url, nostr);
           return {
-            index,
-            status: {
-              ...relay,
-              isOnline,
-              checked: true,
-              isRetrying: false,
-              retryCount: 0
-            }
+            url: relay.url,
+            isOnline,
+            attemptCount: 1
           };
         });
 
-        const initialResults = await Promise.allSettled(initialCheckPromises);
+        const batchResults = await Promise.allSettled(batchPromises);
 
-        // Update statuses with initial results
-        initialResults.forEach((result) => {
+        // Update statuses with batch results
+        batchResults.forEach((result) => {
           if (result.status === 'fulfilled') {
-            currentStatuses[result.value.index] = result.value.status;
-          }
-        });
-
-        // Update state with initial results
-        setRelayStatuses([...currentStatuses]);
-        console.log('Initial check completed');
-
-        // Filter out relays that failed (are offline) and need retrying
-        const failedRelays = currentStatuses.filter(status => !status.isOnline);
-
-        if (failedRelays.length > 0) {
-          console.log(`Retrying ${failedRelays.length} failed relays after 3 seconds...`);
-
-          // Mark relays as retrying
-          failedRelays.forEach(failedRelay => {
-            const index = currentStatuses.findIndex(r => r.url === failedRelay.url);
+            const { url, isOnline, attemptCount } = result.value;
+            const index = currentStatuses.findIndex(r => r.url === url);
             if (index !== -1) {
               currentStatuses[index] = {
                 ...currentStatuses[index],
-                isRetrying: true,
-                retryCount: 1
+                isOnline,
+                checked: true, // Mark as checked (attempted at least once)
+                isRetrying: false,
+                attemptCount
               };
             }
-          });
+          }
+        });
 
-          // Update state to show retrying status
-          setRelayStatuses([...currentStatuses]);
+        // Update UI after each batch
+        setRelayStatuses([...currentStatuses]);
+        
+        // Small delay between batches to show progress
+        if (i + batchSize < unattemptedRelays.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
 
-          // Wait 3 seconds before first retry
-          await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log('First attempt completed - all relays now checked');
 
-          const firstRetryPromises = failedRelays.map(async (relay) => {
+      // === SECOND: Retry relays that failed first attempt (within same cycle) ===
+      const failedFirstAttempt = currentStatuses.filter(
+        status => !status.isOnline && status.attemptCount === 1
+      );
+      
+      if (failedFirstAttempt.length > 0) {
+        console.log(`Second attempt: retrying ${failedFirstAttempt.length} failed relays`);
+        
+        // Wait 3 seconds before retry
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Mark as retrying
+        failedFirstAttempt.forEach(relay => {
+          const index = currentStatuses.findIndex(r => r.url === relay.url);
+          if (index !== -1) {
+            currentStatuses[index] = { 
+              ...currentStatuses[index], 
+              isRetrying: true,
+              attemptCount: 2 
+            };
+          }
+        });
+        setRelayStatuses([...currentStatuses]);
+
+        // Retry failed relays in batches
+        for (let i = 0; i < failedFirstAttempt.length; i += batchSize) {
+          const batch = failedFirstAttempt.slice(i, i + batchSize);
+          console.log(`Second attempt batch ${Math.floor(i/batchSize) + 1}: relays ${i + 1}-${Math.min(i + batchSize, failedFirstAttempt.length)}`);
+          
+          const batchPromises = batch.map(async (relay) => {
             const isOnline = await checkRelayStatus(relay.url, nostr);
             return {
               url: relay.url,
-              status: {
-                ...relay,
-                isOnline,
-                checked: true,
-                isRetrying: false,
-                retryCount: 1
-              }
+              isOnline,
+              attemptCount: 2
             };
           });
 
-          const firstRetryResults = await Promise.allSettled(firstRetryPromises);
+          const batchResults = await Promise.allSettled(batchPromises);
 
-          // Update statuses with first retry results
-          firstRetryResults.forEach((result) => {
+          // Update statuses with retry results
+          batchResults.forEach((result) => {
             if (result.status === 'fulfilled') {
-              const index = currentStatuses.findIndex(r => r.url === result.value.url);
+              const { url, isOnline, attemptCount } = result.value;
+              const index = currentStatuses.findIndex(r => r.url === url);
               if (index !== -1) {
-                currentStatuses[index] = result.value.status;
+                currentStatuses[index] = {
+                  ...currentStatuses[index],
+                  isOnline,
+                  checked: true, // Already checked from first attempt
+                  isRetrying: false,
+                  attemptCount
+                };
               }
             }
           });
 
-          // Update state with first retry results
           setRelayStatuses([...currentStatuses]);
-
-          // Filter out relays that still failed after first retry
-          const stillFailedRelays = currentStatuses.filter(status => !status.isOnline && status.retryCount === 1);
-
-          if (stillFailedRelays.length > 0) {
-            console.log(`Retrying ${stillFailedRelays.length} still-failed relays after another 3 seconds...`);
-
-            // Mark relays as retrying again
-            stillFailedRelays.forEach(stillFailedRelay => {
-              const index = currentStatuses.findIndex(r => r.url === stillFailedRelay.url);
-              if (index !== -1) {
-                currentStatuses[index] = {
-                  ...currentStatuses[index],
-                  isRetrying: true,
-                  retryCount: 2
-                };
-              }
-            });
-
-            // Update state to show retrying status
-            setRelayStatuses([...currentStatuses]);
-
-            // Wait another 3 seconds before second retry
-            await new Promise(resolve => setTimeout(resolve, 3000));
-
-            const secondRetryPromises = stillFailedRelays.map(async (relay) => {
-              const isOnline = await checkRelayStatus(relay.url, nostr);
-              return {
-                url: relay.url,
-                status: {
-                  ...relay,
-                  isOnline,
-                  checked: true,
-                  isRetrying: false,
-                  retryCount: 2
-                }
-              };
-            });
-
-            const secondRetryResults = await Promise.allSettled(secondRetryPromises);
-
-            // Update statuses with second retry results
-            secondRetryResults.forEach((result) => {
-              if (result.status === 'fulfilled') {
-                const index = currentStatuses.findIndex(r => r.url === result.value.url);
-                if (index !== -1) {
-                  currentStatuses[index] = result.value.status;
-                }
-              }
-            });
-
-            // Final state update
-            setRelayStatuses([...currentStatuses]);
+          
+          // Small delay between batches
+          if (i + batchSize < failedFirstAttempt.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
 
-        console.log('All relay checks completed');
-      } catch (error) {
-        console.error('Error in relay checking process:', error);
+        console.log('Second attempt completed');
+
+        // === THIRD: Final retry for relays that failed both attempts (within same cycle) ===
+        const failedSecondAttempt = currentStatuses.filter(
+          status => !status.isOnline && status.attemptCount === 2
+        );
+        
+        if (failedSecondAttempt.length > 0) {
+          console.log(`Third attempt: final retry for ${failedSecondAttempt.length} relays`);
+          
+          // Wait another 3 seconds before final retry
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Mark as final retry
+          failedSecondAttempt.forEach(relay => {
+            const index = currentStatuses.findIndex(r => r.url === relay.url);
+            if (index !== -1) {
+              currentStatuses[index] = { 
+                ...currentStatuses[index], 
+                isRetrying: true,
+                attemptCount: 3 
+              };
+            }
+          });
+          setRelayStatuses([...currentStatuses]);
+
+          // Final retry batch
+          for (let i = 0; i < failedSecondAttempt.length; i += batchSize) {
+            const batch = failedSecondAttempt.slice(i, i + batchSize);
+            console.log(`Third attempt batch ${Math.floor(i/batchSize) + 1}: relays ${i + 1}-${Math.min(i + batchSize, failedSecondAttempt.length)}`);
+            
+            const batchPromises = batch.map(async (relay) => {
+              const isOnline = await checkRelayStatus(relay.url, nostr);
+              return {
+                url: relay.url,
+                isOnline,
+                attemptCount: 3
+              };
+            });
+
+            const batchResults = await Promise.allSettled(batchPromises);
+
+            // Update statuses with final results
+            batchResults.forEach((result) => {
+              if (result.status === 'fulfilled') {
+                const { url, isOnline, attemptCount } = result.value;
+                const index = currentStatuses.findIndex(r => r.url === url);
+                if (index !== -1) {
+                  currentStatuses[index] = {
+                    ...currentStatuses[index],
+                    isOnline,
+                    checked: true, // Already checked from first attempt
+                    isRetrying: false,
+                    attemptCount
+                  };
+                }
+              }
+            });
+
+            setRelayStatuses([...currentStatuses]);
+            
+            // Small delay between batches
+            if (i + batchSize < failedSecondAttempt.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+
+          console.log('Third attempt completed');
+        }
       }
+
+      console.log('SINGLE CYCLE completed - no more retries');
     };
 
-    // Start the checking process with a small delay
-    const timer = setTimeout(checkRelays, 100);
+    // Start the single cycle
+    const timer = setTimeout(singleCycleCheck, 100);
 
     return () => {
       clearTimeout(timer);

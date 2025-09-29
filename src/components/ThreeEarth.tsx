@@ -601,7 +601,7 @@ export function ThreeEarth() {
         const checkedRatio = checkedCount / totalCount; // 0 to 1
         const onlineRatio = onlineCount / totalCount; // 0 to 1
 
-        // Update shader uniforms for screen position-based visibility
+        // Update shader uniforms for progressive star visibility
         const { material } = starLayersRef.current;
         if (material) {
           material.uniforms.time.value = time;
