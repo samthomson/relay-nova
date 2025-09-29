@@ -812,23 +812,7 @@ export function ThreeEarth() {
         </div>
       )}
 
-      {/* Controls and Info */}
-      <div className="absolute top-20 right-6 z-20 space-y-3">
-        {relayLocations && (
-          <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3">
-            <div className="text-white text-sm space-y-1">
-              <div>
-                <span className="font-semibold">{totalCount}</span> relays loaded
-              </div>
-            </div>
-          </div>
-        )}
-
-        <RelayInfoModal
-          relays={relayLocations || []}
-          isLoading={isLoading}
-        />
-      </div>
+      
 
       {/* Three.js mount point */}
       <div ref={mountRef} className="w-full h-full relative z-0" />
