@@ -776,7 +776,7 @@ export function ThreeEarth() {
       // Add relay markers with smart clustering
       clusteredRelays.forEach((relay, index) => {
         // Calculate marker size inversely based on camera zoom level
-        const baseSize = 0.008; // Much smaller base size
+        const baseSize = 0.005; // Much smaller base size (reduced from 0.008)
         // Stronger inverse relationship: much smaller when zoomed in
         const zoomFactor = Math.max(0.3, Math.min(3.0, cameraDistance / 3));
         const markerSize = baseSize * zoomFactor;
@@ -811,8 +811,8 @@ export function ThreeEarth() {
         markerGroup.add(marker);
 
         // Create subtle outer ring for elegance, size varies with zoom level
-        const ringInnerRadius = markerSize * 1.5;
-        const ringOuterRadius = markerSize * 2.5;
+        const ringInnerRadius = markerSize * 1.8;
+        const ringOuterRadius = markerSize * 2.8;
         const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 16);
         const ringColor = 0x66ff66; // Lighter green for all relays (not checking status)
         const ringMaterial = new THREE.MeshBasicMaterial({
@@ -828,7 +828,7 @@ export function ThreeEarth() {
         markerGroup.add(ring);
 
         // Create tiny inner pulse point, size varies with zoom level
-        const pulseSize = markerSize * 0.6;
+        const pulseSize = markerSize * 0.5;
         const pulseGeometry = new THREE.SphereGeometry(pulseSize, 6, 4);
         const pulseMaterial = new THREE.MeshBasicMaterial({
           color: 0xffffff,
@@ -838,9 +838,12 @@ export function ThreeEarth() {
         const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
         markerGroup.add(pulse);
 
-        // Position entire group with z-axis offset for clustering
-        const zOffset = relay.zOffset || 0;
-        markerGroup.position.set(x, y, z + zOffset);
+        // Position entire group - stack vertically above Earth for clustering
+        const stackHeight = relay.stackHeight || 0;
+        // Calculate vertical offset (away from Earth center)
+        const verticalOffset = stackHeight;
+        // Position marker at original coordinates plus vertical stack height
+        markerGroup.position.set(x, y + verticalOffset, z);
 
         relayMarkersRef.current!.add(markerGroup);
       });
@@ -942,7 +945,7 @@ export function ThreeEarth() {
         ...relay,
         clusterIndex: markerIndex,
         clusterSize: cluster.length,
-        zOffset: markerIndex * 0.2 // Stack along z-axis with smaller spacing
+        stackHeight: markerIndex * 0.3 // Stack vertically above Earth surface (more compact)
       }));
     });
   };
