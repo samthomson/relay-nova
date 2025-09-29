@@ -24,7 +24,7 @@ const Index = () => {
           <div className="text-center text-white/70 text-sm">
             <p className="mb-2">🌍 Drag to rotate • 🔍 Scroll to zoom • ⚡ Click dots for relay info</p>
             <p className="text-xs opacity-60">
-              Yellow: relay locations •
+              Green: relay locations •
               Vibed with <a href="https://soapbox.pub/mkstack" className="underline hover:text-white">MKStack</a>
             </p>
           </div>

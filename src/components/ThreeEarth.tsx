@@ -749,7 +749,7 @@ export function ThreeEarth() {
 
       // Main marker - small and refined, default color since we're not checking status
       const markerGeometry = new THREE.SphereGeometry(0.02, 16, 12);
-      const markerColor = 0xffff44; // Yellow for all relays (not checking status)
+      const markerColor = 0x44ff44; // Green for all relays (not checking status)
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: markerColor,
         transparent: false
@@ -764,7 +764,7 @@ export function ThreeEarth() {
 
       // Create subtle outer ring for elegance, default color since we're not checking status
       const ringGeometry = new THREE.RingGeometry(0.025, 0.035, 24);
-      const ringColor = 0xffff66; // Lighter yellow for all relays (not checking status)
+      const ringColor = 0x66ff66; // Lighter green for all relays (not checking status)
       const ringMaterial = new THREE.MeshBasicMaterial({
         color: ringColor,
         transparent: true,
@@ -812,7 +812,7 @@ export function ThreeEarth() {
         </div>
       )}
 
-      
+
 
       {/* Three.js mount point */}
       <div ref={mountRef} className="w-full h-full relative z-0" />
