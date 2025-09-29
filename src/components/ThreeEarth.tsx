@@ -755,57 +755,108 @@ export function ThreeEarth() {
 
 
 
-  // Update marker sizes and clustering when zoom level changes
+  // Combined useEffect for marker creation and zoom updates
   useEffect(() => {
     if (!relayLocations || !relayMarkersRef.current || !sceneReady || !cameraRef.current) {
       return;
     }
 
-    const updateMarkers = () => {
+    const updateAllMarkers = () => {
       const cameraDistance = cameraRef.current!.position.z;
-      const baseSize = 0.008; // Much smaller base size
-      // Stronger inverse relationship: much smaller when zoomed in
-      const zoomFactor = Math.max(0.3, Math.min(3.0, cameraDistance / 3));
-      const markerSize = baseSize * zoomFactor;
+      console.log('updateAllMarkers called - cameraDistance:', cameraDistance);
 
-      relayMarkersRef.current!.children.forEach((markerGroup) => {
-        if (markerGroup instanceof THREE.Group) {
-          // Update main marker size
-          const mainMarker = markerGroup.children[0] as THREE.Mesh;
-          if (mainMarker.geometry instanceof THREE.SphereGeometry) {
-            mainMarker.geometry.dispose();
-            mainMarker.geometry = new THREE.SphereGeometry(markerSize, 16, 12);
-          }
+      // Clear existing markers
+      while (relayMarkersRef.current.children.length > 0) {
+        relayMarkersRef.current.remove(relayMarkersRef.current.children[0]);
+      }
 
-          // Update ring size
-          const ring = markerGroup.children[1] as THREE.Mesh;
-          if (ring.geometry instanceof THREE.RingGeometry) {
-            ring.geometry.dispose();
-            const ringInnerRadius = markerSize * 1.5;
-            const ringOuterRadius = markerSize * 2.5;
-            ring.geometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 16);
-          }
+      // Cluster relays based on zoom level
+      const clusteredRelays = clusterRelays(relayLocations, cameraDistance);
 
-          // Update pulse size
-          const pulse = markerGroup.children[2] as THREE.Mesh;
-          if (pulse.geometry instanceof THREE.SphereGeometry) {
-            pulse.geometry.dispose();
-            const pulseSize = markerSize * 0.6;
-            pulse.geometry = new THREE.SphereGeometry(pulseSize, 6, 4);
-          }
-        }
+      // Add relay markers with smart clustering
+      clusteredRelays.forEach((relay, index) => {
+        // Calculate marker size inversely based on camera zoom level
+        const baseSize = 0.008; // Much smaller base size
+        // Stronger inverse relationship: much smaller when zoomed in
+        const zoomFactor = Math.max(0.3, Math.min(3.0, cameraDistance / 3));
+        const markerSize = baseSize * zoomFactor;
+
+        const radius = 2.05; // Slightly above Earth surface
+
+        // Convert geographic coordinates to 3D Cartesian coordinates
+        const latRad = relay.lat * (Math.PI / 180);
+        const lngRad = -relay.lng * (Math.PI / 180); // Invert longitude for correct direction
+
+        // Standard conversion with inverted longitude
+        const x = radius * Math.cos(latRad) * Math.cos(lngRad);
+        const y = radius * Math.sin(latRad);
+        const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+
+        // Create marker group for easier management
+        const markerGroup = new THREE.Group();
+
+        // Main marker - size varies with zoom level
+        const markerGeometry = new THREE.SphereGeometry(markerSize, 16, 12);
+        const markerColor = 0x44ff44; // Green for all relays (not checking status)
+        const markerMaterial = new THREE.MeshBasicMaterial({
+          color: markerColor,
+          transparent: false
+        });
+        const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+
+        // Store relay data for tooltip
+        (marker as any).relayData = relay;
+        (markerGroup as any).relayData = relay;
+
+        markerGroup.add(marker);
+
+        // Create subtle outer ring for elegance, size varies with zoom level
+        const ringInnerRadius = markerSize * 1.5;
+        const ringOuterRadius = markerSize * 2.5;
+        const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 16);
+        const ringColor = 0x66ff66; // Lighter green for all relays (not checking status)
+        const ringMaterial = new THREE.MeshBasicMaterial({
+          color: ringColor,
+          transparent: true,
+          opacity: 0.8,
+          side: THREE.DoubleSide
+        });
+        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+
+        // Orient the ring to face outward from Earth center
+        ring.lookAt(new THREE.Vector3(x * 2, y * 2, z * 2));
+        markerGroup.add(ring);
+
+        // Create tiny inner pulse point, size varies with zoom level
+        const pulseSize = markerSize * 0.6;
+        const pulseGeometry = new THREE.SphereGeometry(pulseSize, 6, 4);
+        const pulseMaterial = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.7
+        });
+        const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
+        markerGroup.add(pulse);
+
+        // Position entire group with z-axis offset for clustering
+        const zOffset = relay.zOffset || 0;
+        markerGroup.position.set(x, y, z + zOffset);
+
+        relayMarkersRef.current!.add(markerGroup);
       });
+
+      console.log('Created', clusteredRelays.length, 'markers with clustering');
     };
 
-    // Update sizes initially
-    updateMarkers();
+    // Update markers initially
+    updateAllMarkers();
 
     // Set up a listener for zoom changes (using requestAnimationFrame for performance)
     let lastDistance = cameraRef.current.position.z;
     const checkZoomChange = () => {
       const currentDistance = cameraRef.current!.position.z;
       if (Math.abs(currentDistance - lastDistance) > 0.1) {
-        updateMarkers();
+        updateAllMarkers();
         lastDistance = currentDistance;
       }
       requestAnimationFrame(checkZoomChange);
@@ -832,15 +883,29 @@ export function ThreeEarth() {
 
   // Function to detect and cluster relays (only when zoomed in)
   const clusterRelays = (locations: typeof relayLocations, cameraDistance: number) => {
+    console.log('clusterRelays called with cameraDistance:', cameraDistance, 'locations count:', locations?.length);
+
     if (!locations) return [];
 
-    // Only cluster when zoomed in close (cameraDistance < 5)
-    if (cameraDistance >= 5) {
-      return locations.map(relay => ({ ...relay, clusterIndex: 0, clusterSize: 1 }));
+    // Only cluster when significantly zoomed in (cameraDistance < 4)
+    if (cameraDistance >= 4) {
+      console.log('No clustering - camera distance >= 4');
+      // Don't cluster when zoomed out - return normal markers with no z-offset
+      return locations.map(relay => ({ ...relay, clusterIndex: 0, clusterSize: 1, zOffset: 0 }));
+    }
+
+    console.log('Applying clustering - camera distance < 4');
+
+    // Calculate cluster threshold based on zoom level
+    let clusterThreshold = 50; // Default threshold for zoomed in
+
+    if (cameraDistance < 3.2) {
+      clusterThreshold = 20; // Very aggressive clustering when extremely zoomed in (20km)
+    } else {
+      clusterThreshold = 35; // Aggressive clustering when zoomed in (35km)
     }
 
     const processed = [...locations];
-    const clusterThreshold = 50; // km - distance threshold for clustering
     const used = new Set<number>();
     const clusters: typeof locations[][] = [];
 
@@ -870,14 +935,14 @@ export function ThreeEarth() {
     // Apply z-axis offsets to clustered markers
     return clusters.flatMap((cluster, clusterIndex) => {
       if (cluster.length === 1) {
-        return [{ ...cluster[0], clusterIndex: 0, clusterSize: 1 }];
+        return [{ ...cluster[0], clusterIndex: 0, clusterSize: 1, zOffset: 0 }];
       }
 
       return cluster.map((relay, markerIndex) => ({
         ...relay,
         clusterIndex: markerIndex,
         clusterSize: cluster.length,
-        zOffset: markerIndex * 0.15 // Stack along z-axis away from Earth center
+        zOffset: markerIndex * 0.2 // Stack along z-axis with smaller spacing
       }));
     });
   };
