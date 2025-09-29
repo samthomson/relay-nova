@@ -768,14 +768,14 @@ export function ThreeEarth() {
       }
 
       return cluster.map((relay, markerIndex) => {
-        // Create spiral offset for clustered markers
-        const angle = (markerIndex / cluster.length) * Math.PI * 2;
-        const radius = (markerIndex / cluster.length) * offsetDistance;
+        // Stack markers vertically for cleaner appearance
+        const verticalOffset = markerIndex * offsetDistance;
 
         return {
           ...relay,
-          offsetLat: relay.lat + (radius * Math.cos(angle)) * 0.5,
-          offsetLng: relay.lng + (radius * Math.sin(angle)) * 0.5,
+          offsetLat: relay.lat,
+          offsetLng: relay.lng,
+          verticalOffset: verticalOffset,
           clusterSize: cluster.length,
           clusterIndex: markerIndex
         };
@@ -828,7 +828,12 @@ export function ThreeEarth() {
               clusterIndicator.geometry.dispose();
               const clusterSize = markerSize * 0.3;
               clusterIndicator.geometry = new THREE.SphereGeometry(clusterSize, 8, 6);
-              clusterIndicator.position.y = markerSize * 2;
+              clusterIndicator.position.x = markerSize * 3;
+              // Update vertical position based on cluster index
+              const processedRelay = processedRelays[index];
+              if (processedRelay.clusterSize && processedRelay.clusterSize > 1) {
+                clusterIndicator.position.y = (processedRelay.clusterIndex! / (processedRelay.clusterSize! - 1)) * 0.1 - 0.05;
+              }
             }
           }
         }
@@ -953,13 +958,15 @@ export function ThreeEarth() {
           opacity: 0.8
         });
         const clusterIndicator = new THREE.Mesh(clusterGeometry, clusterMaterial);
-        // Position cluster indicator slightly above the main marker
-        clusterIndicator.position.y = markerSize * 2;
+        // Position cluster indicator to the side of stacked markers
+        clusterIndicator.position.x = markerSize * 3;
+        clusterIndicator.position.y = (relay.clusterIndex! / (relay.clusterSize! - 1)) * 0.1 - 0.05; // Center vertically
         markerGroup.add(clusterIndicator);
       }
 
-      // Position the entire group
-      markerGroup.position.set(x, y, z);
+      // Position the entire group with vertical offset for clustered markers
+      const verticalOffset = relay.verticalOffset || 0;
+      markerGroup.position.set(x, y + verticalOffset, z);
 
       relayMarkersRef.current!.add(markerGroup);
 
