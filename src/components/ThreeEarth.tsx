@@ -1040,7 +1040,7 @@ export function ThreeEarth() {
     clusteredRelays.forEach((relay, index) => {
       // Calculate marker size inversely based on camera zoom level
       const cameraDistance = cameraRef.current?.position.z || 6;
-      const baseSize = 0.008; // Much smaller base size
+      const baseSize = 0.005; // Much smaller base size (reduced from 0.008)
       // Stronger inverse relationship: much smaller when zoomed in
       const zoomFactor = Math.max(0.3, Math.min(3.0, cameraDistance / 3));
       const markerSize = baseSize * zoomFactor;
@@ -1070,7 +1070,7 @@ export function ThreeEarth() {
 
       // Main marker - size varies with zoom level
       const markerGeometry = new THREE.SphereGeometry(markerSize, 16, 12);
-      const markerColor = 0x44ff44; // Green for all relays (not checking status)
+      const markerColor = getRandomRelayColor(); // Random orange or purple shade
       const markerMaterial = new THREE.MeshBasicMaterial({
         color: markerColor,
         transparent: false
@@ -1084,10 +1084,14 @@ export function ThreeEarth() {
       markerGroup.add(marker);
 
       // Create subtle outer ring for elegance, size varies with zoom level
-      const ringInnerRadius = markerSize * 1.5;
-      const ringOuterRadius = markerSize * 2.5;
+      const ringInnerRadius = markerSize * 1.8;
+      const ringOuterRadius = markerSize * 2.8;
       const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 16);
-      const ringColor = 0x66ff66; // Lighter green for all relays (not checking status)
+
+      // Create lighter version of marker color for ring
+      const ringColor = new THREE.Color(markerColor);
+      ringColor.offsetHSL(0, 0, 0.3); // Lighten by 30%
+
       const ringMaterial = new THREE.MeshBasicMaterial({
         color: ringColor,
         transparent: true,
