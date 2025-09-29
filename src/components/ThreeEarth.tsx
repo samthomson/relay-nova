@@ -538,7 +538,7 @@ export function ThreeEarth() {
       event.preventDefault();
       const zoomSpeed = 0.2;
       const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
-      camera.position.z = Math.max(4, Math.min(12, newZ)); // Less zoomed in range
+      camera.position.z = Math.max(3, Math.min(15, newZ)); // Allow closer zoom and farther out view
     };
 
     // Event listeners
