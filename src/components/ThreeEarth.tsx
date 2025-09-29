@@ -974,6 +974,7 @@ export function ThreeEarth() {
             onClose={closeRelayPanel}
             onMouseEnter={() => isMouseOverRelayPanel.current = true}
             onMouseLeave={() => isMouseOverRelayPanel.current = false}
+            onMouseDown={() => {}}
           />
         </div>
       )}
