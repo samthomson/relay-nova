@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 import { RelayInfoModal } from './RelayInfoModal';
@@ -48,6 +48,13 @@ export function ThreeEarth() {
 
   // Store the wheel event handler for removal
   const wheelEventHandlerRef = useRef<((event: WheelEvent) => void) | null>(null);
+
+  // Store other event handlers for cleanup
+  const mouseDownHandlerRef = useRef<((event: MouseEvent) => void) | null>(null);
+  const mouseMoveHandlerRef = useRef<((event: MouseEvent) => void) | null>(null);
+  const mouseUpHandlerRef = useRef<((event: MouseEvent) => void) | null>(null);
+  const mouseClickHandlerRef = useRef<((event: MouseEvent) => void) | null>(null);
+  const resizeHandlerRef = useRef<((event: Event) => void) | null>(null);
 
   // Track clicks outside the relay panel
   const relayPanelContainerRef = useRef<HTMLDivElement>(null);
@@ -407,7 +414,7 @@ export function ThreeEarth() {
 
     const onMouseDown = (event: MouseEvent) => {
       // Don't process globe events when relay panel is open
-      if (openRelay) return;
+      if (openRelayRef.current) return;
 
       setManualMode();
       isMouseDown.current = true;
@@ -418,7 +425,7 @@ export function ThreeEarth() {
 
     const onMouseMove = (event: MouseEvent) => {
       // Don't process globe events when relay panel is open
-      if (openRelay) return;
+      if (openRelayRef.current) return;
 
       // Only process drag if mouse button is down
       if (!isMouseDown.current) return;
@@ -456,7 +463,7 @@ export function ThreeEarth() {
 
     const onMouseClick = (event: MouseEvent) => {
       // Don't process globe events when relay panel is open
-      if (openRelay) return;
+      if (openRelayRef.current) return;
 
       setManualMode();
 
@@ -511,7 +518,7 @@ export function ThreeEarth() {
 
     const onWheel = (event: WheelEvent) => {
       // Completely ignore wheel events when relay panel is open
-      if (!wheelEventsEnabled.current || openRelay) {
+      if (!wheelEventsEnabled.current || openRelayRef.current) {
         return; // Let events bubble through to relay panel
       }
 
@@ -541,11 +548,16 @@ export function ThreeEarth() {
       camera.position.z = Math.max(3, Math.min(15, newZ)); // Allow closer zoom and farther out view
     };
 
-    // Event listeners
-    renderer.domElement.addEventListener('mousedown', onMouseDown);
-    renderer.domElement.addEventListener('mousemove', onMouseMove);
-    renderer.domElement.addEventListener('mouseup', onMouseUp);
-    renderer.domElement.addEventListener('click', onMouseClick);
+    // Store event handlers in refs and add listeners
+    mouseDownHandlerRef.current = onMouseDown;
+    mouseMoveHandlerRef.current = onMouseMove;
+    mouseUpHandlerRef.current = onMouseUp;
+    mouseClickHandlerRef.current = onMouseClick;
+
+    renderer.domElement.addEventListener('mousedown', mouseDownHandlerRef.current);
+    renderer.domElement.addEventListener('mousemove', mouseMoveHandlerRef.current);
+    renderer.domElement.addEventListener('mouseup', mouseUpHandlerRef.current);
+    renderer.domElement.addEventListener('click', mouseClickHandlerRef.current);
 
     // Store the wheel event handler and attach to document
     wheelEventHandlerRef.current = onWheel;
@@ -625,7 +637,8 @@ export function ThreeEarth() {
       renderer.render(scene, camera);
     };
 
-    window.addEventListener('resize', handleResize);
+    resizeHandlerRef.current = handleResize;
+    window.addEventListener('resize', resizeHandlerRef.current);
 
     } catch (error) {
       console.error('ThreeEarth initialization failed:', error);
@@ -662,11 +675,22 @@ export function ThreeEarth() {
         cancelAnimationFrame(frameRef.current);
       }
 
-      if (rendererRef.current) {
-        rendererRef.current.domElement.removeEventListener('mousedown', onMouseDown);
-        rendererRef.current.domElement.removeEventListener('mousemove', onMouseMove);
-        rendererRef.current.domElement.removeEventListener('mouseup', onMouseUp);
-        rendererRef.current.domElement.removeEventListener('click', onMouseClick);
+      // Clean up event listeners properly with stored references
+      if (rendererRef.current && rendererRef.current.domElement) {
+        const element = rendererRef.current.domElement;
+        // Remove event listeners using stored refs
+        if (mouseDownHandlerRef.current) {
+          element.removeEventListener('mousedown', mouseDownHandlerRef.current);
+        }
+        if (mouseMoveHandlerRef.current) {
+          element.removeEventListener('mousemove', mouseMoveHandlerRef.current);
+        }
+        if (mouseUpHandlerRef.current) {
+          element.removeEventListener('mouseup', mouseUpHandlerRef.current);
+        }
+        if (mouseClickHandlerRef.current) {
+          element.removeEventListener('click', mouseClickHandlerRef.current);
+        }
       }
 
       // Remove document wheel event
@@ -674,12 +698,27 @@ export function ThreeEarth() {
         document.removeEventListener('wheel', wheelEventHandlerRef.current);
       }
 
-      window.removeEventListener('resize', handleResize);
-
-      if (mountRef.current && rendererRef.current?.domElement) {
-        mountRef.current.removeChild(rendererRef.current.domElement);
+      // Remove resize listener
+      if (resizeHandlerRef.current) {
+        window.removeEventListener('resize', resizeHandlerRef.current);
       }
 
+      // Clean up timers
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current);
+        inactivityTimer.current = null;
+      }
+
+      // Clean up DOM
+      if (mountRef.current && rendererRef.current?.domElement) {
+        try {
+          mountRef.current.removeChild(rendererRef.current.domElement);
+        } catch (error) {
+          // Element might already be removed
+        }
+      }
+
+      // Dispose renderer
       if (rendererRef.current) {
         rendererRef.current.dispose();
       }
@@ -759,14 +798,14 @@ export function ThreeEarth() {
     };
 
     // Update sizes initially
-    updateMarkerSizes();
+    updateMarkers();
 
     // Set up a listener for zoom changes (using requestAnimationFrame for performance)
     let lastDistance = cameraRef.current.position.z;
     const checkZoomChange = () => {
       const currentDistance = cameraRef.current!.position.z;
       if (Math.abs(currentDistance - lastDistance) > 0.1) {
-        updateMarkerSizes();
+        updateMarkers();
         lastDistance = currentDistance;
       }
       requestAnimationFrame(checkZoomChange);
