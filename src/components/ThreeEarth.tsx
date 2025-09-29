@@ -838,18 +838,22 @@ export function ThreeEarth() {
         const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
         markerGroup.add(pulse);
 
-        // Position entire group - stack along normal vector (true altitude)
+        // Position entire group - on Earth surface, tiny altitude only for clustering
         const altitudeOffset = relay.altitudeOffset || 0;
 
-        // Calculate normal vector from Earth center through relay position
-        const normalVector = new THREE.Vector3(x, y, z).normalize();
-
-        // Position marker at Earth surface plus altitude offset along normal
+        // For single relays (no clustering), keep exactly on Earth surface
+        // For clustered relays, add tiny altitude offset just to separate them
         const earthRadius = 2.05;
-        const surfacePosition = normalVector.multiplyScalar(earthRadius);
-        const altitudePosition = normalVector.multiplyScalar(earthRadius + altitudeOffset);
 
-        markerGroup.position.copy(altitudePosition);
+        if (relay.clusterSize && relay.clusterSize > 1) {
+          // Only clustered markers get tiny altitude offset
+          const normalVector = new THREE.Vector3(x, y, z).normalize();
+          const altitudePosition = normalVector.multiplyScalar(earthRadius + altitudeOffset);
+          markerGroup.position.copy(altitudePosition);
+        } else {
+          // Single relays stay exactly on Earth surface
+          markerGroup.position.set(x, y, z);
+        }
 
         relayMarkersRef.current!.add(markerGroup);
       });
@@ -951,7 +955,7 @@ export function ThreeEarth() {
         ...relay,
         clusterIndex: markerIndex,
         clusterSize: cluster.length,
-        altitudeOffset: markerIndex * 0.08 // Much smaller altitude offset for tight stacking
+        altitudeOffset: markerIndex * 0.02 // Tiny altitude offset - just enough to separate
       }));
     });
   };
