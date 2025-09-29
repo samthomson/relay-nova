@@ -175,9 +175,9 @@ export function ThreeEarth() {
 
     try {
 
-    // Scene setup with lighter background
+    // Scene setup with pure black space
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000033); // Slightly lighter space background
+    scene.background = new THREE.Color(0x000000); // Pure black space
     sceneRef.current = scene;
 
     // Ensure we have proper dimensions first
@@ -592,54 +592,21 @@ export function ThreeEarth() {
         });
       }
 
-      // Animate star layers based on relay checking progress
+      // Animate star system based on relay checking progress
       if (starLayersRef.current && relayStatuses) {
-        const time = Date.now() * 0.0005; // Slower star animation
+        const time = Date.now() * 0.001; // Animation time
         const totalCount = relayStatuses.length || 1;
         const checkedCount = relayStatuses.filter(r => r.checked).length || 0;
         const onlineCount = relayStatuses.filter(r => r.isOnline).length || 0;
         const checkedRatio = checkedCount / totalCount; // 0 to 1
         const onlineRatio = onlineCount / totalCount; // 0 to 1
 
-        // Animate star opacity based on checking progress
-        // As more relays are checked, more stars become visible
-        const { farStars, midStars, nearStars, coloredStars } = starLayersRef.current;
-
-        if (farStars && farStars.material) {
-          const farMaterial = farStars.material as THREE.PointsMaterial;
-          // Far stars visible immediately, get brighter as we progress
-          farMaterial.opacity = 0.3 + (checkedRatio * 0.3);
-        }
-
-        if (midStars && midStars.material) {
-          const midMaterial = midStars.material as THREE.PointsMaterial;
-          // Mid stars fade in based on checking progress
-          midMaterial.opacity = 0.2 + (checkedRatio * 0.5);
-        }
-
-        if (nearStars && nearStars.material) {
-          const nearMaterial = nearStars.material as THREE.PointsMaterial;
-          // Near stars appear as relays come online
-          nearMaterial.opacity = 0.1 + (onlineRatio * 0.7);
-        }
-
-        if (coloredStars && coloredStars.material) {
-          const coloredMaterial = coloredStars.material as THREE.PointsMaterial;
-          // Colored stars represent successful connections
-          coloredMaterial.opacity = 0.2 + (onlineRatio * 0.6);
-        }
-
-        // Subtle rotation of star field
-        if (farStars) farStars.rotation.y += 0.0001;
-        if (midStars) midStars.rotation.y += 0.00015;
-        if (nearStars) nearStars.rotation.y += 0.0002;
-        if (coloredStars) coloredStars.rotation.y += 0.00025;
-
-        // Gentle twinkling effect for some stars
-        const twinkleTime = time * 2;
-        if (coloredStars && coloredStars.material) {
-          const coloredMaterial = coloredStars.material as THREE.PointsMaterial;
-          coloredMaterial.opacity = (0.2 + (onlineRatio * 0.6)) * (0.8 + Math.sin(twinkleTime) * 0.2);
+        // Update shader uniforms for screen position-based visibility
+        const { material } = starLayersRef.current;
+        if (material) {
+          material.uniforms.time.value = time;
+          material.uniforms.checkedRatio.value = checkedRatio;
+          material.uniforms.onlineRatio.value = onlineRatio;
         }
       }
 
