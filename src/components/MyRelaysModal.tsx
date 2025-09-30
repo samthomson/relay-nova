@@ -45,7 +45,10 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   // Track which relays are being toggled - now connected to mutation state
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
 
-  
+  // Check if we're in a loading state (initial load or refetch)
+  const isAnyOperationPending = isPublishing || isToggling || togglingRelays.size > 0;
+
+
 
   const updateRelayList = async (updatedRelays: RelayListItem[]) => {
   const tags = updatedRelays.map(relay => {
@@ -108,6 +111,30 @@ const { mutate: togglePermission, isPending: isToggling } = useMutation({
   }
 });
 
+const { mutate: addRelay, isPending: isAddingRelay } = useMutation({
+  mutationFn: async (newRelay: { url: string; read: boolean; write: boolean }) => {
+    if (!relays) throw new Error('No relays available');
+
+    const updatedRelays = [...relays, newRelay];
+
+    const tags = updatedRelays.map(relay => {
+      const tag = ['r', relay.url];
+      if (relay.read && !relay.write) tag.push('read');
+      if (relay.write && !relay.read) tag.push('write');
+      return tag;
+    });
+
+    await publishEvent({
+      kind: 10002,
+      content: '',
+      tags,
+    });
+
+    // Invalidate to refresh data
+    queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+  }
+});
+
 return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] bg-gray-900/95 backdrop-blur-md border border-white/10">
@@ -119,7 +146,7 @@ return (
         </DialogHeader>
 
         <div className="space-y-4">
-          {isLoading ? (
+          {isLoading || isAnyOperationPending ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">

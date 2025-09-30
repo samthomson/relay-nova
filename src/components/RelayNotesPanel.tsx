@@ -71,7 +71,11 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
         tags,
       });
 
-      queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+      // Invalidate the query to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+
+      // Also refetch immediately to ensure fresh data
+      await queryClient.refetchQueries({ queryKey: ['user-relays'] });
     }
   });
 

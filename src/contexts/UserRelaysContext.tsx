@@ -17,8 +17,8 @@ interface UserRelaysContextType {
 const UserRelaysContext = createContext<UserRelaysContextType | undefined>(undefined);
 
 function validateNip65Event(event: any): event is { tags: string[][] } {
-  return event && 
-         event.kind === 10002 && 
+  return event &&
+         event.kind === 10002 &&
          Array.isArray(event.tags) &&
          event.tags.every(tag => Array.isArray(tag) && tag.length >= 2);
 }
@@ -54,7 +54,7 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
           const url = tag[1].trim();
           const read = tag.includes('read');
           const write = tag.includes('write');
-          
+
           relayList.push({
             url,
             read: read || (!tag.includes('read') && !tag.includes('write')), // Default to read if no permissions specified
@@ -66,6 +66,8 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
       return relayList;
     },
     enabled: !!user?.pubkey && !!nostr,
+    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   // Auto-switch to user's first write relay when available
