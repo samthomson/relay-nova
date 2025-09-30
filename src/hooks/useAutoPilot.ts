@@ -17,12 +17,13 @@ interface AutoPilotControls {
 export function useAutoPilot(controls: AutoPilotControls) {
   const { data: relayLocations } = useRelayLocations();
   const { nostr } = useNostr();
-  const { 
-    isAutoPilotMode, 
-    isAutoPilotActive, 
-    stopAutoPilot, 
+  const {
+    isAutoPilotMode,
+    isAutoPilotActive,
+    stopAutoPilot,
+    currentRelayIndex,
     setCurrentRelayIndex,
-    setTotalRelays 
+    setTotalRelays
   } = useAutoPilotContext();
 
   const [currentRelayOrder, setCurrentRelayOrder] = useState<string[]>([]);
@@ -33,7 +34,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
   // Generate random order of relays
   const generateRandomRelayOrder = useCallback(() => {
     if (!relayLocations || relayLocations.length === 0) return [];
-    
+
     const shuffled = [...relayLocations].sort(() => Math.random() - 0.5);
     return shuffled.map(relay => relay.url);
   }, [relayLocations]);
@@ -48,7 +49,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
       setCurrentRelayOrder(newOrder);
       setTotalRelays(newOrder.length);
       setCurrentRelayIndex(0);
-      
+
       if (newOrder.length === 0) {
         console.error('No relays available for auto pilot');
         stopAutoPilot();
@@ -86,10 +87,10 @@ export function useAutoPilot(controls: AutoPilotControls) {
       await moveToNextRelay();
     }
   }, [
-    isAutoPilotMode, 
-    isAutoPilotActive, 
-    currentRelayOrder, 
-    currentRelayIndex, 
+    isAutoPilotMode,
+    isAutoPilotActive,
+    currentRelayOrder,
+    currentRelayIndex,
     controls,
     generateRandomRelayOrder,
     stopAutoPilot,
@@ -105,7 +106,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
       const checkInterval = setInterval(() => {
         attempts++;
-        
+
         if (controls.areEventsLoaded()) {
           clearInterval(checkInterval);
           resolve(true);
@@ -145,7 +146,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
           clearInterval(scrollIntervalRef.current);
           scrollIntervalRef.current = null;
         }
-        
+
         autoPilotTimeoutRef.current = setTimeout(async () => {
           await moveToNextRelay();
         }, 2000);
@@ -188,9 +189,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
       startAutoPilotSequence();
     }, 1000);
   }, [
-    currentRelayIndex, 
-    currentRelayOrder, 
-    controls, 
+    currentRelayIndex,
+    currentRelayOrder,
+    controls,
     generateRandomRelayOrder,
     setCurrentRelayIndex,
     setCurrentRelayOrder,
