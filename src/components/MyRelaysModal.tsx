@@ -3,10 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useNostr } from '@/hooks/useNostr';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { Server, Network } from 'lucide-react';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { Server, Network, X, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface MyRelaysModalProps {
   isOpen: boolean;
@@ -29,6 +41,8 @@ function validateNip65Event(event: any): event is { tags: string[][] } {
 export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   const { user } = useCurrentUser();
   const { nostr } = useNostr();
+  const { mutate: publishEvent } = useNostrPublish();
+  const queryClient = useQueryClient();
 
   const { data: relays, isLoading } = useQuery({
     queryKey: ['nip65-relays', user?.pubkey],
@@ -70,9 +84,46 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
     enabled: !!user?.pubkey,
   });
 
-  return (
+  const updateRelayList = async (updatedRelays: RelayListItem[]) => {
+  if (!user) return;
+
+  const tags = updatedRelays.map(relay => {
+    const tag = ['r', relay.url];
+    if (relay.read && !relay.write) tag.push('read');
+    if (relay.write && !relay.read) tag.push('write');
+    return tag;
+  });
+
+  await publishEvent({
+    kind: 10002,
+    content: '',
+    tags,
+  });
+
+  // Invalidate the query to refresh the data
+  queryClient.invalidateQueries({ queryKey: ['nip65-relays', user.pubkey] });
+};
+
+const removeRelay = async (relayToRemove: RelayListItem) => {
+  if (!relays) return;
+  const updatedRelays = relays.filter(relay => relay.url !== relayToRemove.url);
+  await updateRelayList(updatedRelays);
+};
+
+const togglePermission = async (relayUrl: string, permission: 'read' | 'write') => {
+  if (!relays) return;
+  const updatedRelays = relays.map(relay => {
+    if (relay.url === relayUrl) {
+      return { ...relay, [permission]: !relay[permission] };
+    }
+    return relay;
+  });
+  await updateRelayList(updatedRelays);
+};
+
+return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] bg-black/90 backdrop-blur-md border border-white/10">
+      <DialogContent className="max-w-2xl max-h-[80vh] bg-gray-900/95 backdrop-blur-md border border-white/10">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             <Network className="w-5 h-5 text-orange-400" />
@@ -106,17 +157,63 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
                       {relay.url}
                     </span>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    {relay.read && (
-                      <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
-                        Read
-                      </Badge>
-                    )}
-                    {relay.write && (
-                      <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30">
-                        Write
-                      </Badge>
-                    )}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Toggleable Read Badge */}
+                    <button
+                      onClick={() => togglePermission(relay.url, 'read')}
+                      className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                        relay.read
+                          ? 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
+                          : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
+                      }`}
+                    >
+                      Read
+                    </button>
+
+                    {/* Toggleable Write Badge */}
+                    <button
+                      onClick={() => togglePermission(relay.url, 'write')}
+                      className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                        relay.write
+                          ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30'
+                          : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
+                      }`}
+                    >
+                      Write
+                    </button>
+
+                    {/* Remove Button */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-white/40 hover:text-red-400 hover:bg-red-500/10"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-gray-900/95 backdrop-blur-md border border-white/10">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-white">Remove Relay</AlertDialogTitle>
+                          <AlertDialogDescription className="text-white/70">
+                            Are you sure you want to remove "{relay.url}" from your relay list? This action will update your NIP-65 event.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-white/10 text-white hover:bg-white/20 border-white/20">
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => removeRelay(relay)}
+                            className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Remove
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}
