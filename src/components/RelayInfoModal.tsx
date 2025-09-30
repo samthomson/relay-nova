@@ -29,9 +29,6 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
   const { mutate: publishEvent } = useNostrPublish();
   const queryClient = useQueryClient();
 
-  // Debug logging
-  console.log('RelayInfoModal:', { user: !!user, userRelays: userRelays?.length });
-
   const { mutate: addRelay, isPending: isAdding } = useMutation({
     mutationFn: async (relayUrl: string) => {
       if (!user) throw new Error('User not logged in');
