@@ -74,6 +74,10 @@ export function ThreeEarth() {
   const openRelayPanel = (relay: RelayLocation, camera: THREE.PerspectiveCamera) => {
     setOpenRelay(relay);
 
+    // Clear hover state when opening relay panel
+    setHoveredRelay(null);
+    setTooltipPosition(null);
+
     // Disable wheel events when relay panel opens
     wheelEventsEnabled.current = false;
 
@@ -427,33 +431,71 @@ export function ThreeEarth() {
       // Don't process globe events when relay panel is open
       if (openRelayRef.current) return;
 
-      // Only process drag if mouse button is down
-      if (!isMouseDown.current) return;
-
-      // Check if we've moved enough to start dragging
-      if (!isDragging.current) {
-        const dragDistance = Math.sqrt(
-          Math.pow(event.clientX - dragStartPosition.current.x, 2) +
-          Math.pow(event.clientY - dragStartPosition.current.y, 2)
-        );
-        if (dragDistance > DRAG_THRESHOLD) {
-          isDragging.current = true;
+      // Handle dragging
+      if (isMouseDown.current) {
+        // Check if we've moved enough to start dragging
+        if (!isDragging.current) {
+          const dragDistance = Math.sqrt(
+            Math.pow(event.clientX - dragStartPosition.current.x, 2) +
+            Math.pow(event.clientY - dragStartPosition.current.y, 2)
+          );
+          if (dragDistance > DRAG_THRESHOLD) {
+            isDragging.current = true;
+          }
         }
+
+        if (isDragging.current && earthRef.current) {
+          setManualMode();
+          const deltaX = event.clientX - previousMouse.current.x;
+          const deltaY = event.clientY - previousMouse.current.y;
+
+          earthRef.current.rotation.y += deltaX * 0.005;
+          earthRef.current.rotation.x += deltaY * 0.005;
+
+          // Clamp X rotation to prevent flipping
+          earthRef.current.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, earthRef.current.rotation.x));
+        }
+
+        previousMouse.current = { x: event.clientX, y: event.clientY };
+        return;
       }
 
-      if (isDragging.current && earthRef.current) {
-        setManualMode();
-        const deltaX = event.clientX - previousMouse.current.x;
-        const deltaY = event.clientY - previousMouse.current.y;
+      // Handle hover detection (only when not dragging)
+      if (!relayMarkersRef.current || !cameraRef.current || !rendererRef.current) return;
 
-        earthRef.current.rotation.y += deltaX * 0.005;
-        earthRef.current.rotation.x += deltaY * 0.005;
+      // Calculate mouse position in normalized device coordinates
+      const rect = rendererRef.current.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-        // Clamp X rotation to prevent flipping
-        earthRef.current.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, earthRef.current.rotation.x));
+      // Raycast to find intersected objects
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
+
+      const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
+
+      if (intersects.length > 0) {
+        let relayData = null;
+
+        // Check the intersected object and its parent for relay data
+        let currentObject = intersects[0].object;
+        while (currentObject && !relayData) {
+          relayData = (currentObject as any).relayData;
+          currentObject = currentObject.parent as THREE.Object3D;
+        }
+
+        if (relayData) {
+          setHoveredRelay(relayData);
+          setTooltipPosition({ x: event.clientX, y: event.clientY });
+        } else {
+          setHoveredRelay(null);
+          setTooltipPosition(null);
+        }
+      } else {
+        setHoveredRelay(null);
+        setTooltipPosition(null);
       }
-
-      previousMouse.current = { x: event.clientX, y: event.clientY };
     };
 
     const onMouseUp = () => {
@@ -499,10 +541,7 @@ export function ThreeEarth() {
           }
 
           if (relayData) {
-            setHoveredRelay(relayData);
-            setTooltipPosition({ x: event.clientX, y: event.clientY });
-
-            // Open relay panel
+            // Only open relay panel, don't set hover state (that's for mouse hover only)
             openRelayPanel(relayData, camera);
           } else {
             // Clicked on a line or other non-marker object - just clear selection
