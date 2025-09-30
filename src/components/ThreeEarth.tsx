@@ -867,7 +867,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       const startCameraY = cameraRef.current.position.y;
       const startCameraZ = cameraRef.current.position.z;
 
-      const animationDuration = 2000; // 2 seconds
+      const animationDuration = 1000; // 1 second
       const startTime = Date.now();
 
       const animateRotation = () => {

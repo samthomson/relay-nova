@@ -44,6 +44,12 @@ export function useAutoPilot(controls: AutoPilotControls) {
   const runAutoPilotSequence = useCallback(async () => {
     if (!isAutoPilotMode || !isAutoPilotActive) return;
 
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
     // Generate new random order if needed
     if (currentRelayOrder.length === 0) {
       const newOrder = generateRandomRelayOrder();
@@ -62,7 +68,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     console.log(`🛩️ Processing relay ${currentRelayIndex + 1}/${currentRelayOrder.length}: ${currentRelayUrl}`);
 
     try {
-      // Step 1: Rotate earth to relay (1 second smooth movement)
+      // Step 1: Rotate earth to relay (fast, 1 second)
       console.log('🔄 Rotating earth to relay...');
       await controls.rotateEarthToRelay(currentRelayUrl);
       console.log('✅ Earth rotated');
@@ -86,7 +92,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
       console.log('⏳ Waiting 5 seconds...');
       await new Promise(resolve => setTimeout(resolve, 5000));
 
-      // Step 5: Move to next relay and repeat
+      // Step 5: Move to next relay
       console.log('⏭️ Moving to next relay...');
       moveToNextRelayLocal();
 
@@ -145,6 +151,13 @@ export function useAutoPilot(controls: AutoPilotControls) {
       timeoutRef.current = null;
     }
 
+    // Close current relay panel
+    if (controls.isPanelOpen()) {
+      controls.closeRelayPanel().catch(error => {
+        console.error('❌ Error closing relay panel:', error);
+      });
+    }
+
     // Move to next relay or restart from beginning
     const nextIndex = currentRelayIndex + 1;
     if (nextIndex >= currentRelayOrder.length) {
@@ -166,6 +179,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
   }, [
     currentRelayIndex,
     currentRelayOrder,
+    controls,
     generateRandomRelayOrder,
     setCurrentRelayIndex,
     setCurrentRelayOrder,
