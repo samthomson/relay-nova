@@ -1,7 +1,6 @@
 import { ReactNode, useEffect } from 'react';
 import { z } from 'zod';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useUserRelays } from '@/hooks/useUserRelays';
 import { AppContext, type AppConfig, type AppContextType, type Theme } from '@/contexts/AppContext';
 
 interface AppProviderProps {
@@ -41,21 +40,7 @@ export function AppProvider(props: AppProviderProps) {
     }
   );
 
-  // Fetch user's NIP-65 relays
-  const { data: userRelays } = useUserRelays();
-
-  // Auto-switch to user's first write relay when available
-  useEffect(() => {
-    if (userRelays && userRelays.length > 0) {
-      const writeRelays = userRelays.filter(relay => relay.write);
-      if (writeRelays.length > 0 && config.relayUrl !== writeRelays[0].url) {
-        setConfig(prev => ({
-          ...prev,
-          relayUrl: writeRelays[0].url
-        }));
-      }
-    }
-  }, [userRelays, config.relayUrl, setConfig]);
+  
 
   // Generic config updater with callback pattern
   const updateConfig = (updater: (currentConfig: AppConfig) => AppConfig) => {

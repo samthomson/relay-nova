@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { useNostr } from '@/hooks/useNostr';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
 import { Server, Network, X, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -39,54 +38,11 @@ function validateNip65Event(event: any): event is { tags: string[][] } {
 }
 
 export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
-  const { user } = useCurrentUser();
-  const { nostr } = useNostr();
+  const { userRelays: relays, isLoading } = useUserRelaysContext();
   const { mutate: publishEvent } = useNostrPublish();
   const queryClient = useQueryClient();
 
-  const { data: relays, isLoading } = useQuery({
-    queryKey: ['nip65-relays', user?.pubkey],
-    queryFn: async () => {
-      if (!user?.pubkey) return [];
-
-      const signal = AbortSignal.timeout(3000);
-      const events = await nostr.query([
-        {
-          kinds: [10002], // NIP-65 relay list
-          authors: [user.pubkey],
-          limit: 1,
-        }
-      ], { signal });
-
-      const latestEvent = events[0];
-      if (!latestEvent || !validateNip65Event(latestEvent)) {
-        return [];
-      }
-
-      // Parse relay tags
-      const relayList: RelayListItem[] = [];
-      for (const tag of latestEvent.tags) {
-        if (tag[0] === 'r' && tag[1]) {
-          const url = tag[1].trim();
-          const read = tag.includes('read');
-          const write = tag.includes('write');
-
-          relayList.push({
-            url,
-            read: read || (!tag.includes('read') && !tag.includes('write')), // Default to read if no permissions specified
-            write: write || (!tag.includes('read') && !tag.includes('write')), // Default to write if no permissions specified
-          });
-        }
-      }
-
-      return relayList;
-    },
-    enabled: !!user?.pubkey,
-  });
-
   const updateRelayList = async (updatedRelays: RelayListItem[]) => {
-  if (!user) return;
-
   const tags = updatedRelays.map(relay => {
     const tag = ['r', relay.url];
     if (relay.read && !relay.write) tag.push('read');
@@ -101,7 +57,7 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   });
 
   // Invalidate the query to refresh the data
-  queryClient.invalidateQueries({ queryKey: ['nip65-relays', user.pubkey] });
+  queryClient.invalidateQueries({ queryKey: ['user-relays'] });
 };
 
 const removeRelay = async (relayToRemove: RelayListItem) => {
