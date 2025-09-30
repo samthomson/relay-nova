@@ -1210,11 +1210,11 @@ export function ThreeEarth() {
             transform: 'translate(0, -100%)',
           }}
         >
-          <div className="text-sm font-semibold">
-            {hoveredRelay.country || 'Unknown Location'}
-          </div>
-          <div className="text-xs text-gray-300 mt-1">
+          <div className="text-xs text-gray-300">
             {hoveredRelay.url.replace('wss://', '').replace('ws://', '')}
+          </div>
+          <div className="text-sm font-semibold mt-1">
+            {hoveredRelay.country || 'Unknown Location'}
           </div>
           {hoveredRelay.lat && hoveredRelay.lng && (
             <div className="text-xs text-gray-400 mt-1">
