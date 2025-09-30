@@ -12,6 +12,7 @@ interface UserRelay {
 interface UserRelaysContextType {
   userRelays: UserRelay[] | undefined;
   isLoading: boolean;
+  refetch: () => Promise<void>;
 }
 
 const UserRelaysContext = createContext<UserRelaysContextType | undefined>(undefined);
@@ -28,7 +29,7 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
   const { nostr } = useNostr();
   const queryClient = useQueryClient();
 
-  const { data: userRelays, isLoading } = useQuery({
+  const { data: userRelays, isLoading, refetch } = useQuery({
     queryKey: ['user-relays', user?.pubkey],
     queryFn: async () => {
       if (!user?.pubkey || !nostr) return [];
@@ -66,8 +67,11 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
       return relayList;
     },
     enabled: !!user?.pubkey && !!nostr,
-    staleTime: 0, // Always consider data stale to ensure fresh fetches
-    refetchOnWindowFocus: true, // Refetch when window gains focus
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache data at all
+    refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
+    refetchOnReconnect: 'always',
   });
 
   // Auto-switch to user's first write relay when available
@@ -100,6 +104,7 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
   const value: UserRelaysContextType = {
     userRelays,
     isLoading,
+    refetch,
   };
 
   return (

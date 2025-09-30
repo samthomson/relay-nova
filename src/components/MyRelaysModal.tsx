@@ -38,9 +38,8 @@ function validateNip65Event(event: any): event is { tags: string[][] } {
 }
 
 export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
-  const { userRelays: relays, isLoading } = useUserRelaysContext();
+  const { userRelays: relays, isLoading, refetch } = useUserRelaysContext();
   const { mutate: publishEvent, isPending: isPublishing } = useNostrPublish();
-  const queryClient = useQueryClient();
 
   // Track which relays are being toggled - now connected to mutation state
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
@@ -61,8 +60,8 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
     tags,
   });
 
-  // Invalidate the query to refresh the data
-  queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+  // Force immediate refetch to get fresh data
+  await queryClient.refetchQueries({ queryKey: ['user-relays'] });
 };
 
 const { mutate: removeRelay, isPending: isRemoving } = useMutation({
@@ -84,8 +83,8 @@ const { mutate: removeRelay, isPending: isRemoving } = useMutation({
       tags,
     });
 
-    // Invalidate to refresh data
-    queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+    // Force immediate refetch to get fresh data
+  await refetch();
   }
 });
 
@@ -113,8 +112,8 @@ const { mutate: togglePermission, isPending: isToggling } = useMutation({
       tags,
     });
 
-    // Invalidate to refresh data
-    queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+    // Force immediate refetch to get fresh data
+  await refetch();
   },
   onMutate: ({ relayUrl }) => {
     // Add to toggling set when mutation starts
@@ -145,8 +144,8 @@ const { mutate: addRelay, isPending: isAddingRelay } = useMutation({
       tags,
     });
 
-    // Invalidate to refresh data
-    queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+    // Force immediate refetch to get fresh data
+  await refetch();
   }
 });
 
