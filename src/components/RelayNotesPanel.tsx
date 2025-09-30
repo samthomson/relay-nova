@@ -29,10 +29,12 @@ interface RelayNotesPanelProps {
   onMouseLeave?: () => void;
   onMouseDown?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onWheel?: (event: React.WheelEvent<HTMLDivElement>) => void;
+  onEventsChange?: (events: NostrEvent[] | null, loaded: boolean) => void;
+  forwardScrollableRef?: React.RefObject<{ scrollableRef: React.RefObject<HTMLDivElement> }>;
 }
 
 export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
-  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel }, ref) => {
+  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef }, ref) => {
   const { nostr } = useNostr();
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,16 +121,33 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
         // Sort by created_at (newest first)
         const sortedEvents = events.sort((a, b) => b.created_at - a.created_at);
         setNotes(sortedEvents);
+
+        // Notify parent that events are loaded
+        if (onEventsChange) {
+          onEventsChange(sortedEvents, true);
+        }
       } catch (err) {
         // Silently handle relay connection failures - this is expected for offline relays
         setError('Failed to fetch notes from this relay');
+
+        // Notify parent that events failed to load
+        if (onEventsChange) {
+          onEventsChange(null, false);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchNotes();
-  }, [relay.url, nostr]);
+  }, [relay.url, nostr, onEventsChange]);
+
+  // Expose scrollable ref to parent
+  useEffect(() => {
+    if (forwardScrollableRef) {
+      forwardScrollableRef.current = { scrollableRef };
+    }
+  }, [forwardScrollableRef]);
 
   const getPanelClasses = () => {
     const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[99999] pointer-events-auto flex flex-col';
@@ -264,7 +283,7 @@ function NoteCard({ note }: { note: NostrEvent }) {
   const timeAgo = new Date(note.created_at * 1000).toLocaleDateString();
 
   return (
-    <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden">
+    <Card data-note-card="true" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Avatar */}

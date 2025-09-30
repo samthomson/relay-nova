@@ -12,6 +12,7 @@ import { NostrLoginProvider } from '@nostrify/react/login';
 import { AppProvider } from '@/components/AppProvider';
 import { NWCProvider } from '@/contexts/NWCContext';
 import { UserRelaysProvider } from '@/contexts/UserRelaysContext';
+import { AutoPilotProvider } from '@/contexts/AutoPilotContext';
 import { AppConfig } from '@/contexts/AppContext';
 import AppRouter from './AppRouter';
 
@@ -52,12 +53,14 @@ export function App() {
             <NostrProvider>
               <NWCProvider>
                 <UserRelaysProvider>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Suspense>
-                      <AppRouter />
-                    </Suspense>
-                  </TooltipProvider>
+                  <AutoPilotProvider>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Suspense>
+                        <AppRouter />
+                      </Suspense>
+                    </TooltipProvider>
+                  </AutoPilotProvider>
                 </UserRelaysProvider>
               </NWCProvider>
             </NostrProvider>

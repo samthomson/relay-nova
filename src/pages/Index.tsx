@@ -1,8 +1,10 @@
 import { useSeoMeta } from '@unhead/react';
-import { ThreeEarth } from '@/components/ThreeEarth';
+import { ThreeEarth, type ThreeEarthRef } from '@/components/ThreeEarth';
 import { Navbar } from '@/components/Navbar';
 import { RelayInfoModal } from '@/components/RelayInfoModal';
+import { AutoPilotButton } from '@/components/AutoPilotButton';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
+import { useRef } from 'react';
 
 const Index = () => {
   useSeoMeta({
@@ -11,6 +13,7 @@ const Index = () => {
   });
 
   const { data: relayLocations, isLoading: isLoadingLocations } = useRelayLocations();
+  const earthRef = useRef<ThreeEarthRef>(null);
 
   return (
     <div className="relative min-h-screen">
@@ -31,15 +34,16 @@ const Index = () => {
         </div>
 
         {/* Relay Info button at bottom */}
-        <div className="absolute bottom-6 right-6 z-20">
+        <div className="absolute bottom-6 right-6 z-20 flex flex-col gap-3">
           <RelayInfoModal
             relays={relayLocations || []}
             isLoading={isLoadingLocations}
           />
+          <AutoPilotButton />
         </div>
 
         {/* 3D Earth Visualization */}
-        <ThreeEarth />
+        <ThreeEarth ref={earthRef} />
       </div>
     </div>
   );

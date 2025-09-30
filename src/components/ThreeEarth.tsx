@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 import { RelayInfoModal } from './RelayInfoModal';
 import { RelayNotesPanel } from './RelayNotesPanel';
+import { useAutoPilot } from '@/hooks/useAutoPilot';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 interface RelayLocation {
   url: string;
@@ -17,7 +19,21 @@ interface RelayStatus extends RelayLocation {
   checked: boolean;
 }
 
-export function ThreeEarth() {
+export interface AutoPilotControls {
+  rotateEarthToRelay: (relayUrl: string) => Promise<void>;
+  openRelayPanel: (relayUrl: string) => Promise<void>;
+  closeRelayPanel: () => Promise<void>;
+  scrollToEvent: (eventIndex: number) => Promise<void>;
+  getCurrentEvents: () => NostrEvent[] | null;
+  isPanelOpen: () => boolean;
+  areEventsLoaded: () => boolean;
+}
+
+export interface ThreeEarthRef {
+  getAutoPilotControls: () => AutoPilotControls;
+}
+
+export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -40,8 +56,11 @@ export function ThreeEarth() {
   // Track if mouse is over relay panel for scroll handling
   const isMouseOverRelayPanel = useRef(false);
 
-  // Track relay panel element for bounds checking
-  const relayPanelRef = useRef<HTMLElement | null>(null);
+  // Track relay panel element for bounds checking and auto pilot
+  const relayPanelRef = useRef<{
+    element?: HTMLElement | null;
+    scrollableRef?: React.RefObject<HTMLDivElement>;
+  } | null>(null);
 
   // Track whether wheel events should be enabled
   const wheelEventsEnabled = useRef(true);
@@ -64,14 +83,14 @@ export function ThreeEarth() {
 
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
-    if (!relayPanelRef.current || !openRelayRef.current) return false;
+    if (!relayPanelRef.current?.element || !openRelayRef.current) return false;
 
-    const rect = relayPanelRef.current.getBoundingClientRect();
+    const rect = relayPanelRef.current.element.getBoundingClientRect();
     return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
   };
 
   // Function to open relay panel and determine side
-  const openRelayPanel = (relay: RelayLocation, camera: THREE.PerspectiveCamera) => {
+  const openRelayPanelInternal = (relay: RelayLocation, camera: THREE.PerspectiveCamera) => {
     setOpenRelay(relay);
 
     // Clear hover state when opening relay panel
@@ -122,7 +141,7 @@ export function ThreeEarth() {
   };
 
   // Function to close relay panel
-  const closeRelayPanel = () => {
+  const closeRelayPanelInternal = () => {
     setOpenRelay(null);
     setHoveredRelay(null); // Clear the hovered relay to remove tooltip
     setTooltipPosition(null); // Clear tooltip position
@@ -542,7 +561,7 @@ export function ThreeEarth() {
 
           if (relayData) {
             // Only open relay panel, don't set hover state (that's for mouse hover only)
-            openRelayPanel(relayData, camera);
+            openRelayPanelInternal(relayData, camera);
           } else {
             // Clicked on a line or other non-marker object - just clear selection
             setHoveredRelay(null);
@@ -769,6 +788,162 @@ export function ThreeEarth() {
     isAutoMode.current = true;
   }, []);
 
+  // Auto pilot integration
+  const [notes, setNotes] = useState<NostrEvent[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+
+  // Auto pilot controls implementation
+  const rotateEarthToRelay = useCallback(async (relayUrl: string) => {
+    if (!relayLocations || !earthRef.current || !cameraRef.current) {
+      throw new Error('Earth or camera not ready');
+    }
+
+    const relay = relayLocations.find(r => r.url === relayUrl);
+    if (!relay) {
+      throw new Error(`Relay not found: ${relayUrl}`);
+    }
+
+    console.log(`🌍 Rotating earth to relay: ${relayUrl} at ${relay.lat}, ${relay.lng}`);
+
+    return new Promise<void>((resolve) => {
+      // Convert relay coordinates to 3D position
+      const latRad = relay.lat * (Math.PI / 180);
+      const lngRad = -relay.lng * (Math.PI / 180);
+
+      const radius = 2.05;
+      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
+      const y = radius * Math.sin(latRad);
+      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+
+      // Calculate target rotation
+      const targetRotationY = -lngRad;
+      const targetRotationX = -latRad;
+
+      // Smooth rotation animation
+      const startRotationY = earthRef.current.rotation.y;
+      const startRotationX = earthRef.current.rotation.x;
+      const animationDuration = 2000; // 2 seconds
+      const startTime = Date.now();
+
+      const animateRotation = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / animationDuration, 1);
+
+        // Easing function for smooth animation
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+        if (earthRef.current) {
+          earthRef.current.rotation.y = startRotationY + (targetRotationY - startRotationY) * easeProgress;
+          earthRef.current.rotation.x = startRotationX + (targetRotationX - startRotationX) * easeProgress;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animateRotation);
+        } else {
+          resolve();
+        }
+      };
+
+      animateRotation();
+    });
+  }, [relayLocations]);
+
+  const openRelayPanel = useCallback(async (relayUrl: string) => {
+    if (!relayLocations || !cameraRef.current) {
+      throw new Error('Relay locations or camera not ready');
+    }
+
+    const relay = relayLocations.find(r => r.url === relayUrl);
+    if (!relay) {
+      throw new Error(`Relay not found: ${relayUrl}`);
+    }
+
+    console.log(`📂 Opening relay panel for: ${relayUrl}`);
+
+    // Set events as not loaded initially
+    setEventsLoaded(false);
+    setNotes([]);
+
+    // Open the relay panel using existing function
+    openRelayPanelInternal(relay, cameraRef.current);
+
+    // Wait for panel to open and events to load
+    return new Promise<void>((resolve) => {
+      const checkEventsLoaded = () => {
+        if (eventsLoaded) {
+          resolve();
+        } else {
+          setTimeout(checkEventsLoaded, 100);
+        }
+      };
+      checkEventsLoaded();
+    });
+  }, [relayLocations, eventsLoaded]);
+
+  const closeRelayPanel = useCallback(async () => {
+    console.log('📂 Closing relay panel');
+    closeRelayPanelInternal();
+    setNotes([]);
+    setEventsLoaded(false);
+  }, []);
+
+  const scrollToEvent = useCallback(async (eventIndex: number) => {
+    if (!relayPanelRef.current?.scrollableRef?.current) {
+      console.warn('Scrollable ref not available');
+      return;
+    }
+
+    const scrollableElement = relayPanelRef.current.scrollableRef.current;
+    const eventElements = scrollableElement.querySelectorAll('[data-note-card]');
+
+    if (eventIndex < eventElements.length) {
+      const eventElement = eventElements[eventIndex] as HTMLElement;
+      eventElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+      console.log(`📜 Scrolled to event ${eventIndex}`);
+    }
+  }, []);
+
+  const getCurrentEvents = useCallback(() => {
+    return notes.length > 0 ? notes : null;
+  }, [notes]);
+
+  const isPanelOpen = useCallback(() => {
+    return openRelay !== null;
+  }, [openRelay]);
+
+  const areEventsLoaded = useCallback(() => {
+    return eventsLoaded;
+  }, [eventsLoaded]);
+
+  // Expose auto pilot controls
+  useImperativeHandle(ref, () => ({
+    getAutoPilotControls: () => ({
+      rotateEarthToRelay,
+      openRelayPanel,
+      closeRelayPanel,
+      scrollToEvent,
+      getCurrentEvents,
+      isPanelOpen,
+      areEventsLoaded,
+    }),
+  }));
+
+  // Initialize auto pilot hook
+  const autoPilotControls = {
+    rotateEarthToRelay,
+    openRelayPanel,
+    closeRelayPanel,
+    scrollToEvent,
+    getCurrentEvents,
+    isPanelOpen,
+    areEventsLoaded,
+  };
+
+  useAutoPilot(autoPilotControls);
+
   // Add click-outside-to-close functionality
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -777,7 +952,7 @@ export function ThreeEarth() {
 
       // Check if click is outside the relay panel
       if (relayPanelContainerRef.current && !relayPanelContainerRef.current.contains(event.target as Node)) {
-        closeRelayPanel();
+        closeRelayPanelInternal();
       }
     };
 
@@ -1189,13 +1364,24 @@ export function ThreeEarth() {
       {openRelay && (
         <div ref={relayPanelContainerRef}>
           <RelayNotesPanel
-            ref={relayPanelRef}
+            ref={(element) => {
+              if (relayPanelRef.current) {
+                relayPanelRef.current.element = element;
+              }
+            }}
             relay={openRelay}
             side={relaySide}
-            onClose={closeRelayPanel}
+            onClose={closeRelayPanelInternal}
             onMouseEnter={() => isMouseOverRelayPanel.current = true}
             onMouseLeave={() => isMouseOverRelayPanel.current = false}
             onMouseDown={() => {}}
+            onEventsChange={(events, loaded) => {
+              if (events) {
+                setNotes(events);
+              }
+              setEventsLoaded(loaded);
+            }}
+            forwardScrollableRef={relayPanelRef}
           />
         </div>
       )}
@@ -1225,4 +1411,6 @@ export function ThreeEarth() {
       )}
     </div>
   );
-}
+});
+
+ThreeEarth.displayName = 'ThreeEarth';
