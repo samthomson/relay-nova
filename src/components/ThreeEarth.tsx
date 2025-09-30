@@ -1032,13 +1032,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     areEventsLoaded,
   };
 
-  const { isAutoPilotMode, isAutoPilotActive, currentRelayIndex, totalRelays } = useAutoPilot(autoPilotControls);
-
-  // Update autopilot mode ref for the animation loop
-  useEffect(() => {
-    isAutoPilotModeActive.current = isAutoPilotMode;
-  }, [isAutoPilotMode]);
-
   // Create connection line from relay to panel
   const createConnectionLine = useCallback((relay: RelayLocation) => {
     if (!sceneRef.current || !earthRef.current || !relayPanelRef.current?.element) {
@@ -1578,6 +1571,14 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       )}
     </div>
   );
+
+  // Initialize auto pilot hook and get state (must be after all functions are defined)
+  const { isAutoPilotMode, isAutoPilotActive, currentRelayIndex, totalRelays } = useAutoPilot(autoPilotControls);
+
+  // Update autopilot mode ref for the animation loop
+  useEffect(() => {
+    isAutoPilotModeActive.current = isAutoPilotMode;
+  }, [isAutoPilotMode]);
 });
 
 ThreeEarth.displayName = 'ThreeEarth';

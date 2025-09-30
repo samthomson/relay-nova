@@ -43,6 +43,10 @@ export function useAutoPilot(controls: AutoPilotControls) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const relayOrderRef = useRef<string[]>([]);
 
+  // Use refs to store function references to avoid circular dependencies
+  const runAutoPilotSequenceRef = useRef<() => Promise<void>>();
+  const scheduleNextRelayRef = useRef<() => Promise<void>>();
+
   // Generate random order of relays
   const generateRandomRelayOrder = useCallback(() => {
     if (!relayLocations || relayLocations.length === 0) return [];
@@ -71,7 +75,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
   }, []);
 
   // Auto pilot sequence runner - simple and clean
-  const runAutoPilotSequence = useCallback(async () => {
+  const runAutoPilotSequence = async () => {
     // Prevent multiple simultaneous executions
     if (isRunningRef.current) {
       console.log('🔄 Auto pilot already running, aborting existing execution...');
@@ -148,7 +152,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
       console.log(`✅ Auto pilot: Finished 15-second display period`);
 
       // Step 5: Move to next relay
-      await scheduleNextRelay();
+      await scheduleNextRelayRef.current?.();
 
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
@@ -156,11 +160,11 @@ export function useAutoPilot(controls: AutoPilotControls) {
         return;
       }
       console.error(`❌ Auto pilot error:`, error);
-      scheduleNextRelay();
+      scheduleNextRelayRef.current?.();
     } finally {
       isRunningRef.current = false;
     }
-  }, [controls, generateRandomRelayOrder, setTotalRelays, stopAutoPilot, abortCurrentExecution]);
+  };
 
   // Wait for events to load with proper signal handling
   const waitForEventsToLoad = useCallback(async (signal: AbortSignal): Promise<boolean> => {
@@ -266,7 +270,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
   }, [controls]);
 
   // Schedule next relay with proper cleanup
-  const scheduleNextRelay = useCallback(async () => {
+  const scheduleNextRelay = async () => {
     console.log(`⏭️ Scheduling next relay...`);
 
     // Close current relay panel and wait for it to close
@@ -299,12 +303,16 @@ export function useAutoPilot(controls: AutoPilotControls) {
     timeoutRef.current = setTimeout(() => {
       if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current) {
         console.log(`⏰ Travel time complete, starting next sequence`);
-        runAutoPilotSequence();
+        runAutoPilotSequenceRef.current?.();
       } else {
         console.log(`⏹️ Travel cancelled - autopilot no longer active`);
       }
     }, 1000); // 1 second travel time as requested
-  }, [controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, runAutoPilotSequence]);
+  };
+
+  // Assign functions to refs to avoid circular dependencies
+  runAutoPilotSequenceRef.current = runAutoPilotSequence;
+  scheduleNextRelayRef.current = scheduleNextRelay;
 
   // Start autopilot when activated
   useEffect(() => {
@@ -321,13 +329,13 @@ export function useAutoPilot(controls: AutoPilotControls) {
       // Start sequence after brief delay to ensure clean state
       const startTimeout = setTimeout(() => {
         if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current) {
-          runAutoPilotSequence();
+          runAutoPilotSequenceRef.current?.();
         }
       }, 100);
 
       return () => clearTimeout(startTimeout);
     }
-  }, [runAutoPilotSequence, setCurrentRelayIndex, abortCurrentExecution]);
+  }, [setCurrentRelayIndex, abortCurrentExecution]);
 
   // Cleanup when autopilot stops
   useEffect(() => {
