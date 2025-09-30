@@ -107,15 +107,19 @@ export function useAutoPilot(controls: AutoPilotControls) {
     } catch (error) {
       console.error('❌ Auto pilot error:', error);
 
-      // Check if this is a "Relay not found" error, which might indicate data issues
-      if (error instanceof Error && error.message.includes('Relay not found')) {
-        console.log('🔄 Relay not found error, trying to continue with next relay');
+      // Don't let errors break the autopilot - always try to continue
+      console.log('🔄 Attempting to continue to next relay despite error');
+      try {
         await moveToNextRelayLocal();
-      } else {
-        // For other errors, add a small delay before continuing
-        console.log('🔄 Moving to next relay due to error (with delay)');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await moveToNextRelayLocal();
+      } catch (nextError) {
+        console.error('❌ Failed to move to next relay:', nextError);
+        // If even moving to next relay fails, wait and retry
+        console.log('⏳ Waiting 3 seconds before retry...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        if (isAutoPilotMode && isAutoPilotActive) {
+          console.log('🔄 Retrying autopilot sequence');
+          await startAutoPilotSequence();
+        }
       }
     }
   }, [
@@ -162,6 +166,13 @@ export function useAutoPilot(controls: AutoPilotControls) {
           resolve(false);
         }
       }, 100);
+
+      // Safety cleanup - don't leave interval hanging
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.log('⏰ Safety timeout reached for events loading');
+        resolve(false);
+      }, 15000); // 15 second absolute safety timeout
     });
   }, [controls]);
 
@@ -218,10 +229,15 @@ export function useAutoPilot(controls: AutoPilotControls) {
       autoPilotTimeoutRef.current = null;
     }
 
-    // Close current relay panel
-    if (controls.isPanelOpen()) {
-      await controls.closeRelayPanel();
-      console.log('✅ Relay panel closed');
+    // Close current relay panel with error handling
+    try {
+      if (controls.isPanelOpen()) {
+        await controls.closeRelayPanel();
+        console.log('✅ Relay panel closed');
+      }
+    } catch (error) {
+      console.error('❌ Error closing relay panel:', error);
+      // Continue anyway - don't let this break autopilot
     }
 
     // Move to next relay or restart from beginning
@@ -229,9 +245,15 @@ export function useAutoPilot(controls: AutoPilotControls) {
     if (nextIndex >= currentRelayOrder.length) {
       // Restart from beginning with new random order
       console.log('🔄 Auto Pilot: Completed all relays, restarting with new order');
-      const newOrder = generateRandomRelayOrder();
-      setCurrentRelayOrder(newOrder);
-      setCurrentRelayIndex(0);
+      try {
+        const newOrder = generateRandomRelayOrder();
+        setCurrentRelayOrder(newOrder);
+        setCurrentRelayIndex(0);
+      } catch (error) {
+        console.error('❌ Error generating new relay order:', error);
+        // Try to continue with current order
+        setCurrentRelayIndex(0);
+      }
     } else {
       setCurrentRelayIndex(nextIndex);
     }
@@ -241,7 +263,18 @@ export function useAutoPilot(controls: AutoPilotControls) {
       console.log(`🔍 Timeout triggered - isAutoPilotMode: ${isAutoPilotMode}, isAutoPilotActive: ${isAutoPilotActive}`);
       if (isAutoPilotMode && isAutoPilotActive) {
         console.log('🚀 Starting next relay sequence');
-        startAutoPilotSequence();
+        try {
+          startAutoPilotSequence();
+        } catch (error) {
+          console.error('❌ Error starting next relay sequence:', error);
+          // Wait and retry
+          setTimeout(() => {
+            if (isAutoPilotMode && isAutoPilotActive) {
+              console.log('🔄 Retrying autopilot sequence');
+              startAutoPilotSequence();
+            }
+          }, 2000);
+        }
       } else {
         console.log('⏹️ Auto pilot stopped, not starting next sequence');
       }

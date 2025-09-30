@@ -830,16 +830,18 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
 
       // Calculate target earth rotations to bring relay to front
       // We want the relay to be at the front-right of the earth when viewed from camera
-      const targetRotationY = -lngRad + Math.PI / 2; // Adjust for Three.js coordinate system
-      const targetRotationX = -latRad;  // Rotate latitude to center
+      const targetRotationY = -lngRad; // Simple longitude rotation
+      const targetRotationX = latRad;   // Simple latitude rotation (positive for correct direction)
 
       // Calculate camera position to view the relay from optimal angle
       // Camera should be positioned to see the relay clearly
-      const cameraDistance = 6;
-      const cameraAngle = Math.PI / 6; // 30 degrees elevation
-      const targetCameraX = Math.sin(lngRad) * cameraDistance * Math.cos(cameraAngle);
+      const cameraDistance = 8;
+      const cameraAngle = Math.PI / 8; // 22.5 degrees elevation
+
+      // Calculate camera position based on relay longitude (opposite side of earth)
+      const targetCameraX = Math.sin(lngRad + Math.PI) * cameraDistance * Math.cos(cameraAngle);
       const targetCameraY = cameraDistance * Math.sin(cameraAngle);
-      const targetCameraZ = Math.cos(lngRad) * cameraDistance * Math.cos(cameraAngle);
+      const targetCameraZ = Math.cos(lngRad + Math.PI) * cameraDistance * Math.cos(cameraAngle);
 
       console.log(`🎯 Relay 3D position: X=${relayX.toFixed(2)}, Y=${relayY.toFixed(2)}, Z=${relayZ.toFixed(2)}`);
 
