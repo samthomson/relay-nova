@@ -867,7 +867,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       const startCameraY = cameraRef.current.position.y;
       const startCameraZ = cameraRef.current.position.z;
 
-      const animationDuration = 1000; // 1 second
+      const animationDuration = 750; // 750ms as specified
       const startTime = Date.now();
 
       const animateRotation = () => {
@@ -964,12 +964,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     setNotes([]);
     setEventsLoaded(false);
 
-    // Only stop auto pilot mode when user manually closes panel AND we're in autopilot mode
-    if (stopAutoPilot && isAutoPilotModeActive.current) {
-      console.log('🛑 Stopping auto pilot mode due to manual panel close');
-      stopAutoPilot();
-    }
-  }, [stopAutoPilot]);
+    // Don't automatically stop autopilot when panel closes - let the autopilot control this
+  }, []);
 
   const scrollToEvent = useCallback(async (eventIndex: number) => {
     if (!relayPanelRef.current?.scrollableRef?.current) {

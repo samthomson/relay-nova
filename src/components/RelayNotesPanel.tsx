@@ -82,12 +82,12 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
     }
   });
 
-  const { isAutoPilotMode, moveToNextRelay } = useAutoPilotContext();
+  const { isAutoPilotMode, stopAutoPilot } = useAutoPilotContext();
 
   const handleNextRelay = () => {
-    if (isAutoPilotMode && moveToNextRelay) {
-      console.log('⏭️ Skipping to next relay via Next button');
-      moveToNextRelay();
+    if (isAutoPilotMode) {
+      console.log('⏭️ Stopping auto pilot via Next button');
+      stopAutoPilot();
     }
   };
 
@@ -293,16 +293,16 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
               add relay+
             </Button>
 
-          {/* Next Button - Only show in auto pilot mode */}
-          {isAutoPilotMode && moveToNextRelay && (
+          {/* Stop Button - Only show in auto pilot mode */}
+          {isAutoPilotMode && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleNextRelay}
-              className="bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 text-xs px-3 py-1 h-7"
+              className="bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30 text-xs px-3 py-1 h-7"
             >
               <SkipForward className="w-3 h-3 mr-1" />
-              next
+              stop
             </Button>
           )}
           </div>

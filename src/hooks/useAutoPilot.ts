@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { useNostr } from '@nostrify/react';
 import { useRelayLocations } from './useRelayLocations';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -16,7 +15,6 @@ interface AutoPilotControls {
 
 export function useAutoPilot(controls: AutoPilotControls) {
   const { data: relayLocations } = useRelayLocations();
-  const { nostr } = useNostr();
   const {
     isAutoPilotMode,
     isAutoPilotActive,
@@ -24,11 +22,12 @@ export function useAutoPilot(controls: AutoPilotControls) {
     currentRelayIndex,
     setCurrentRelayIndex,
     setTotalRelays,
-    moveToNextRelay
   } = useAutoPilotContext();
 
   const [currentRelayOrder, setCurrentRelayOrder] = useState<string[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentStepRef = useRef<'idle' | 'rotating' | 'opening' | 'loading' | 'scrolling'>('idle');
 
   // Generate random order of relays
   const generateRandomRelayOrder = useCallback(() => {
@@ -40,121 +39,187 @@ export function useAutoPilot(controls: AutoPilotControls) {
     return urlOrder;
   }, [relayLocations]);
 
-  // Simple auto pilot sequence - exactly as described
-  const runAutoPilotSequence = useCallback(async () => {
-    if (!isAutoPilotMode || !isAutoPilotActive) return;
-
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-
-    // Generate new random order if needed
-    if (currentRelayOrder.length === 0) {
+  // Initialize relay order when autopilot starts
+  useEffect(() => {
+    if (isAutoPilotMode && isAutoPilotActive && currentRelayOrder.length === 0) {
       const newOrder = generateRandomRelayOrder();
       setCurrentRelayOrder(newOrder);
       setTotalRelays(newOrder.length);
       setCurrentRelayIndex(0);
+    }
+  }, [isAutoPilotMode, isAutoPilotActive, currentRelayOrder.length, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays]);
 
-      if (newOrder.length === 0) {
-        console.error('No relays available for auto pilot');
-        stopAutoPilot();
-        return;
-      }
+  // Auto pilot sequence runner
+  const runAutoPilotSequence = useCallback(async () => {
+    if (!isAutoPilotMode || !isAutoPilotActive || currentRelayOrder.length === 0) {
+      return;
     }
 
-    const currentRelayUrl = currentRelayOrder[currentRelayIndex];
-    console.log(`🛩️ Processing relay ${currentRelayIndex + 1}/${currentRelayOrder.length}: ${currentRelayUrl}`);
+    const relayUrl = currentRelayOrder[currentRelayIndex];
+    if (!relayUrl) {
+      console.error('No relay URL found at current index:', currentRelayIndex);
+      return;
+    }
+
+    console.log(`🛩️ Auto pilot: Processing relay ${currentRelayIndex + 1}/${currentRelayOrder.length}: ${relayUrl}`);
 
     try {
-      // Step 1: Rotate earth to relay (fast, 1 second)
-      console.log('🔄 Rotating earth to relay...');
-      await controls.rotateEarthToRelay(currentRelayUrl);
-      console.log('✅ Earth rotated');
+      // Step 1: Rotate earth to relay (750ms as specified)
+      currentStepRef.current = 'rotating';
+      console.log('🔄 Auto pilot: Rotating earth to relay...');
+      await controls.rotateEarthToRelay(relayUrl);
+      console.log('✅ Auto pilot: Earth rotated');
+
+      if (!isAutoPilotMode || !isAutoPilotActive) return; // Check if stopped during rotation
 
       // Step 2: Open relay panel
-      console.log('📂 Opening relay panel...');
-      await controls.openRelayPanel(currentRelayUrl);
-      console.log('✅ Relay panel opened');
+      currentStepRef.current = 'opening';
+      console.log('📂 Auto pilot: Opening relay panel...');
+      await controls.openRelayPanel(relayUrl);
+      console.log('✅ Auto pilot: Relay panel opened');
+
+      if (!isAutoPilotMode || !isAutoPilotActive) return; // Check if stopped during opening
 
       // Step 3: Wait for events to load
-      console.log('⏳ Waiting for events to load...');
+      currentStepRef.current = 'loading';
+      console.log('⏳ Auto pilot: Waiting for events to load...');
       const eventsLoaded = await waitForEventsToLoad();
+
+      if (!isAutoPilotMode || !isAutoPilotActive) return; // Check if stopped during loading
+
       if (!eventsLoaded) {
-        console.log('⏰ Events loading timeout, moving to next relay');
-        moveToNextRelayLocal();
+        console.log('⏰ Auto pilot: Events loading timeout, moving to next relay');
+        moveToNextRelay();
         return;
       }
-      console.log('✅ Events loaded');
+      console.log('✅ Auto pilot: Events loaded');
 
-      // Step 4: Wait 5 seconds after loading
-      console.log('⏳ Waiting 5 seconds...');
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Step 4: Scroll through events for 5 seconds
+      currentStepRef.current = 'scrolling';
+      console.log('📜 Auto pilot: Starting to scroll through events...');
+      await scrollThroughEvents();
+
+      if (!isAutoPilotMode || !isAutoPilotActive) return; // Check if stopped during scrolling
 
       // Step 5: Move to next relay
-      console.log('⏭️ Moving to next relay...');
-      moveToNextRelayLocal();
+      console.log('⏭️ Auto pilot: Moving to next relay...');
+      moveToNextRelay();
 
     } catch (error) {
       console.error('❌ Auto pilot error:', error);
       // Continue to next relay despite errors
-      moveToNextRelayLocal();
+      if (isAutoPilotMode && isAutoPilotActive) {
+        moveToNextRelay();
+      }
     }
-  }, [
-    isAutoPilotMode,
-    isAutoPilotActive,
-    currentRelayOrder,
-    currentRelayIndex,
-    controls,
-    generateRandomRelayOrder,
-    stopAutoPilot,
-    setCurrentRelayIndex,
-    setTotalRelays
-  ]);
+  }, [isAutoPilotMode, isAutoPilotActive, currentRelayOrder, currentRelayIndex, controls]);
 
   // Wait for events to load
   const waitForEventsToLoad = useCallback(async (): Promise<boolean> => {
     return new Promise((resolve) => {
       let attempts = 0;
-      const maxAttempts = 100; // 100 * 100ms = 10 seconds max
+      const maxAttempts = 50; // 5 seconds max (50 * 100ms)
 
       const checkInterval = setInterval(() => {
         attempts++;
 
+        if (!isAutoPilotMode || !isAutoPilotActive) {
+          clearInterval(checkInterval);
+          resolve(false);
+          return;
+        }
+
         if (controls.areEventsLoaded()) {
-          console.log('✅ Events loaded successfully');
+          console.log('✅ Auto pilot: Events loaded successfully');
           clearInterval(checkInterval);
           resolve(true);
         } else if (attempts >= maxAttempts) {
-          console.log('⏰ Events loading timeout');
+          console.log('⏰ Auto pilot: Events loading timeout');
           clearInterval(checkInterval);
           resolve(false);
         }
       }, 100);
 
-      // Safety cleanup
-      setTimeout(() => {
+      // Cleanup on unmount or stop
+      const cleanup = () => {
         clearInterval(checkInterval);
         resolve(false);
-      }, 15000);
+      };
+
+      return cleanup;
     });
-  }, [controls]);
+  }, [isAutoPilotMode, isAutoPilotActive, controls]);
+
+  // Scroll through events for 5 seconds
+  const scrollThroughEvents = useCallback(async (): Promise<void> => {
+    return new Promise((resolve) => {
+      const events = controls.getCurrentEvents();
+      if (!events || events.length === 0) {
+        console.log('📜 Auto pilot: No events to scroll through');
+        resolve();
+        return;
+      }
+
+      console.log(`📜 Auto pilot: Scrolling through ${events.length} events for 5 seconds`);
+
+      let currentEventIndex = 0;
+      const scrollInterval = 1000; // Scroll to next event every 1 second
+      let scrollCount = 0;
+      const maxScrolls = 5; // Scroll for 5 seconds total
+
+      const scrollToNextEvent = () => {
+        if (!isAutoPilotMode || !isAutoPilotActive) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          resolve();
+          return;
+        }
+
+        if (scrollCount >= maxScrolls) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          console.log('📜 Auto pilot: Finished scrolling through events');
+          resolve();
+          return;
+        }
+
+        // Scroll to current event
+        controls.scrollToEvent(currentEventIndex);
+        currentEventIndex = (currentEventIndex + 1) % events.length;
+        scrollCount++;
+      };
+
+      // Start scrolling immediately
+      scrollToNextEvent();
+
+      // Continue scrolling every second
+      intervalRef.current = setInterval(scrollToNextEvent, scrollInterval);
+    });
+  }, [isAutoPilotMode, isAutoPilotActive, controls]);
 
   // Move to next relay
-  const moveToNextRelayLocal = useCallback(() => {
-    console.log('⏭️ Moving to next relay');
+  const moveToNextRelay = useCallback(() => {
+    console.log('⏭️ Auto pilot: Moving to next relay');
+    currentStepRef.current = 'idle';
 
-    // Clear any existing timeout
+    // Clear any existing timeouts/intervals
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
 
     // Close current relay panel
     if (controls.isPanelOpen()) {
       controls.closeRelayPanel().catch(error => {
-        console.error('❌ Error closing relay panel:', error);
+        console.error('❌ Auto pilot: Error closing relay panel:', error);
       });
     }
 
@@ -162,7 +227,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     const nextIndex = currentRelayIndex + 1;
     if (nextIndex >= currentRelayOrder.length) {
       // Restart from beginning with new random order
-      console.log('🔄 Completed all relays, restarting with new order');
+      console.log('🔄 Auto pilot: Completed all relays, restarting with new order');
       const newOrder = generateRandomRelayOrder();
       setCurrentRelayOrder(newOrder);
       setCurrentRelayIndex(0);
@@ -176,42 +241,40 @@ export function useAutoPilot(controls: AutoPilotControls) {
         runAutoPilotSequence();
       }
     }, 1000);
-  }, [
-    currentRelayIndex,
-    currentRelayOrder,
-    controls,
-    generateRandomRelayOrder,
-    setCurrentRelayIndex,
-    setCurrentRelayOrder,
-    isAutoPilotMode,
-    isAutoPilotActive,
-    runAutoPilotSequence
-  ]);
+  }, [currentRelayIndex, currentRelayOrder, controls, generateRandomRelayOrder, setCurrentRelayIndex, isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence]);
 
-  // Main effect - start sequence when autopilot is active
+  // Main effect - start sequence when autopilot is active and relay order is ready
   useEffect(() => {
-    if (isAutoPilotMode && isAutoPilotActive) {
-      console.log('🚀 Starting auto pilot sequence');
+    if (isAutoPilotMode && isAutoPilotActive && currentRelayOrder.length > 0 && currentStepRef.current === 'idle') {
+      console.log('🚀 Auto pilot: Starting sequence');
       runAutoPilotSequence();
     }
+  }, [isAutoPilotMode, isAutoPilotActive, currentRelayOrder.length, runAutoPilotSequence]);
 
-    return () => {
-      // Cleanup on unmount or when auto pilot is stopped
+  // Cleanup on autopilot stop or unmount
+  useEffect(() => {
+    if (!isAutoPilotMode || !isAutoPilotActive) {
+      // Clear all timeouts and intervals when autopilot stops
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-    };
-  }, [isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence]);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      currentStepRef.current = 'idle';
+    }
 
-  // Cleanup on unmount
-  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, []);
+  }, [isAutoPilotMode, isAutoPilotActive]);
 
   return {
     isAutoPilotMode,
