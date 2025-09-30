@@ -9,6 +9,8 @@ interface AutoPilotContextType {
   currentRelayIndex: number;
   totalRelays: number;
   moveToNextRelay: () => void;
+  setCurrentRelayIndex: (index: number) => void;
+  setTotalRelays: (count: number) => void;
 }
 
 const AutoPilotContext = createContext<AutoPilotContextType | undefined>(undefined);
@@ -62,6 +64,8 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     currentRelayIndex,
     totalRelays,
     moveToNextRelay,
+    setCurrentRelayIndex,
+    setTotalRelays,
   };
 
   return (
