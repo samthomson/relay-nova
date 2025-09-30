@@ -15,7 +15,6 @@ interface LoginDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: () => void;
-  onSignup?: () => void;
 }
 
 const validateNsec = (nsec: string) => {
@@ -26,7 +25,7 @@ const validateBunkerUri = (uri: string) => {
   return uri.startsWith('bunker://');
 };
 
-const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onSignup }) => {
+const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [nsec, setNsec] = useState('');
@@ -170,92 +169,53 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
     reader.readAsText(file);
   };
 
-  const handleSignupClick = () => {
-    onClose();
-    if (onSignup) {
-      onSignup();
-    }
-  };
+
 
   const defaultTab = 'nostr' in window ? 'extension' : 'key';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className={cn("max-w-[95vw] sm:max-w-md max-h-[90vh] max-h-[90dvh] p-0 overflow-hidden rounded-2xl overflow-y-scroll")}
+        className={cn("max-w-[95vw] sm:max-w-md max-h-[90vh] max-h-[90dvh] p-0 overflow-hidden rounded-2xl overflow-y-scroll bg-black/90 backdrop-blur-md border border-white/10")}
       >
         <DialogHeader className={cn('px-6 pt-6 pb-1 relative')}>
-
-            <DialogDescription className="text-center">
-              Sign up or log in to continue
+            <DialogDescription className="text-center text-white/80">
+              Log in to continue
             </DialogDescription>
         </DialogHeader>
         <div className='px-6 pt-2 pb-4 space-y-4 overflow-y-auto flex-1'>
-          {/* Prominent Sign Up Section */}
-          <div className='relative p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200 dark:border-blue-800 overflow-hidden'>
-            <div className='relative z-10 text-center space-y-3'>
-              <div className='flex justify-center items-center gap-2 mb-2'>
-                <Sparkles className='w-5 h-5 text-blue-600' />
-                <span className='font-semibold text-blue-800 dark:text-blue-200'>
-                  New to Nostr?
-                </span>
-              </div>
-              <p className='text-sm text-blue-700 dark:text-blue-300'>
-                Create a new account to get started. It's free and open.
-              </p>
-              <Button
-                onClick={handleSignupClick}
-                className='w-full rounded-full py-3 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg border-0'
-              >
-                <UserPlus className='w-4 h-4 mr-2' />
-                <span>Sign Up</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className='relative'>
-            <div className='absolute inset-0 flex items-center'>
-              <div className='w-full border-t border-gray-300 dark:border-gray-600'></div>
-            </div>
-            <div className='relative flex justify-center text-sm'>
-              <span className='px-3 bg-background text-muted-foreground'>
-                <span>Or log in</span>
-              </span>
-            </div>
-          </div>
 
           {/* Login Methods */}
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-muted/80 rounded-lg mb-4">
-              <TabsTrigger value="extension" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-3 bg-white/5 rounded-lg mb-4 border border-white/10">
+              <TabsTrigger value="extension" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
                 <Shield className="w-4 h-4" />
                 <span>Extension</span>
               </TabsTrigger>
-              <TabsTrigger value="key" className="flex items-center gap-2">
+              <TabsTrigger value="key" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
                 <KeyRound className="w-4 h-4" />
                 <span>Key</span>
               </TabsTrigger>
-              <TabsTrigger value="bunker" className="flex items-center gap-2">
+              <TabsTrigger value="bunker" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
                 <Cloud className="w-4 h-4" />
                 <span>Bunker</span>
               </TabsTrigger>
             </TabsList>
-            <TabsContent value='extension' className='space-y-3 bg-muted'>
+            <TabsContent value='extension' className='space-y-3 bg-transparent'>
               {errors.extension && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="border-red-500/20 bg-red-500/10 text-red-200">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>{errors.extension}</AlertDescription>
                 </Alert>
               )}
-              <div className='text-center p-4 rounded-lg bg-gray-50 dark:bg-gray-800'>
-                <Shield className='w-12 h-12 mx-auto mb-3 text-primary' />
-                <p className='text-sm text-gray-600 dark:text-gray-300 mb-4'>
+              <div className='text-center p-6 rounded-xl bg-white/5 border border-white/10'>
+                <Shield className='w-12 h-12 mx-auto mb-3 text-orange-400' />
+                <p className='text-sm text-white/70 mb-4'>
                   Login with one click using the browser extension
                 </p>
                 <div className="flex justify-center">
                   <Button
-                    className='w-full rounded-full py-4'
+                    className='w-full rounded-full py-4 bg-gradient-to-r from-orange-500/20 to-purple-500/20 hover:from-orange-500/30 hover:to-purple-500/30 text-white border border-white/10 hover:border-white/20 transition-all duration-200'
                     onClick={handleExtensionLogin}
                     disabled={isLoading}
                   >
@@ -265,10 +225,10 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
               </div>
             </TabsContent>
 
-            <TabsContent value='key' className='space-y-4'>
+            <TabsContent value='key' className='space-y-4 bg-transparent'>
               <div className='space-y-4'>
                 <div className='space-y-2'>
-                  <label htmlFor='nsec' className='text-sm font-medium'>
+                  <label htmlFor='nsec' className='text-sm font-medium text-white/80'>
                     Secret Key (nsec)
                   </label>
                   <Input
@@ -279,19 +239,19 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                       setNsec(e.target.value);
                       if (errors.nsec) setErrors(prev => ({ ...prev, nsec: undefined }));
                     }}
-                    className={`rounded-lg ${
-                      errors.nsec ? 'border-red-500 focus-visible:ring-red-500' : ''
+                    className={`rounded-lg bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-orange-500/30 ${
+                      errors.nsec ? 'border-red-500/50 focus-visible:ring-red-500/30' : ''
                     }`}
                     placeholder='nsec1...'
                     autoComplete="off"
                   />
                   {errors.nsec && (
-                    <p className="text-sm text-red-500">{errors.nsec}</p>
+                    <p className="text-sm text-red-300">{errors.nsec}</p>
                   )}
                 </div>
 
                 <Button
-                  className='w-full rounded-full py-3'
+                  className='w-full rounded-full py-3 bg-gradient-to-r from-orange-500/20 to-purple-500/20 hover:from-orange-500/30 hover:to-purple-500/30 text-white border border-white/10 hover:border-white/20 transition-all duration-200'
                   onClick={handleKeyLogin}
                   disabled={isLoading || !nsec.trim()}
                 >
@@ -300,10 +260,10 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
 
                 <div className='relative'>
                   <div className='absolute inset-0 flex items-center'>
-                    <div className='w-full border-t border-muted'></div>
+                    <div className='w-full border-t border-white/10'></div>
                   </div>
                   <div className='relative flex justify-center text-xs'>
-                    <span className='px-2 bg-background text-muted-foreground'>
+                    <span className='px-2 bg-black/90 text-white/50'>
                       or
                     </span>
                   </div>
@@ -319,7 +279,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                   />
                   <Button
                     variant='outline'
-                    className='w-full'
+                    className='w-full bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isLoading || isFileLoading}
                   >
@@ -327,15 +287,15 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                     {isFileLoading ? 'Reading File...' : 'Upload Your Key File'}
                   </Button>
                   {errors.file && (
-                    <p className="text-sm text-red-500 mt-2">{errors.file}</p>
+                    <p className="text-sm text-red-300 mt-2">{errors.file}</p>
                   )}
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value='bunker' className='space-y-3 bg-muted'>
+            <TabsContent value='bunker' className='space-y-3 bg-transparent'>
               <div className='space-y-2'>
-                <label htmlFor='bunkerUri' className='text-sm font-medium text-gray-700 dark:text-gray-400'>
+                <label htmlFor='bunkerUri' className='text-sm font-medium text-white/80'>
                   Bunker URI
                 </label>
                 <Input
@@ -345,20 +305,20 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                     setBunkerUri(e.target.value);
                     if (errors.bunker) setErrors(prev => ({ ...prev, bunker: undefined }));
                   }}
-                  className={`rounded-lg border-gray-300 dark:border-gray-700 focus-visible:ring-primary ${
-                    errors.bunker ? 'border-red-500' : ''
+                  className={`rounded-lg bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-purple-500/30 ${
+                    errors.bunker ? 'border-red-500/50 focus-visible:ring-red-500/30' : ''
                   }`}
                   placeholder='bunker://'
                   autoComplete="off"
                 />
                 {errors.bunker && (
-                  <p className="text-sm text-red-500">{errors.bunker}</p>
+                  <p className="text-sm text-red-300">{errors.bunker}</p>
                 )}
               </div>
 
               <div className="flex justify-center">
                 <Button
-                  className='w-full rounded-full py-4'
+                  className='w-full rounded-full py-4 bg-gradient-to-r from-orange-500/20 to-purple-500/20 hover:from-orange-500/30 hover:to-purple-500/30 text-white border border-white/10 hover:border-white/20 transition-all duration-200'
                   onClick={handleBunkerLogin}
                   disabled={isLoading || !bunkerUri.trim()}
                 >
