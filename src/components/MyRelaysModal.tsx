@@ -68,7 +68,11 @@ const { mutate: removeRelay, isPending: isRemoving } = useMutation({
   mutationFn: async (relayToRemove: RelayListItem) => {
     if (!relays) throw new Error('No relays available');
 
+    console.log('🗑️ Removing relay:', relayToRemove.url);
+    console.log('📝 Current relays before removal:', relays);
+
     const updatedRelays = relays.filter(relay => relay.url !== relayToRemove.url);
+    console.log('📝 Updated relays after removal:', updatedRelays);
 
     const tags = updatedRelays.map(relay => {
       const tag = ['r', relay.url];
@@ -77,11 +81,15 @@ const { mutate: removeRelay, isPending: isRemoving } = useMutation({
       return tag;
     });
 
+    console.log('🏷️ New NIP-65 tags to publish:', tags);
+
     await publishEvent({
       kind: 10002,
       content: '',
       tags,
     });
+
+    console.log('✅ NIP-65 event published, now refetching...');
 
     // Force immediate refetch to get fresh data
   await refetch();

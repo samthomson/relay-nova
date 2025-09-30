@@ -34,7 +34,9 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
     queryFn: async () => {
       if (!user?.pubkey || !nostr) return [];
 
-      const signal = AbortSignal.timeout(3000);
+      console.log('🔍 Fetching fresh NIP-65 relay list for:', user.pubkey);
+
+      const signal = AbortSignal.timeout(5000);
       const events = await nostr.query([
         {
           kinds: [10002], // NIP-65 relay list
@@ -43,10 +45,15 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
         }
       ], { signal });
 
+      console.log('📡 Found NIP-65 events:', events.length);
+
       const latestEvent = events[0];
       if (!latestEvent || !validateNip65Event(latestEvent)) {
+        console.log('❌ No valid NIP-65 event found');
         return [];
       }
+
+      console.log('✅ Valid NIP-65 event found with tags:', latestEvent.tags);
 
       // Parse relay tags
       const relayList: UserRelay[] = [];
@@ -64,6 +71,7 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
         }
       }
 
+      console.log('📋 Parsed relay list:', relayList);
       return relayList;
     },
     enabled: !!user?.pubkey && !!nostr,
