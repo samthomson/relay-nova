@@ -837,9 +837,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       // Camera should be positioned to see the relay clearly
       const cameraDistance = 6;
       const cameraAngle = Math.PI / 6; // 30 degrees elevation
-      const cameraX = Math.sin(lngRad) * cameraDistance * Math.cos(cameraAngle);
-      const cameraY = cameraDistance * Math.sin(cameraAngle);
-      const cameraZ = Math.cos(lngRad) * cameraDistance * Math.cos(cameraAngle);
+      const targetCameraX = Math.sin(lngRad) * cameraDistance * Math.cos(cameraAngle);
+      const targetCameraY = cameraDistance * Math.sin(cameraAngle);
+      const targetCameraZ = Math.cos(lngRad) * cameraDistance * Math.cos(cameraAngle);
 
       console.log(`🎯 Relay 3D position: X=${relayX.toFixed(2)}, Y=${relayY.toFixed(2)}, Z=${relayZ.toFixed(2)}`);
 
