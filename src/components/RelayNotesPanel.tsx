@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, SkipForward } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, MessageCircle, Loader2 } from 'lucide-react';
@@ -12,6 +12,7 @@ import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
 
 interface RelayLocation {
   url: string;
@@ -81,6 +82,15 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
     }
   });
 
+  const { isAutoPilotMode, moveToNextRelay } = useAutoPilotContext();
+
+  const handleNextRelay = () => {
+    if (isAutoPilotMode && moveToNextRelay) {
+      console.log('⏭️ Skipping to next relay via Next button');
+      moveToNextRelay();
+    }
+  };
+
   const scrollUp = () => {
     if (scrollableRef.current) {
       scrollableRef.current.scrollBy({
@@ -99,12 +109,52 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
     }
   };
 
+  // Use ref to avoid onEventsChange dependency causing infinite loop
+  const onEventsChangeRef = useRef(onEventsChange);
+
+  // Update ref when prop changes
+  useEffect(() => {
+    onEventsChangeRef.current = onEventsChange;
+  }, [onEventsChange]);
+
+  // Track the current relay URL to prevent rapid restarts
+  const currentRelayUrlRef = useRef(relay.url);
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Initialize events state
+  useEffect(() => {
+    // Notify parent that events are not loaded initially
+    if (onEventsChangeRef.current) {
+      onEventsChangeRef.current(null, false);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchNotes = async () => {
+      // Prevent concurrent fetches for the same relay
+      if (isFetchingRef.current && currentRelayUrlRef.current === relay.url) {
+        console.log(`⏭️ Already fetching notes for ${relay.url}, skipping duplicate request`);
+        return;
+      }
+
+      // Cancel any existing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create new abort controller for this request
+      abortControllerRef.current = new AbortController();
+
+      isFetchingRef.current = true;
+      currentRelayUrlRef.current = relay.url;
+
       if (!nostr) return;
 
+      console.log(`🔍 Fetching notes from relay: ${relay.url}`);
       setIsLoading(true);
       setError(null);
+      setNotes([]); // Clear existing notes
 
       try {
         // Connect to the specific relay
@@ -116,31 +166,58 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
             kinds: [1],
             limit: 20,
           }
-        ], { signal: AbortSignal.timeout(5000) });
+        ], {
+          signal: AbortSignal.any([
+            abortControllerRef.current.signal,
+            AbortSignal.timeout(5000)
+          ])
+        });
+
+        // Check if this is still the current relay we want
+        if (currentRelayUrlRef.current !== relay.url) {
+          console.log(`⏭️ Relay changed during fetch, ignoring results for ${relay.url}`);
+          return;
+        }
 
         // Sort by created_at (newest first)
         const sortedEvents = events.sort((a, b) => b.created_at - a.created_at);
         setNotes(sortedEvents);
+        console.log(`✅ Successfully loaded ${sortedEvents.length} notes from ${relay.url}`);
 
         // Notify parent that events are loaded
-        if (onEventsChange) {
-          onEventsChange(sortedEvents, true);
+        if (onEventsChangeRef.current) {
+          onEventsChangeRef.current(sortedEvents, true);
         }
       } catch (err) {
+        // Check if this was an abort due to relay change
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.log(`⏭️ Fetch aborted for ${relay.url} due to relay change`);
+          return;
+        }
+
         // Silently handle relay connection failures - this is expected for offline relays
+        console.error(`❌ Failed to fetch notes from ${relay.url}:`, err);
         setError('Failed to fetch notes from this relay');
 
         // Notify parent that events failed to load
-        if (onEventsChange) {
-          onEventsChange(null, false);
+        if (onEventsChangeRef.current) {
+          onEventsChangeRef.current(null, false);
         }
       } finally {
         setIsLoading(false);
+        isFetchingRef.current = false;
       }
     };
 
     fetchNotes();
-  }, [relay.url, nostr, onEventsChange]);
+
+    // Cleanup function to abort any pending request
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [relay.url, nostr]); // Removed onEventsChange to prevent infinite loop
 
   // Expose scrollable ref to parent
   useEffect(() => {
@@ -200,7 +277,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
 
         {/* Add Relay Button on new line */}
         {user && (
-          <div className="flex justify-start">
+          <div className="flex justify-start gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -215,6 +292,19 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
               )}
               add relay+
             </Button>
+
+          {/* Next Button - Only show in auto pilot mode */}
+          {isAutoPilotMode && moveToNextRelay && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextRelay}
+              className="bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 text-xs px-3 py-1 h-7"
+            >
+              <SkipForward className="w-3 h-3 mr-1" />
+              next
+            </Button>
+          )}
           </div>
         )}
       </div>

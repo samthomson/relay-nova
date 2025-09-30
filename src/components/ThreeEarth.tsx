@@ -891,18 +891,33 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     // Open the relay panel using existing function
     openRelayPanelInternal(relay, cameraRef.current);
 
-    // Wait for panel to open and events to load
-    return new Promise<void>((resolve) => {
-      const checkEventsLoaded = () => {
-        if (eventsLoaded) {
+    // Wait for panel to open and events to load using a more reliable approach
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        console.log('⏰ Relay panel loading timeout - proceeding anyway');
+        resolve(); // Don't fail, just proceed
+      }, 10000); // 10 second timeout
+
+      const checkInterval = setInterval(() => {
+        // Check if events are loaded by looking at the actual panel state
+        const panelElement = document.querySelector('[data-relay-panel]');
+        const hasContent = panelElement && panelElement.querySelector('[data-note-card]');
+
+        if (hasContent || panelElement?.querySelector('.text-red-400')) {
+          // Either has notes or shows an error - either way, it's loaded
+          clearTimeout(timeout);
+          clearInterval(checkInterval);
           resolve();
-        } else {
-          setTimeout(checkEventsLoaded, 100);
         }
+      }, 100);
+
+      // Cleanup on unmount
+      return () => {
+        clearTimeout(timeout);
+        clearInterval(checkInterval);
       };
-      checkEventsLoaded();
     });
-  }, [relayLocations, eventsLoaded]);
+  }, [relayLocations]);
 
   const closeRelayPanel = useCallback(async () => {
     console.log('📂 Closing relay panel');

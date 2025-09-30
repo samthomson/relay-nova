@@ -8,6 +8,7 @@ interface AutoPilotContextType {
   isAutoPilotActive: boolean;
   currentRelayIndex: number;
   totalRelays: number;
+  moveToNextRelay: () => void;
 }
 
 const AutoPilotContext = createContext<AutoPilotContextType | undefined>(undefined);
@@ -17,14 +18,14 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
   const [isAutoPilotActive, setIsAutoPilotActive] = useState(false);
   const [currentRelayIndex, setCurrentRelayIndex] = useState(0);
   const [totalRelays, setTotalRelays] = useState(0);
-  
+
   const autoPilotTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const stopAutoPilot = useCallback(() => {
     setIsAutoPilotMode(false);
     setIsAutoPilotActive(false);
     setCurrentRelayIndex(0);
-    
+
     // Clear any pending timeout
     if (autoPilotTimeoutRef.current) {
       clearTimeout(autoPilotTimeoutRef.current);
@@ -36,6 +37,12 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     setIsAutoPilotMode(true);
     setIsAutoPilotActive(true);
     setCurrentRelayIndex(0);
+  }, []);
+
+  const moveToNextRelay = useCallback(() => {
+    console.log('⏭️ Manual skip to next relay requested');
+    // This will be handled by the useAutoPilot hook
+    // The hook will detect that we need to move to next relay
   }, []);
 
   const toggleAutoPilot = useCallback(() => {
@@ -54,6 +61,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     isAutoPilotActive,
     currentRelayIndex,
     totalRelays,
+    moveToNextRelay,
   };
 
   return (

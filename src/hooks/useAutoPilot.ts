@@ -23,13 +23,15 @@ export function useAutoPilot(controls: AutoPilotControls) {
     stopAutoPilot,
     currentRelayIndex,
     setCurrentRelayIndex,
-    setTotalRelays
+    setTotalRelays,
+    moveToNextRelay
   } = useAutoPilotContext();
 
   const [currentRelayOrder, setCurrentRelayOrder] = useState<string[]>([]);
   const autoPilotTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentEventIndexRef = useRef(0);
+  const manualNextRequestedRef = useRef(false);
 
   // Generate random order of relays
   const generateRandomRelayOrder = useCallback(() => {
@@ -76,10 +78,18 @@ export function useAutoPilot(controls: AutoPilotControls) {
       const eventsLoaded = await waitForEventsToLoad();
       if (!eventsLoaded) {
         console.log('⏰ Events loading timeout, moving to next relay');
-        await moveToNextRelay();
+        await moveToNextRelayLocal();
         return;
       }
       console.log('✅ Events loaded');
+
+      // Check if user requested manual next before starting auto-scroll
+      if (manualNextRequestedRef.current) {
+        console.log('⏭️ Manual next requested, skipping auto-scrolling');
+        manualNextRequestedRef.current = false;
+        await moveToNextRelayLocal();
+        return;
+      }
 
       // Step 4: Start auto-scrolling through events
       console.log('🔄 Step 4: Starting auto-scrolling through events');
@@ -88,8 +98,17 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
     } catch (error) {
       console.error('❌ Auto pilot error:', error);
-      console.log('🔄 Moving to next relay due to error');
-      await moveToNextRelay();
+
+      // Check if this is a "Relay not found" error, which might indicate data issues
+      if (error instanceof Error && error.message.includes('Relay not found')) {
+        console.log('🔄 Relay not found error, trying to continue with next relay');
+        await moveToNextRelayLocal();
+      } else {
+        // For other errors, add a small delay before continuing
+        console.log('🔄 Moving to next relay due to error (with delay)');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await moveToNextRelayLocal();
+      }
     }
   }, [
     isAutoPilotMode,
@@ -109,9 +128,21 @@ export function useAutoPilot(controls: AutoPilotControls) {
     return new Promise((resolve) => {
       let attempts = 0;
       const maxAttempts = 100; // 100 * 100ms = 10 seconds max
+      let lastPanelState = controls.isPanelOpen();
 
       const checkInterval = setInterval(() => {
         attempts++;
+        const currentPanelState = controls.isPanelOpen();
+
+        // If panel closed unexpectedly, consider it a failure
+        if (lastPanelState && !currentPanelState) {
+          console.log('❌ Relay panel closed unexpectedly');
+          clearInterval(checkInterval);
+          resolve(false);
+          return;
+        }
+
+        lastPanelState = currentPanelState;
 
         if (controls.areEventsLoaded()) {
           console.log('✅ Events loaded successfully');
@@ -156,14 +187,16 @@ export function useAutoPilot(controls: AutoPilotControls) {
         }
 
         autoPilotTimeoutRef.current = setTimeout(async () => {
-          await moveToNextRelay();
+          await moveToNextRelayLocal();
         }, 2000);
       }
     }, 3000); // 3 seconds per event (readable pace)
   }, [controls]);
 
-  // Move to next relay
-  const moveToNextRelay = useCallback(async () => {
+  // Move to next relay (local implementation)
+  const moveToNextRelayLocal = useCallback(async () => {
+    console.log('⏭️ Moving to next relay');
+
     // Clear any existing intervals/timeout
     if (scrollIntervalRef.current) {
       clearInterval(scrollIntervalRef.current);
