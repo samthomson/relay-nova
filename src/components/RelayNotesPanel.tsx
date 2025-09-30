@@ -155,7 +155,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
       >
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <MessageCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
@@ -170,43 +170,6 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
             </div>
           </div>
 
-          {/* Add Relay Button */}
-          {user && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAddRelayDialogOpen(true)}
-              className="mr-2 bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 flex-shrink-0"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              add relay+
-            </Button>
-          )}
-
-          {/* Up/Down buttons */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={scrollUp}
-              className="text-white/70 hover:text-white hover:bg-white/10"
-              disabled={notes.length === 0}
-              title="Scroll up"
-            >
-              <ChevronUp className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={scrollDown}
-              className="text-white/70 hover:text-white hover:bg-white/10"
-              disabled={notes.length === 0}
-              title="Scroll down"
-            >
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </div>
-
           <Button
             variant="ghost"
             size="sm"
@@ -216,6 +179,21 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
             <X className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* Add Relay Button on new line */}
+        {user && (
+          <div className="flex justify-start">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddRelayDialogOpen(true)}
+              className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 text-xs px-3 py-1 h-7"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              add relay+
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Content */}
