@@ -42,8 +42,23 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   const { mutate: publishEvent, isPending: isPublishing } = useNostrPublish();
   const queryClient = useQueryClient();
 
-  // Track which relays are being toggled
+  // Track which relays are being toggled - now connected to mutation state
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
+
+  // Clear toggling state when publishing completes OR when relays data updates
+  useEffect(() => {
+    if (!isPublishing) {
+      setTogglingRelays(new Set());
+    }
+  }, [isPublishing]);
+
+  // Also clear toggling state when relays data changes (indicating successful update)
+  useEffect(() => {
+    // When relays data updates, clear any remaining toggling states
+    if (relays && togglingRelays.size > 0) {
+      setTogglingRelays(new Set());
+    }
+  }, [relays, togglingRelays.size]);
 
   const updateRelayList = async (updatedRelays: RelayListItem[]) => {
   const tags = updatedRelays.map(relay => {
@@ -83,13 +98,17 @@ const togglePermission = async (relayUrl: string, permission: 'read' | 'write') 
       return relay;
     });
     await updateRelayList(updatedRelays);
-  } finally {
-    // Remove from toggling set
+
+    // Don't remove from toggling set here - let data refetch handle it
+    // This keeps spinner visible until actual data updates
+  } catch (error) {
+    // Remove from toggling set on error
     setTogglingRelays(prev => {
       const newSet = new Set(prev);
       newSet.delete(relayUrl);
       return newSet;
     });
+    console.error('Failed to toggle relay permission:', error);
   }
 };
 
