@@ -25,6 +25,18 @@ export function useAutoPilot(controls: AutoPilotControls) {
     setTotalRelays,
   } = useAutoPilotContext();
 
+  // Use refs to track current state and avoid circular dependencies
+  const isAutoPilotModeRef = useRef(isAutoPilotMode);
+  const isAutoPilotActiveRef = useRef(isAutoPilotActive);
+  const currentRelayIndexRef = useRef(currentRelayIndex);
+
+  // Update refs when state changes
+  useEffect(() => {
+    isAutoPilotModeRef.current = isAutoPilotMode;
+    isAutoPilotActiveRef.current = isAutoPilotActive;
+    currentRelayIndexRef.current = currentRelayIndex;
+  }, [isAutoPilotMode, isAutoPilotActive, currentRelayIndex]);
+
   // Simple execution state
   const isRunningRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -68,8 +80,8 @@ export function useAutoPilot(controls: AutoPilotControls) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Check if autopilot is still active
-    if (!isAutoPilotMode || !isAutoPilotActive) {
+    // Check if autopilot is still active using refs
+    if (!isAutoPilotModeRef.current || !isAutoPilotActiveRef.current) {
       console.log('🛑 Auto pilot not active, stopping execution');
       return;
     }
@@ -86,9 +98,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
       setTotalRelays(newOrder.length);
     }
 
-    const relayUrl = relayOrderRef.current[currentRelayIndex];
+    const relayUrl = relayOrderRef.current[currentRelayIndexRef.current];
     if (!relayUrl) {
-      console.error('❌ No relay URL found at index:', currentRelayIndex);
+      console.error('❌ No relay URL found at index:', currentRelayIndexRef.current);
       return;
     }
 
@@ -96,7 +108,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     isRunningRef.current = true;
     abortControllerRef.current = new AbortController();
 
-    console.log(`🛩️ Auto pilot: Processing relay ${currentRelayIndex + 1}/${relayOrderRef.current.length}: ${relayUrl}`);
+    console.log(`🛩️ Auto pilot: Processing relay ${currentRelayIndexRef.current + 1}/${relayOrderRef.current.length}: ${relayUrl}`);
 
     try {
       const signal = abortControllerRef.current.signal;
@@ -148,7 +160,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     } finally {
       isRunningRef.current = false;
     }
-  }, [isAutoPilotMode, isAutoPilotActive, currentRelayIndex, controls, generateRandomRelayOrder, setTotalRelays, stopAutoPilot, abortCurrentExecution]);
+  }, [controls, generateRandomRelayOrder, setTotalRelays, stopAutoPilot, abortCurrentExecution]);
 
   // Wait for events to load with proper signal handling
   const waitForEventsToLoad = useCallback(async (signal: AbortSignal): Promise<boolean> => {
@@ -271,7 +283,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     }
 
     // Move to next relay index
-    const nextIndex = currentRelayIndex + 1;
+    const nextIndex = currentRelayIndexRef.current + 1;
     if (nextIndex >= relayOrderRef.current.length) {
       // Generate new random order and restart
       console.log(`🔄 Completed all relays, generating new order...`);
@@ -285,18 +297,18 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
     // Wait 1 second before processing next relay (as requested)
     timeoutRef.current = setTimeout(() => {
-      if (isAutoPilotMode && isAutoPilotActive) {
+      if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current) {
         console.log(`⏰ Travel time complete, starting next sequence`);
         runAutoPilotSequence();
       } else {
         console.log(`⏹️ Travel cancelled - autopilot no longer active`);
       }
     }, 1000); // 1 second travel time as requested
-  }, [currentRelayIndex, controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence]);
+  }, [controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, runAutoPilotSequence]);
 
   // Start autopilot when activated
   useEffect(() => {
-    if (isAutoPilotMode && isAutoPilotActive && !isRunningRef.current) {
+    if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current && !isRunningRef.current) {
       console.log('🚀 Starting autopilot mode');
 
       // Clean up any existing state
@@ -308,18 +320,18 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
       // Start sequence after brief delay to ensure clean state
       const startTimeout = setTimeout(() => {
-        if (isAutoPilotMode && isAutoPilotActive) {
+        if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current) {
           runAutoPilotSequence();
         }
       }, 100);
 
       return () => clearTimeout(startTimeout);
     }
-  }, [isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence, setCurrentRelayIndex, abortCurrentExecution]);
+  }, [runAutoPilotSequence, setCurrentRelayIndex, abortCurrentExecution]);
 
   // Cleanup when autopilot stops
   useEffect(() => {
-    if (!isAutoPilotMode || !isAutoPilotActive) {
+    if (!isAutoPilotModeRef.current || !isAutoPilotActiveRef.current) {
       console.log('🛑 Cleaning up autopilot...');
       abortCurrentExecution();
       relayOrderRef.current = [];
@@ -329,7 +341,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
       // Cleanup on unmount
       abortCurrentExecution();
     };
-  }, [isAutoPilotMode, isAutoPilotActive, abortCurrentExecution]);
+  }, [abortCurrentExecution]);
 
   return {
     isAutoPilotMode,
