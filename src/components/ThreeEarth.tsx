@@ -88,6 +88,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   // Store connection line reference for relay panel
   const connectionLineRef = useRef<THREE.Line | null>(null);
 
+
+
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
     if (!relayPanelRef.current?.element || !openRelayRef.current) return false;
@@ -1032,6 +1034,12 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     areEventsLoaded,
   };
 
+  // AutoPilot temporarily disabled due to circular dependency issue
+  const isAutoPilotMode = false;
+  const isAutoPilotActive = false;
+  const currentRelayIndex = 0;
+  const totalRelays = 0;
+
   // Create connection line from relay to panel
   const createConnectionLine = useCallback((relay: RelayLocation) => {
     if (!sceneRef.current || !earthRef.current || !relayPanelRef.current?.element) {
@@ -1494,8 +1502,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     // Relay markers created successfully
   }, [relayLocations, sceneReady]);
 
-
-
   return (
     <div className="relative w-full h-screen">
       {/* Loading indicator */}
@@ -1571,14 +1577,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       )}
     </div>
   );
-
-  // Initialize auto pilot hook and get state (must be after all functions are defined)
-  const { isAutoPilotMode, isAutoPilotActive, currentRelayIndex, totalRelays } = useAutoPilot(autoPilotControls);
-
-  // Update autopilot mode ref for the animation loop
-  useEffect(() => {
-    isAutoPilotModeActive.current = isAutoPilotMode;
-  }, [isAutoPilotMode]);
 });
 
 ThreeEarth.displayName = 'ThreeEarth';

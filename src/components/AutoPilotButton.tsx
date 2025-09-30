@@ -12,40 +12,30 @@ export function AutoPilotButton() {
     totalRelays
   } = useAutoPilotContext();
 
-  const getButtonClasses = () => {
-    const baseClasses = 'fixed bottom-6 right-6 z-50 rounded-lg shadow-lg transition-all duration-300 border-2 flex items-center justify-center font-semibold';
+  const handleAutoPilotClick = () => {
+    console.log('🚫 AutoPilot temporarily disabled due to circular dependency issue');
+    // toggleAutoPilot(); // Temporarily disabled
+  };
 
-    if (isAutoPilotMode) {
-      return `${baseClasses} bg-red-600 hover:bg-red-700 text-white border-red-500 hover:scale-105 px-6 py-3`;
-    } else {
-      return `${baseClasses} bg-blue-600 hover:bg-blue-700 text-white border-blue-500 hover:scale-105 px-6 py-3`;
-    }
+  const getButtonClasses = () => {
+    return 'fixed bottom-6 right-6 z-50 rounded-lg shadow-lg transition-all duration-300 border-2 flex items-center justify-center font-semibold bg-gray-600 text-white border-gray-500 px-6 py-3 cursor-not-allowed opacity-60';
   };
 
   const getButtonText = () => {
-    if (isAutoPilotMode) {
-      return 'AUTO PILOT ON';
-    } else {
-      return 'AUTO PILOT OFF';
-    }
+    return 'AUTO PILOT (DISABLED)';
   };
 
   const getStatusText = () => {
-    if (isAutoPilotActive) {
-      return `Active (${currentRelayIndex + 1}/${totalRelays})`;
-    } else if (isAutoPilotMode) {
-      return 'Starting...';
-    } else {
-      return 'Ready';
-    }
+    return 'Temporarily disabled';
   };
 
   return (
     <div className="relative group">
       <Button
-        onClick={toggleAutoPilot}
+        onClick={handleAutoPilotClick}
         className={getButtonClasses()}
         size="lg"
+        disabled={true}
       >
         <div className="flex items-center gap-2">
           {isAutoPilotMode && isAutoPilotActive ? (
