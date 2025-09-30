@@ -230,7 +230,12 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
     // Wait 1 second before processing next relay
     autoPilotTimeoutRef.current = setTimeout(() => {
-      startAutoPilotSequence();
+      if (isAutoPilotMode && isAutoPilotActive) {
+        console.log('🚀 Starting next relay sequence');
+        startAutoPilotSequence();
+      } else {
+        console.log('⏹️ Auto pilot stopped, not starting next sequence');
+      }
     }, 1000);
   }, [
     currentRelayIndex,
@@ -239,7 +244,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
     generateRandomRelayOrder,
     setCurrentRelayIndex,
     setCurrentRelayOrder,
-    startAutoPilotSequence
+    startAutoPilotSequence,
+    isAutoPilotMode,
+    isAutoPilotActive
   ]);
 
   // Main auto pilot effect

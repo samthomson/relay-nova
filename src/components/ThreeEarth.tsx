@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
-import { RelayInfoModal } from './RelayInfoModal';
+
 import { RelayNotesPanel } from './RelayNotesPanel';
 import { useAutoPilot } from '@/hooks/useAutoPilot';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
@@ -82,6 +82,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   // Store star layer references for animation
   const starLayersRef = useRef<any>(null);
 
+  // Store connection line reference for relay panel
+  const connectionLineRef = useRef<THREE.Line | null>(null);
+
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
     if (!relayPanelRef.current?.element || !openRelayRef.current) return false;
@@ -149,6 +152,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
     relayPanelRef.current = null; // Clear the panel ref
     wheelEventsEnabled.current = true; // Re-enable wheel events when panel closes
+
+    // Remove connection line
+    removeConnectionLine();
 
     // Re-attach wheel event listener to document
     if (wheelEventHandlerRef.current) {
@@ -798,7 +804,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
 
   // Auto pilot controls implementation
   const rotateEarthToRelay = useCallback(async (relayUrl: string) => {
-    if (!relayLocations || !earthRef.current || !cameraRef.current) {
+    if (!relayLocations || !earthRef.current || !cameraRef.current || !sceneRef.current) {
       throw new Error('Earth or camera not ready');
     }
 
@@ -824,19 +830,18 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
 
       // Calculate target earth rotations to bring relay to front
       // We want the relay to be at the front-right of the earth when viewed from camera
-      const targetRotationY = -lngRad; // Rotate longitude to front
+      const targetRotationY = -lngRad + Math.PI / 2; // Adjust for Three.js coordinate system
       const targetRotationX = -latRad;  // Rotate latitude to center
 
       // Calculate camera position to view the relay from optimal angle
       // Camera should be positioned to see the relay clearly
       const cameraDistance = 6;
-      const cameraOffsetX = Math.sin(lngRad) * cameraDistance;
-      const cameraOffsetZ = Math.cos(lngRad) * cameraDistance;
-      const cameraOffsetY = Math.sin(latRad) * cameraDistance * 0.5; // Slight elevation
+      const cameraAngle = Math.PI / 6; // 30 degrees elevation
+      const cameraX = Math.sin(lngRad) * cameraDistance * Math.cos(cameraAngle);
+      const cameraY = cameraDistance * Math.sin(cameraAngle);
+      const cameraZ = Math.cos(lngRad) * cameraDistance * Math.cos(cameraAngle);
 
-      const targetCameraX = cameraOffsetX;
-      const targetCameraY = cameraOffsetY;
-      const targetCameraZ = cameraOffsetZ;
+      console.log(`🎯 Relay 3D position: X=${relayX.toFixed(2)}, Y=${relayY.toFixed(2)}, Z=${relayZ.toFixed(2)}`);
 
       console.log(`🎯 Target rotations: Y=${targetRotationY.toFixed(2)}, X=${targetRotationX.toFixed(2)}`);
       console.log(`🎯 Target camera: X=${targetCameraX.toFixed(2)}, Y=${targetCameraY.toFixed(2)}, Z=${targetCameraZ.toFixed(2)}`);
@@ -907,6 +912,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
 
     // Open the relay panel using existing function
     openRelayPanelInternal(relay, cameraRef.current);
+
+    // Create connection line from relay to panel
+    createConnectionLine(relay);
 
     // Wait for panel to open and events to load using a more reliable approach
     return new Promise<void>((resolve, reject) => {
@@ -1005,6 +1013,71 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   };
 
   useAutoPilot(autoPilotControls);
+
+  // Create connection line from relay to panel
+  const createConnectionLine = useCallback((relay: RelayLocation) => {
+    if (!sceneRef.current || !earthRef.current || !relayPanelRef.current?.element) {
+      return;
+    }
+
+    // Remove any existing connection line
+    if (connectionLineRef.current) {
+      sceneRef.current.remove(connectionLineRef.current);
+      connectionLineRef.current = null;
+    }
+
+    // Convert relay coordinates to 3D position
+    const latRad = relay.lat * (Math.PI / 180);
+    const lngRad = relay.lng * (Math.PI / 180);
+    const earthRadius = 2.05;
+
+    const relayX = earthRadius * Math.cos(latRad) * Math.cos(lngRad);
+    const relayY = earthRadius * Math.sin(latRad);
+    const relayZ = earthRadius * Math.cos(latRad) * Math.sin(lngRad);
+
+    // Transform relay position by earth rotation
+    const relayWorldPos = new THREE.Vector3(relayX, relayY, relayZ);
+    relayWorldPos.applyMatrix4(earthRef.current.matrixWorld);
+
+    // Get panel position (convert screen coordinates to 3D world coordinates)
+    const panelRect = relayPanelRef.current.element.getBoundingClientRect();
+    const panelScreenX = (panelRect.left / window.innerWidth) * 2 - 1;
+    const panelScreenY = -(panelRect.top / window.innerHeight) * 2 + 1;
+
+    // Project panel screen position to 3D world space
+    const panelWorldPos = new THREE.Vector3(panelScreenX, panelScreenY, 0.5);
+    panelWorldPos.unproject(cameraRef.current!);
+
+    // Create line geometry
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+      relayWorldPos,
+      panelWorldPos
+    ]);
+
+    // Create line material
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: 0x00ff88,
+      transparent: true,
+      opacity: 0.6,
+      linewidth: 2
+    });
+
+    // Create line
+    const line = new THREE.Line(lineGeometry, lineMaterial);
+    connectionLineRef.current = line;
+    sceneRef.current.add(line);
+
+    console.log('🔗 Connection line created from relay to panel');
+  }, []);
+
+  // Remove connection line when panel closes
+  const removeConnectionLine = useCallback(() => {
+    if (connectionLineRef.current && sceneRef.current) {
+      sceneRef.current.remove(connectionLineRef.current);
+      connectionLineRef.current = null;
+      console.log('🔗 Connection line removed');
+    }
+  }, []);
 
   // Add click-outside-to-close functionality
   useEffect(() => {
