@@ -4,6 +4,7 @@ import { useRelayLocations } from '@/hooks/useRelayLocations';
 import { RelayInfoModal } from './RelayInfoModal';
 import { RelayNotesPanel } from './RelayNotesPanel';
 import { useAutoPilot } from '@/hooks/useAutoPilot';
+import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface RelayLocation {
