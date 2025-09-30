@@ -171,6 +171,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     }
   };
 
+  // Auto pilot integration
+  const { stopAutoPilot } = useAutoPilotContext();
+
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
@@ -885,7 +888,13 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     closeRelayPanelInternal();
     setNotes([]);
     setEventsLoaded(false);
-  }, []);
+
+    // Stop auto pilot mode when user manually closes panel
+    if (stopAutoPilot) {
+      console.log('🛑 Stopping auto pilot mode due to manual panel close');
+      stopAutoPilot();
+    }
+  }, [stopAutoPilot]);
 
   const scrollToEvent = useCallback(async (eventIndex: number) => {
     if (!relayPanelRef.current?.scrollableRef?.current) {
