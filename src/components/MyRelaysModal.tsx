@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
-import { Server, Network, X, Trash2, Loader2 } from 'lucide-react';
+import { Server, Network, X, Trash2, Loader2, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,127 +36,70 @@ function validateNip65Event(event: any): event is { tags: string[][] } {
 }
 
 export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
-  const { userRelays: relays, isLoading, refetch } = useUserRelaysContext();
-  const { mutate: publishEvent, isPending: isPublishing } = useNostrPublish();
+  const { userRelays: relays, isLoading, removeRelay, togglePermission, updateRelayList } = useUserRelaysContext();
 
-  // Track which relays are being toggled - now connected to mutation state
+  // State for adding new relay
+  const [newRelayUrl, setNewRelayUrl] = useState('');
+  const [isAddingRelay, setIsAddingRelay] = useState(false);
+
+  // Track which relays are being toggled
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
 
+  const handleAddRelay = async () => {
+    if (!newRelayUrl.trim() || !relays) return;
 
-
-  const updateRelayList = async (updatedRelays: RelayListItem[]) => {
-  const tags = updatedRelays.map(relay => {
-    const tag = ['r', relay.url];
-    if (relay.read && !relay.write) tag.push('read');
-    if (relay.write && !relay.read) tag.push('write');
-    return tag;
-  });
-
-  await publishEvent({
-    kind: 10002,
-    content: '',
-    tags,
-  });
-
-  // Force immediate refetch to get fresh data
-  await queryClient.refetchQueries({ queryKey: ['user-relays'] });
-};
-
-const { mutate: removeRelay, isPending: isRemoving } = useMutation({
-  mutationFn: async (relayToRemove: RelayListItem) => {
-    if (!relays) throw new Error('No relays available');
-
-    console.log('🗑️ Removing relay:', relayToRemove.url);
-    console.log('📝 Current relays before removal:', relays);
-
-    const updatedRelays = relays.filter(relay => relay.url !== relayToRemove.url);
-    console.log('📝 Updated relays after removal:', updatedRelays);
-
-    const tags = updatedRelays.map(relay => {
-      const tag = ['r', relay.url];
-      if (relay.read && !relay.write) tag.push('read');
-      if (relay.write && !relay.read) tag.push('write');
-      return tag;
-    });
-
-    console.log('🏷️ New NIP-65 tags to publish:', tags);
-
-    await publishEvent({
-      kind: 10002,
-      content: '',
-      tags,
-    });
-
-    console.log('✅ NIP-65 event published, now refetching...');
-
-    // Force immediate refetch to get fresh data
-  await refetch();
-  }
-});
-
-const { mutate: togglePermission, isPending: isToggling } = useMutation({
-  mutationFn: async ({ relayUrl, permission }: { relayUrl: string; permission: 'read' | 'write' }) => {
-    if (!relays) throw new Error('No relays available');
-
-    const updatedRelays = relays.map(relay => {
-      if (relay.url === relayUrl) {
-        return { ...relay, [permission]: !relay[permission] };
+    setIsAddingRelay(true);
+    try {
+      // Validate URL format
+      let url = newRelayUrl.trim();
+      if (!url.startsWith('wss://') && !url.startsWith('ws://')) {
+        url = 'wss://' + url;
       }
-      return relay;
-    });
 
-    const tags = updatedRelays.map(relay => {
-      const tag = ['r', relay.url];
-      if (relay.read && !relay.write) tag.push('read');
-      if (relay.write && !relay.read) tag.push('write');
-      return tag;
-    });
+      // Check if relay already exists
+      if (relays.some(relay => relay.url === url)) {
+        alert('This relay is already in your list');
+        return;
+      }
 
-    await publishEvent({
-      kind: 10002,
-      content: '',
-      tags,
-    });
+      // Add new relay with default permissions
+      const newRelay = { url, read: true, write: true };
+      const updatedRelays = [...relays, newRelay];
 
-    // Force immediate refetch to get fresh data
-  await refetch();
-  },
-  onMutate: ({ relayUrl }) => {
-    // Add to toggling set when mutation starts
+      await updateRelayList(updatedRelays);
+      setNewRelayUrl('');
+    } catch (error) {
+      console.error('Error adding relay:', error);
+      alert('Failed to add relay. Please check the URL and try again.');
+    } finally {
+      setIsAddingRelay(false);
+    }
+  };
+
+  const handleTogglePermission = async (relayUrl: string, permission: 'read' | 'write') => {
     setTogglingRelays(prev => new Set(prev).add(relayUrl));
-  },
-  onSettled: () => {
-    // Clear all toggling states when mutation completes (success or error)
-    setTogglingRelays(new Set());
-  }
-});
+    try {
+      await togglePermission(relayUrl, permission);
+    } finally {
+      setTogglingRelays(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(relayUrl);
+        return newSet;
+      });
+    }
+  };
 
-const { mutate: addRelay, isPending: isAddingRelay } = useMutation({
-  mutationFn: async (newRelay: { url: string; read: boolean; write: boolean }) => {
-    if (!relays) throw new Error('No relays available');
+  const handleRemoveRelay = async (relayToRemove: RelayListItem) => {
+    try {
+      await removeRelay(relayToRemove.url);
+    } catch (error) {
+      console.error('Error removing relay:', error);
+      alert('Failed to remove relay. Please try again.');
+    }
+  };
 
-    const updatedRelays = [...relays, newRelay];
-
-    const tags = updatedRelays.map(relay => {
-      const tag = ['r', relay.url];
-      if (relay.read && !relay.write) tag.push('read');
-      if (relay.write && !relay.read) tag.push('write');
-      return tag;
-    });
-
-    await publishEvent({
-      kind: 10002,
-      content: '',
-      tags,
-    });
-
-    // Force immediate refetch to get fresh data
-  await refetch();
-  }
-});
-
-// Check if we're in a loading state (initial load or refetch) - defined after all hooks
-const isAnyOperationPending = isPublishing || isToggling || isAddingRelay || isRemoving || togglingRelays.size > 0;
+  // Check if we're in a loading state
+  const isAnyOperationPending = isLoading || isAddingRelay || togglingRelays.size > 0;
 
 return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -171,6 +112,29 @@ return (
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Add New Relay Section */}
+          <div className="flex gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
+            <Input
+              placeholder="Enter relay URL (e.g., relay.example.com)"
+              value={newRelayUrl}
+              onChange={(e) => setNewRelayUrl(e.target.value)}
+              className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-white/40"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddRelay()}
+            />
+            <Button
+              onClick={handleAddRelay}
+              disabled={!newRelayUrl.trim() || isAddingRelay}
+              className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30"
+            >
+              {isAddingRelay ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              Add
+            </Button>
+          </div>
+
           {isLoading || isAnyOperationPending ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
@@ -187,7 +151,7 @@ return (
               ))}
             </div>
           ) : relays && relays.length > 0 ? (
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto">
               {relays.map((relay, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -199,15 +163,15 @@ return (
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Toggleable Read Badge */}
                     <button
-                      onClick={() => togglePermission({ relayUrl: relay.url, permission: 'read' })}
-                      disabled={isToggling}
+                      onClick={() => handleTogglePermission(relay.url, 'read')}
+                      disabled={togglingRelays.has(relay.url)}
                       className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
                         relay.read
                           ? 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
                           : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                      } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${togglingRelays.has(relay.url) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {isToggling && togglingRelays.has(relay.url) ? (
+                      {togglingRelays.has(relay.url) ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : null}
                       Read
@@ -215,15 +179,15 @@ return (
 
                     {/* Toggleable Write Badge */}
                     <button
-                      onClick={() => togglePermission({ relayUrl: relay.url, permission: 'write' })}
-                      disabled={isToggling}
+                      onClick={() => handleTogglePermission(relay.url, 'write')}
+                      disabled={togglingRelays.has(relay.url)}
                       className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
                         relay.write
                           ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30'
                           : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                      } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${togglingRelays.has(relay.url) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {isToggling && togglingRelays.has(relay.url) ? (
+                      {togglingRelays.has(relay.url) ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : null}
                       Write
@@ -252,15 +216,10 @@ return (
                             Cancel
                           </AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => removeRelay(relay)}
-                            disabled={isRemoving}
-                            className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50"
+                            onClick={() => handleRemoveRelay(relay)}
+                            className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30"
                           >
-                            {isRemoving ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4 mr-2" />
-                            )}
+                            <Trash2 className="w-4 h-4 mr-2" />
                             Remove
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -273,9 +232,9 @@ return (
           ) : (
             <div className="text-center py-8">
               <Network className="w-12 h-12 mx-auto mb-4 text-white/30" />
-              <p className="text-white/60 mb-2">No relay list found</p>
+              <p className="text-white/60 mb-2">No relays configured</p>
               <p className="text-white/40 text-sm">
-                Your NIP-65 relay list appears to be empty. Configure your preferred relays in your Nostr client.
+                Add your preferred relays above to get started. They will be saved to your NIP-65 relay list.
               </p>
             </div>
           )}

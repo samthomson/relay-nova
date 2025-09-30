@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 interface UserRelay {
   url: string;
@@ -13,6 +13,9 @@ interface UserRelaysContextType {
   userRelays: UserRelay[] | undefined;
   isLoading: boolean;
   refetch: () => Promise<void>;
+  updateRelayList: (newRelays: UserRelay[]) => Promise<void>;
+  removeRelay: (relayUrl: string) => Promise<void>;
+  togglePermission: (relayUrl: string, permission: 'read' | 'write') => Promise<void>;
 }
 
 const UserRelaysContext = createContext<UserRelaysContextType | undefined>(undefined);
@@ -29,7 +32,10 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
   const { nostr } = useNostr();
   const queryClient = useQueryClient();
 
-  const { data: userRelays, isLoading, refetch } = useQuery({
+  // Local state for immediate UI updates - this is the source of truth
+  const [localRelays, setLocalRelays] = useState<UserRelay[]>([]);
+
+  const { data: networkRelays, isLoading, refetch } = useQuery({
     queryKey: ['user-relays', user?.pubkey],
     queryFn: async () => {
       if (!user?.pubkey || !nostr) return [];
@@ -82,10 +88,18 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
     refetchOnReconnect: 'always',
   });
 
+  // Sync network data to local state when network query completes
+  useEffect(() => {
+    if (networkRelays) {
+      console.log('🔄 Syncing network relays to local state:', networkRelays);
+      setLocalRelays(networkRelays);
+    }
+  }, [networkRelays]);
+
   // Auto-switch to user's first write relay when available
   useEffect(() => {
-    if (userRelays && userRelays.length > 0) {
-      const writeRelays = userRelays.filter(relay => relay.write);
+    if (localRelays && localRelays.length > 0) {
+      const writeRelays = localRelays.filter(relay => relay.write);
       if (writeRelays.length > 0) {
         // We'll handle this in AppProvider by listening to this context
         // For now, we'll store the preferred relay in localStorage
@@ -107,12 +121,87 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
         }
       }
     }
-  }, [userRelays]);
+  }, [localRelays]);
+
+  const { mutate: publishRelayList } = useMutation({
+    mutationFn: async (relaysToPublish: UserRelay[]) => {
+      if (!user?.pubkey) throw new Error('User not authenticated');
+
+      console.log('📤 Publishing NIP-65 event with relays:', relaysToPublish);
+
+      const tags = relaysToPublish.map(relay => {
+        const tag = ['r', relay.url];
+        if (relay.read && !relay.write) tag.push('read');
+        if (relay.write && !relay.read) tag.push('write');
+        return tag;
+      });
+
+      // Create and publish the event
+      const event = {
+        kind: 10002,
+        content: '',
+        tags,
+        created_at: Math.floor(Date.now() / 1000),
+      };
+
+      // Sign and publish the event
+      const signedEvent = await user.signer.signEvent(event);
+
+      // Publish to all relays
+      await nostr?.event(signedEvent);
+
+      console.log('✅ NIP-65 event published successfully');
+    },
+    onSuccess: () => {
+      // Refetch to ensure we're in sync with the network
+      refetch();
+    },
+  });
+
+  const updateRelayList = async (newRelays: UserRelay[]) => {
+    console.log('🔄 Updating relay list locally:', newRelays);
+
+    // Update local state immediately for instant UI feedback
+    setLocalRelays(newRelays);
+
+    // Publish to network in the background
+    await publishRelayList(newRelays);
+  };
+
+  const removeRelay = async (relayUrl: string) => {
+    console.log('🗑️ Removing relay locally:', relayUrl);
+
+    // Update local state immediately
+    const updatedRelays = localRelays.filter(relay => relay.url !== relayUrl);
+    setLocalRelays(updatedRelays);
+
+    // Publish to network in the background
+    await publishRelayList(updatedRelays);
+  };
+
+  const togglePermission = async (relayUrl: string, permission: 'read' | 'write') => {
+    console.log(`🔄 Toggling ${permission} permission for relay:`, relayUrl);
+
+    // Update local state immediately
+    const updatedRelays = localRelays.map(relay => {
+      if (relay.url === relayUrl) {
+        return { ...relay, [permission]: !relay[permission] };
+      }
+      return relay;
+    });
+    setLocalRelays(updatedRelays);
+
+    // Publish to network in the background
+    await publishRelayList(updatedRelays);
+  };
 
   const value: UserRelaysContextType = {
-    userRelays,
+    userRelays: localRelays,
     isLoading,
     refetch,
+    updateRelayList,
+    removeRelay,
+    togglePermission,
   };
 
   return (
