@@ -45,13 +45,7 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   // Track which relays are being toggled - now connected to mutation state
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
 
-  // Clear toggling state only when relays data changes (indicating successful update)
-  useEffect(() => {
-    // When relays data updates, clear any remaining toggling states
-    if (relays && togglingRelays.size > 0) {
-      setTogglingRelays(new Set());
-    }
-  }, [relays, togglingRelays.size]);
+  
 
   const updateRelayList = async (updatedRelays: RelayListItem[]) => {
   const tags = updatedRelays.map(relay => {
@@ -77,13 +71,10 @@ const removeRelay = async (relayToRemove: RelayListItem) => {
   await updateRelayList(updatedRelays);
 };
 
-const togglePermission = async (relayUrl: string, permission: 'read' | 'write') => {
-  if (!relays) return;
+const { mutate: togglePermission, isPending: isToggling } = useMutation({
+  mutationFn: async ({ relayUrl, permission }: { relayUrl: string; permission: 'read' | 'write' }) => {
+    if (!relays) throw new Error('No relays available');
 
-  // Add to toggling set
-  setTogglingRelays(prev => new Set(prev).add(relayUrl));
-
-  try {
     const updatedRelays = relays.map(relay => {
       if (relay.url === relayUrl) {
         return { ...relay, [permission]: !relay[permission] };
@@ -106,19 +97,16 @@ const togglePermission = async (relayUrl: string, permission: 'read' | 'write') 
 
     // Invalidate to refresh data
     queryClient.invalidateQueries({ queryKey: ['user-relays'] });
-
-    // Keep spinner visible until data refetches
-    // Don't remove from toggling set here - useEffect will handle it when data updates
-  } catch (error) {
-    // Remove from toggling set on error
-    setTogglingRelays(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(relayUrl);
-      return newSet;
-    });
-    console.error('Failed to toggle relay permission:', error);
+  },
+  onMutate: ({ relayUrl }) => {
+    // Add to toggling set when mutation starts
+    setTogglingRelays(prev => new Set(prev).add(relayUrl));
+  },
+  onSettled: () => {
+    // Clear all toggling states when mutation completes (success or error)
+    setTogglingRelays(new Set());
   }
-};
+});
 
 return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -159,15 +147,15 @@ return (
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Toggleable Read Badge */}
                     <button
-                      onClick={() => togglePermission(relay.url, 'read')}
-                      disabled={togglingRelays.has(relay.url) || isPublishing}
+                      onClick={() => togglePermission({ relayUrl: relay.url, permission: 'read' })}
+                      disabled={isToggling}
                       className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
                         relay.read
                           ? 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
                           : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                      } ${(togglingRelays.has(relay.url) || isPublishing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {(togglingRelays.has(relay.url) || isPublishing) ? (
+                      {isToggling && togglingRelays.has(relay.url) ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : null}
                       Read
@@ -175,15 +163,15 @@ return (
 
                     {/* Toggleable Write Badge */}
                     <button
-                      onClick={() => togglePermission(relay.url, 'write')}
-                      disabled={togglingRelays.has(relay.url) || isPublishing}
+                      onClick={() => togglePermission({ relayUrl: relay.url, permission: 'write' })}
+                      disabled={isToggling}
                       className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
                         relay.write
                           ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30'
                           : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                      } ${(togglingRelays.has(relay.url) || isPublishing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {(togglingRelays.has(relay.url) || isPublishing) ? (
+                      {isToggling && togglingRelays.has(relay.url) ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : null}
                       Write

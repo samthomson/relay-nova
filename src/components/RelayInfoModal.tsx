@@ -128,7 +128,7 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                   className="ml-2 bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30"
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Add Relay
+                  add relay+
                 </Button>
               )}
             </DialogTitle>
