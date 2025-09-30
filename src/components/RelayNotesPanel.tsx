@@ -32,10 +32,11 @@ interface RelayNotesPanelProps {
   onWheel?: (event: React.WheelEvent<HTMLDivElement>) => void;
   onEventsChange?: (events: NostrEvent[] | null, loaded: boolean) => void;
   forwardScrollableRef?: React.RefObject<{ scrollableRef: React.RefObject<HTMLDivElement> }>;
+  countdown?: number | null;
 }
 
 export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
-  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef }, ref) => {
+  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef, countdown }, ref) => {
   const { nostr } = useNostr();
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -257,9 +258,9 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
               <h3 className="font-semibold text-lg truncate">
                 {relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`}
               </h3>
-              {relay.city && (
+              {(relay.city || relay.country) && (
                 <p className="text-sm text-gray-400 truncate">
-                  {relay.city}, {relay.country}
+                  {relay.city ? `${relay.city}, ${relay.country}` : relay.country}
                 </p>
               )}
             </div>
@@ -273,6 +274,16 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
           >
             <X className="w-4 h-4" />
           </Button>
+
+          {/* Countdown Timer */}
+          {countdown !== null && (
+            <div className="bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm font-mono text-green-400">
+                {countdown}s
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Add Relay Button on new line */}

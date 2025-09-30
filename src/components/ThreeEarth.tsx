@@ -194,6 +194,12 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   const [openRelay, setOpenRelay] = useState<RelayLocation | null>(null);
   const [relaySide, setRelaySide] = useState<'left' | 'right' | 'bottom'>('right');
 
+  // Auto pilot state
+  const [notes, setNotes] = useState<NostrEvent[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [currentRelayUrl, setCurrentRelayUrl] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+
   // Create a ref to track the current openRelay state for event handlers
   const openRelayRef = useRef(openRelay);
 
@@ -805,11 +811,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     isAutoMode.current = true;
   }, []);
 
-  // Auto pilot integration - track events state
-  const [notes, setNotes] = useState<NostrEvent[]>([]);
-  const [eventsLoaded, setEventsLoaded] = useState(false);
-  const [currentRelayUrl, setCurrentRelayUrl] = useState<string | null>(null);
-
   // Update autopilot mode state when context changes
   useEffect(() => {
     isAutoPilotModeActive.current = isAutoPilotMode;
@@ -1004,6 +1005,12 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     return false;
   }, [eventsLoaded, notes.length, currentRelayUrl]);
 
+  // Update countdown display
+  const updateCountdown = useCallback((secondsLeft: number) => {
+    console.log(`⏱️ Countdown updated: ${secondsLeft} seconds left`);
+    setCountdown(secondsLeft);
+  }, []);
+
   // Expose auto pilot controls
   useImperativeHandle(ref, () => ({
     getAutoPilotControls: () => ({
@@ -1014,6 +1021,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       getCurrentEvents,
       isPanelOpen,
       areEventsLoaded,
+      updateCountdown,
     }),
   }));
 
@@ -1538,6 +1546,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
               setEventsLoaded(loaded);
               console.log(`📋 ThreeEarth: Set eventsLoaded to ${loaded}`);
             }}
+            countdown={countdown}
             forwardScrollableRef={relayPanelRef}
           />
         </div>
