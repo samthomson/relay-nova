@@ -812,31 +812,42 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     console.log(`🌍 Rotating earth to relay: ${relayUrl} at ${relay.lat}, ${relay.lng}`);
 
     return new Promise<void>((resolve) => {
-      // Convert relay coordinates to 3D position
+      // Convert relay coordinates to 3D position on unit sphere
       const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = -relay.lng * (Math.PI / 180);
+      const lngRad = relay.lng * (Math.PI / 180);
 
-      const radius = 2.05;
-      const x = radius * Math.cos(latRad) * Math.cos(lngRad);
-      const y = radius * Math.sin(latRad);
-      const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+      // Calculate 3D position of relay on earth surface
+      const earthRadius = 2.05;
+      const relayX = earthRadius * Math.cos(latRad) * Math.cos(lngRad);
+      const relayY = earthRadius * Math.sin(latRad);
+      const relayZ = earthRadius * Math.cos(latRad) * Math.sin(lngRad);
 
-      // Calculate target rotation, accounting for initial -90 degree Y rotation
-      const targetRotationY = -lngRad - Math.PI / 2;
-      const targetRotationX = -latRad;
+      // Calculate target earth rotations to bring relay to front
+      // We want the relay to be at the front-right of the earth when viewed from camera
+      const targetRotationY = -lngRad; // Rotate longitude to front
+      const targetRotationX = -latRad;  // Rotate latitude to center
 
-      // Calculate target camera position (opposite side of earth)
+      // Calculate camera position to view the relay from optimal angle
+      // Camera should be positioned to see the relay clearly
       const cameraDistance = 6;
-      const cameraX = -x * 2;
-      const cameraY = -y * 2;
-      const cameraZ = -z * 2;
+      const cameraOffsetX = Math.sin(lngRad) * cameraDistance;
+      const cameraOffsetZ = Math.cos(lngRad) * cameraDistance;
+      const cameraOffsetY = Math.sin(latRad) * cameraDistance * 0.5; // Slight elevation
 
-      // Smooth rotation and camera movement animation
+      const targetCameraX = cameraOffsetX;
+      const targetCameraY = cameraOffsetY;
+      const targetCameraZ = cameraOffsetZ;
+
+      console.log(`🎯 Target rotations: Y=${targetRotationY.toFixed(2)}, X=${targetRotationX.toFixed(2)}`);
+      console.log(`🎯 Target camera: X=${targetCameraX.toFixed(2)}, Y=${targetCameraY.toFixed(2)}, Z=${targetCameraZ.toFixed(2)}`);
+
+      // Current state
       const startRotationY = earthRef.current.rotation.y;
       const startRotationX = earthRef.current.rotation.x;
       const startCameraX = cameraRef.current.position.x;
       const startCameraY = cameraRef.current.position.y;
       const startCameraZ = cameraRef.current.position.z;
+
       const animationDuration = 2000; // 2 seconds
       const startTime = Date.now();
 
@@ -848,17 +859,23 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
         const easeProgress = 1 - Math.pow(1 - progress, 3);
 
         if (earthRef.current && cameraRef.current) {
-          // Rotate earth
+          // Rotate earth to bring relay to front
           earthRef.current.rotation.y = startRotationY + (targetRotationY - startRotationY) * easeProgress;
           earthRef.current.rotation.x = startRotationX + (targetRotationX - startRotationX) * easeProgress;
 
-          // Move camera to show the relay location
-          cameraRef.current.position.x = startCameraX + (cameraX - startCameraX) * easeProgress;
-          cameraRef.current.position.y = startCameraY + (cameraY - startCameraY) * easeProgress;
-          cameraRef.current.position.z = startCameraZ + (cameraZ - startCameraZ) * easeProgress;
+          // Move camera to viewing position
+          cameraRef.current.position.x = startCameraX + (targetCameraX - startCameraX) * easeProgress;
+          cameraRef.current.position.y = startCameraY + (targetCameraY - startCameraY) * easeProgress;
+          cameraRef.current.position.z = startCameraZ + (targetCameraZ - startCameraZ) * easeProgress;
 
-          // Make camera look at earth center
+          // Always make camera look at earth center
           cameraRef.current.lookAt(0, 0, 0);
+
+          // Debug logging
+          if (progress === 1) {
+            console.log(`✅ Final earth rotation: Y=${earthRef.current.rotation.y.toFixed(2)}, X=${earthRef.current.rotation.x.toFixed(2)}`);
+            console.log(`✅ Final camera position: X=${cameraRef.current.position.x.toFixed(2)}, Y=${cameraRef.current.position.y.toFixed(2)}, Z=${cameraRef.current.position.z.toFixed(2)}`);
+          }
         }
 
         if (progress < 1) {

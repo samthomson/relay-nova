@@ -38,7 +38,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
     if (!relayLocations || relayLocations.length === 0) return [];
 
     const shuffled = [...relayLocations].sort(() => Math.random() - 0.5);
-    return shuffled.map(relay => relay.url);
+    const urlOrder = shuffled.map(relay => relay.url);
+    console.log('🎲 Generated random relay order:', urlOrder.slice(0, 5), `(${urlOrder.length} total)`);
+    return urlOrder;
   }, [relayLocations]);
 
   // Start auto pilot sequence
@@ -65,6 +67,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     try {
       // Step 1: Rotate earth to relay location
       console.log('🔄 Step 1: Rotating earth to relay location');
+      console.log(`🎯 Target relay: ${currentRelayUrl}`);
       await controls.rotateEarthToRelay(currentRelayUrl);
       console.log('✅ Earth rotated to relay');
 
