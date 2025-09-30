@@ -825,9 +825,18 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       const targetRotationY = -lngRad - Math.PI / 2;
       const targetRotationX = -latRad;
 
-      // Smooth rotation animation
+      // Calculate target camera position (opposite side of earth)
+      const cameraDistance = 6;
+      const cameraX = -x * 2;
+      const cameraY = -y * 2;
+      const cameraZ = -z * 2;
+
+      // Smooth rotation and camera movement animation
       const startRotationY = earthRef.current.rotation.y;
       const startRotationX = earthRef.current.rotation.x;
+      const startCameraX = cameraRef.current.position.x;
+      const startCameraY = cameraRef.current.position.y;
+      const startCameraZ = cameraRef.current.position.z;
       const animationDuration = 2000; // 2 seconds
       const startTime = Date.now();
 
@@ -838,9 +847,18 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
         // Easing function for smooth animation
         const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-        if (earthRef.current) {
+        if (earthRef.current && cameraRef.current) {
+          // Rotate earth
           earthRef.current.rotation.y = startRotationY + (targetRotationY - startRotationY) * easeProgress;
           earthRef.current.rotation.x = startRotationX + (targetRotationX - startRotationX) * easeProgress;
+
+          // Move camera to show the relay location
+          cameraRef.current.position.x = startCameraX + (cameraX - startCameraX) * easeProgress;
+          cameraRef.current.position.y = startCameraY + (cameraY - startCameraY) * easeProgress;
+          cameraRef.current.position.z = startCameraZ + (cameraZ - startCameraZ) * easeProgress;
+
+          // Make camera look at earth center
+          cameraRef.current.lookAt(0, 0, 0);
         }
 
         if (progress < 1) {
@@ -854,7 +872,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     });
   }, [relayLocations]);
 
-  const openRelayPanel = useCallback(async (relayUrl: string) => {
+  const openRelayPanelForAutoPilot = useCallback(async (relayUrl: string) => {
     if (!relayLocations || !cameraRef.current) {
       throw new Error('Relay locations or camera not ready');
     }
@@ -934,7 +952,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   useImperativeHandle(ref, () => ({
     getAutoPilotControls: () => ({
       rotateEarthToRelay,
-      openRelayPanel,
+      openRelayPanel: openRelayPanelForAutoPilot,
       closeRelayPanel,
       scrollToEvent,
       getCurrentEvents,
@@ -946,7 +964,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   // Initialize auto pilot hook
   const autoPilotControls = {
     rotateEarthToRelay,
-    openRelayPanel,
+    openRelayPanel: openRelayPanelForAutoPilot,
     closeRelayPanel,
     scrollToEvent,
     getCurrentEvents,

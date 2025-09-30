@@ -33,12 +33,16 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Relay Info button at bottom */}
-        <div className="absolute bottom-6 right-6 z-20 flex flex-col gap-3">
+        {/* Relay Info button at bottom left */}
+        <div className="absolute bottom-6 left-6 z-20">
           <RelayInfoModal
             relays={relayLocations || []}
             isLoading={isLoadingLocations}
           />
+        </div>
+
+        {/* Auto Pilot button at bottom right */}
+        <div className="absolute bottom-6 right-6 z-20">
           <AutoPilotButton />
         </div>
 
