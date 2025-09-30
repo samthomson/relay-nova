@@ -1,10 +1,9 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { X, MessageCircle, Loader2 } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { useAuthor } from '@/hooks/useAuthor';
@@ -13,8 +12,6 @@ import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 
 interface RelayLocation {
   url: string;
@@ -45,18 +42,16 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
   const { user } = useCurrentUser();
   const { mutate: publishEvent } = useNostrPublish();
   const queryClient = useQueryClient();
-  const [isAddRelayDialogOpen, setIsAddRelayDialogOpen] = useState(false);
-  const [newRelayUrl, setNewRelayUrl] = useState('');
 
-  const { mutate: addRelay, isPending: isAdding } = useMutation({
-    mutationFn: async (relayUrl: string) => {
+  const { mutate: addCurrentRelay, isPending: isAdding } = useMutation({
+    mutationFn: async () => {
       if (!user) throw new Error('User not logged in');
-      if (!relayUrl.trim()) throw new Error('Relay URL is required');
 
       const currentRelays = userRelays || [];
+      const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
 
       // Check if relay already exists
-      if (currentRelays.some(r => r.url === relayUrl.trim())) {
+      if (currentRelays.some(r => r.url === relayUrl)) {
         throw new Error('Relay already exists in your list');
       }
 
@@ -67,7 +62,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
           if (relay.write && !relay.read) tag.push('write');
           return tag;
         }),
-        ['r', relayUrl.trim()] // Add new relay with default read+write
+        ['r', relayUrl, 'read'] // Add current relay as read-only
       ];
 
       await publishEvent({
@@ -186,10 +181,15 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsAddRelayDialogOpen(true)}
+              onClick={() => addCurrentRelay()}
+              disabled={isAdding}
               className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 text-xs px-3 py-1 h-7"
             >
-              <Plus className="w-3 h-3 mr-1" />
+              {isAdding ? (
+                <div className="w-3 h-3 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-1" />
+              ) : (
+                <Plus className="w-3 h-3 mr-1" />
+              )}
               add relay+
             </Button>
           </div>
@@ -246,60 +246,6 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
         </div>
       </div>
     </div>
-
-      {/* Add Relay Dialog */}
-      <Dialog open={isAddRelayDialogOpen} onOpenChange={setIsAddRelayDialogOpen}>
-        <DialogContent className="max-w-md bg-gray-900/95 backdrop-blur-sm border border-white/10">
-          <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
-              <Plus className="w-5 h-5 text-green-400" />
-              Add New Relay
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="relay-url" className="text-sm font-medium text-white/80">
-                Relay URL
-              </label>
-              <Input
-                id="relay-url"
-                value={newRelayUrl}
-                onChange={(e) => setNewRelayUrl(e.target.value)}
-                placeholder="wss://relay.example.com"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-green-500/30"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsAddRelayDialogOpen(false);
-                  setNewRelayUrl('');
-                }}
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  if (newRelayUrl.trim()) {
-                    addRelay(newRelayUrl.trim());
-                    setIsAddRelayDialogOpen(false);
-                    setNewRelayUrl('');
-                  }
-                }}
-                disabled={!newRelayUrl.trim() || isAdding}
-                className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30"
-              >
-                {isAdding ? (
-                  <div className="w-4 h-4 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-2" />
-                ) : null}
-                Add Relay
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
