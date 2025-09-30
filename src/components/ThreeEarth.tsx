@@ -1211,14 +1211,14 @@ export function ThreeEarth() {
           }}
         >
           <div className="text-sm font-semibold">
-            {hoveredRelay.city ? `${hoveredRelay.city}, ${hoveredRelay.country}` : 'Unknown Location'}
+            {hoveredRelay.country || 'Unknown Location'}
           </div>
           <div className="text-xs text-gray-300 mt-1">
             {hoveredRelay.url.replace('wss://', '').replace('ws://', '')}
           </div>
           {hoveredRelay.lat && hoveredRelay.lng && (
             <div className="text-xs text-gray-400 mt-1">
-              {hoveredRelay.lat.toFixed(2)}, {hoveredRelay.lng.toFixed(2)}
+              {hoveredRelay.lat.toFixed(2)}°, {hoveredRelay.lng.toFixed(2)}°
             </div>
           )}
         </div>

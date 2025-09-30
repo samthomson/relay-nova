@@ -13,13 +13,13 @@ async function fetchRelayLocations(): Promise<RelayLocation[]> {
   try {
     // Fetch JSON file from public directory
     const response = await fetch('/relays.json');
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch relays.json: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     // Transform JSON data to match our RelayLocation interface
     const relayLocations: RelayLocation[] = data.map((relay: any) => ({
       url: relay.url,
@@ -28,13 +28,13 @@ async function fetchRelayLocations(): Promise<RelayLocation[]> {
       country: relay.location.country,
       // Note: city is not in the JSON format, but we can add it later if needed
     }));
-    
+
     console.log(`Loaded ${relayLocations.length} relays from JSON file`);
     return relayLocations;
-    
+
   } catch (error) {
     console.error('Error loading relay locations:', error);
-    
+
     // Fallback to a small set of default relays if JSON fails to load
     return [
       { url: 'wss://relay.damus.io', lat: 37.7749, lng: -122.4194, country: 'USA' },
