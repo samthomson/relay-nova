@@ -47,20 +47,18 @@ export function useAutoPilot(controls: AutoPilotControls) {
   const startAutoPilotSequence = useCallback(async () => {
     if (!isAutoPilotMode || !isAutoPilotActive) return;
 
-    // Generate new random order if needed
-    if (currentRelayOrder.length === 0) {
-      console.log('🔄 Generating new random relay order...');
-      const newOrder = generateRandomRelayOrder();
-      console.log('📋 Generated order:', newOrder);
-      setCurrentRelayOrder(newOrder);
-      setTotalRelays(newOrder.length);
-      setCurrentRelayIndex(0);
+    // ALWAYS generate new random order when starting autopilot
+    console.log('🔄 Generating new random relay order...');
+    const newOrder = generateRandomRelayOrder();
+    console.log('📋 Generated order:', newOrder);
+    setCurrentRelayOrder(newOrder);
+    setTotalRelays(newOrder.length);
+    setCurrentRelayIndex(0);
 
-      if (newOrder.length === 0) {
-        console.error('No relays available for auto pilot');
-        stopAutoPilot();
-        return;
-      }
+    if (newOrder.length === 0) {
+      console.error('No relays available for auto pilot');
+      stopAutoPilot();
+      return;
     }
 
     console.log(`📊 Current relay order: [${currentRelayOrder.join(', ')}]`);
@@ -99,8 +97,11 @@ export function useAutoPilot(controls: AutoPilotControls) {
         return;
       }
 
-      // Step 4: Start auto-scrolling through events
-      console.log('🔄 Step 4: Starting auto-scrolling through events');
+      // Step 4: Wait 5 seconds, then start auto-scrolling through events
+      console.log('🔄 Step 4: Waiting 5 seconds before auto-scrolling');
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      console.log('🔄 Step 5: Starting auto-scrolling through events');
       currentEventIndexRef.current = 0;
       await startAutoScrolling();
 
@@ -209,7 +210,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
           await moveToNextRelayLocal();
         }, 2000);
       }
-    }, 3000); // 3 seconds per event (readable pace)
+    }, 2000); // 2 seconds per event (faster pace)
   }, [controls]);
 
   // Move to next relay (local implementation)

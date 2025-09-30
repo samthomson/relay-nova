@@ -54,6 +54,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
   const lastInteraction = useRef(Date.now());
 
+  // Auto pilot mode state - completely independent from manual mode
+  const isAutoPilotModeActive = useRef(false);
+
   // Track if mouse is over relay panel for scroll handling
   const isMouseOverRelayPanel = useRef(false);
 
@@ -109,13 +112,15 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       document.removeEventListener('wheel', wheelEventHandlerRef.current);
     }
 
-    // Pause auto mode when relay panel is open
-    isAutoMode.current = false;
+    // Only pause auto mode if NOT in autopilot mode
+    if (!isAutoPilotModeActive.current) {
+      isAutoMode.current = false;
 
-    // Clear any existing auto mode timer
-    if (inactivityTimer.current) {
-      clearTimeout(inactivityTimer.current);
-      inactivityTimer.current = null;
+      // Clear any existing auto mode timer
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current);
+        inactivityTimer.current = null;
+      }
     }
 
     // Determine which side to show panel based on relay position
@@ -165,21 +170,23 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     isMouseDown.current = false;
     isDragging.current = false;
 
-    // Immediately enable auto mode and clear any timers
-    isAutoMode.current = true;
-    if (inactivityTimer.current) {
-      clearTimeout(inactivityTimer.current);
-      inactivityTimer.current = null;
-    }
+    // Only enable auto mode if NOT in autopilot mode
+    if (!isAutoPilotModeActive.current) {
+      isAutoMode.current = true;
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current);
+        inactivityTimer.current = null;
+      }
 
-    // Force a small rotation to kickstart the auto rotation
-    if (earthRef.current) {
-      earthRef.current.rotation.y += 0.001;
+      // Force a small rotation to kickstart the auto rotation
+      if (earthRef.current) {
+        earthRef.current.rotation.y += 0.001;
+      }
     }
   };
 
   // Auto pilot integration
-  const { stopAutoPilot } = useAutoPilotContext();
+  const { stopAutoPilot, isAutoPilotMode } = useAutoPilotContext();
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -635,8 +642,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
 
-      // Auto rotation only when in auto mode
-      if (isAutoMode.current && !isDragging.current && earthRef.current) {
+      // Auto rotation only when in auto mode AND NOT in autopilot mode
+      if (isAutoMode.current && !isDragging.current && !isAutoPilotModeActive.current && earthRef.current) {
         earthRef.current.rotation.y += 0.002;
       }
 
@@ -802,6 +809,11 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
 
+  // Update autopilot mode state when context changes
+  useEffect(() => {
+    isAutoPilotModeActive.current = isAutoPilotMode;
+  }, [isAutoPilotMode]);
+
   // Auto pilot controls implementation
   const rotateEarthToRelay = useCallback(async (relayUrl: string) => {
     if (!relayLocations || !earthRef.current || !cameraRef.current || !sceneRef.current) {
@@ -952,8 +964,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     setNotes([]);
     setEventsLoaded(false);
 
-    // Stop auto pilot mode when user manually closes panel
-    if (stopAutoPilot) {
+    // Only stop auto pilot mode when user manually closes panel AND we're in autopilot mode
+    if (stopAutoPilot && isAutoPilotModeActive.current) {
       console.log('🛑 Stopping auto pilot mode due to manual panel close');
       stopAutoPilot();
     }
