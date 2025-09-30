@@ -805,9 +805,10 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     isAutoMode.current = true;
   }, []);
 
-  // Auto pilot integration
+  // Auto pilot integration - track events state
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [currentRelayUrl, setCurrentRelayUrl] = useState<string | null>(null);
 
   // Update autopilot mode state when context changes
   useEffect(() => {
@@ -923,12 +924,13 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     // Reset events state before opening new panel
     setEventsLoaded(false);
     setNotes([]);
+    setCurrentRelayUrl(relayUrl);
 
     // Close any existing panel first to prevent conflicts
     if (openRelay) {
       closeRelayPanelInternal();
       // Wait a brief moment for cleanup
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     // Open the relay panel using existing function
@@ -945,6 +947,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     closeRelayPanelInternal();
     setNotes([]);
     setEventsLoaded(false);
+    setCurrentRelayUrl(null);
 
     // Don't automatically stop autopilot when panel closes - let the autopilot control this
   }, []);
@@ -969,17 +972,20 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   }, []);
 
   const getCurrentEvents = useCallback(() => {
+    console.log(`📋 getCurrentEvents called: ${notes.length} notes available for relay: ${currentRelayUrl}`);
     return notes.length > 0 ? notes : null;
-  }, [notes]);
+  }, [notes, currentRelayUrl]);
 
   const isPanelOpen = useCallback(() => {
     return openRelay !== null;
   }, [openRelay]);
 
   const areEventsLoaded = useCallback(() => {
+    console.log(`🔍 areEventsLoaded check: eventsLoaded=${eventsLoaded}, notes.length=${notes.length}, currentRelayUrl=${currentRelayUrl}`);
+
     // Return true if events have finished loading (regardless of count)
-    // or if we can see the panel has finished loading by checking DOM
     if (eventsLoaded) {
+      console.log('✅ Events marked as loaded via state');
       return true;
     }
 
@@ -989,11 +995,14 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       const hasContent = panelElement.querySelector('[data-note-card]');
       const hasError = panelElement.querySelector('.text-red-400');
       const hasEmptyState = panelElement.querySelector('.text-gray-400');
-      return !!(hasContent || hasError || hasEmptyState);
+      const result = !!(hasContent || hasError || hasEmptyState);
+      console.log(`🔍 DOM fallback check: hasContent=${!!hasContent}, hasError=${!!hasError}, hasEmptyState=${!!hasEmptyState}, result=${result}`);
+      return result;
     }
 
+    console.log('❌ No panel element found');
     return false;
-  }, [eventsLoaded]);
+  }, [eventsLoaded, notes.length, currentRelayUrl]);
 
   // Expose auto pilot controls
   useImperativeHandle(ref, () => ({
@@ -1518,10 +1527,16 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
             onMouseLeave={() => isMouseOverRelayPanel.current = false}
             onMouseDown={() => {}}
             onEventsChange={(events, loaded) => {
+              console.log(`📋 ThreeEarth: onEventsChange called - events: ${events?.length || 0}, loaded: ${loaded}, relay: ${openRelay?.url}`);
               if (events) {
                 setNotes(events);
+                console.log(`📋 ThreeEarth: Set notes to ${events.length} events`);
+              } else {
+                setNotes([]);
+                console.log(`📋 ThreeEarth: Cleared notes (events was null)`);
               }
               setEventsLoaded(loaded);
+              console.log(`📋 ThreeEarth: Set eventsLoaded to ${loaded}`);
             }}
             forwardScrollableRef={relayPanelRef}
           />
