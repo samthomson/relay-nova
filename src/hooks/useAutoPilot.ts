@@ -62,14 +62,17 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
     try {
       // Step 1: Rotate earth to relay location
+      console.log('🔄 Step 1: Rotating earth to relay location');
       await controls.rotateEarthToRelay(currentRelayUrl);
       console.log('✅ Earth rotated to relay');
 
       // Step 2: Open relay panel
+      console.log('🔄 Step 2: Opening relay panel');
       await controls.openRelayPanel(currentRelayUrl);
       console.log('✅ Relay panel opened');
 
       // Step 3: Wait for events to load
+      console.log('🔄 Step 3: Waiting for events to load');
       const eventsLoaded = await waitForEventsToLoad();
       if (!eventsLoaded) {
         console.log('⏰ Events loading timeout, moving to next relay');
@@ -79,11 +82,13 @@ export function useAutoPilot(controls: AutoPilotControls) {
       console.log('✅ Events loaded');
 
       // Step 4: Start auto-scrolling through events
+      console.log('🔄 Step 4: Starting auto-scrolling through events');
       currentEventIndexRef.current = 0;
       await startAutoScrolling();
 
     } catch (error) {
       console.error('❌ Auto pilot error:', error);
+      console.log('🔄 Moving to next relay due to error');
       await moveToNextRelay();
     }
   }, [
@@ -100,6 +105,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
   // Wait for events to load (max 10 seconds)
   const waitForEventsToLoad = useCallback(async (): Promise<boolean> => {
+    console.log('⏳ Waiting for events to load...');
     return new Promise((resolve) => {
       let attempts = 0;
       const maxAttempts = 100; // 100 * 100ms = 10 seconds max
@@ -108,9 +114,11 @@ export function useAutoPilot(controls: AutoPilotControls) {
         attempts++;
 
         if (controls.areEventsLoaded()) {
+          console.log('✅ Events loaded successfully');
           clearInterval(checkInterval);
           resolve(true);
         } else if (attempts >= maxAttempts) {
+          console.log('⏰ Events loading timeout - moving to next relay');
           clearInterval(checkInterval);
           resolve(false);
         }

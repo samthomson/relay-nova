@@ -804,6 +804,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
 
     const relay = relayLocations.find(r => r.url === relayUrl);
     if (!relay) {
+      console.error(`❌ Relay not found in relay locations: ${relayUrl}`);
+      console.error(`🔍 Available relay URLs:`, relayLocations.map(r => r.url).slice(0, 5));
       throw new Error(`Relay not found: ${relayUrl}`);
     }
 
@@ -819,8 +821,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       const y = radius * Math.sin(latRad);
       const z = radius * Math.cos(latRad) * Math.sin(lngRad);
 
-      // Calculate target rotation
-      const targetRotationY = -lngRad;
+      // Calculate target rotation, accounting for initial -90 degree Y rotation
+      const targetRotationY = -lngRad - Math.PI / 2;
       const targetRotationX = -latRad;
 
       // Smooth rotation animation
