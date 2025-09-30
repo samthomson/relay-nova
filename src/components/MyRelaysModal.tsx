@@ -45,14 +45,7 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   // Track which relays are being toggled - now connected to mutation state
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
 
-  // Clear toggling state when publishing completes OR when relays data updates
-  useEffect(() => {
-    if (!isPublishing) {
-      setTogglingRelays(new Set());
-    }
-  }, [isPublishing]);
-
-  // Also clear toggling state when relays data changes (indicating successful update)
+  // Clear toggling state only when relays data changes (indicating successful update)
   useEffect(() => {
     // When relays data updates, clear any remaining toggling states
     if (relays && togglingRelays.size > 0) {
@@ -97,10 +90,25 @@ const togglePermission = async (relayUrl: string, permission: 'read' | 'write') 
       }
       return relay;
     });
-    await updateRelayList(updatedRelays);
 
-    // Don't remove from toggling set here - let data refetch handle it
-    // This keeps spinner visible until actual data updates
+    const tags = updatedRelays.map(relay => {
+      const tag = ['r', relay.url];
+      if (relay.read && !relay.write) tag.push('read');
+      if (relay.write && !relay.read) tag.push('write');
+      return tag;
+    });
+
+    await publishEvent({
+      kind: 10002,
+      content: '',
+      tags,
+    });
+
+    // Invalidate to refresh data
+    queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+
+    // Keep spinner visible until data refetches
+    // Don't remove from toggling set here - useEffect will handle it when data updates
   } catch (error) {
     // Remove from toggling set on error
     setTogglingRelays(prev => {
