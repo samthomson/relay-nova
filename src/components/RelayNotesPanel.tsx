@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Plus } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,12 @@ import { X, MessageCircle, Loader2 } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { useAuthor } from '@/hooks/useAuthor';
 import { NoteContent } from './NoteContent';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface RelayLocation {
   url: string;
@@ -35,6 +41,44 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const scrollableRef = useRef<HTMLDivElement>(null);
+  const { userRelays } = useUserRelaysContext();
+  const { user } = useCurrentUser();
+  const { mutate: publishEvent } = useNostrPublish();
+  const queryClient = useQueryClient();
+  const [isAddRelayDialogOpen, setIsAddRelayDialogOpen] = useState(false);
+  const [newRelayUrl, setNewRelayUrl] = useState('');
+
+  const { mutate: addRelay, isPending: isAdding } = useMutation({
+    mutationFn: async (relayUrl: string) => {
+      if (!user) throw new Error('User not logged in');
+      if (!relayUrl.trim()) throw new Error('Relay URL is required');
+
+      const currentRelays = userRelays || [];
+
+      // Check if relay already exists
+      if (currentRelays.some(r => r.url === relayUrl.trim())) {
+        throw new Error('Relay already exists in your list');
+      }
+
+      const tags = [
+        ...currentRelays.map(relay => {
+          const tag = ['r', relay.url];
+          if (relay.read && !relay.write) tag.push('read');
+          if (relay.write && !relay.read) tag.push('write');
+          return tag;
+        }),
+        ['r', relayUrl.trim()] // Add new relay with default read+write
+      ];
+
+      await publishEvent({
+        kind: 10002,
+        content: '',
+        tags,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+    }
+  });
 
   const scrollUp = () => {
     if (scrollableRef.current) {
@@ -100,14 +144,15 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
   };
 
   return (
-    <div
-      ref={ref}
-      className={getPanelClasses()}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onMouseDown={onMouseDown}
-      data-relay-panel="true"
-    >
+    <>
+      <div
+        ref={ref}
+        className={getPanelClasses()}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        onMouseDown={onMouseDown}
+        data-relay-panel="true"
+      >
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-white/20">
         <div className="flex items-center justify-between">
@@ -115,7 +160,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
             <MessageCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-lg truncate">
-                {relay.url.replace('wss://', '').replace('ws://', '')}
+                {relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`}
               </h3>
               {relay.city && (
                 <p className="text-sm text-gray-400 truncate">
@@ -124,6 +169,19 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
               )}
             </div>
           </div>
+
+          {/* Add Relay Button */}
+          {user && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddRelayDialogOpen(true)}
+              className="mr-2 bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 flex-shrink-0"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              add relay+
+            </Button>
+          )}
 
           {/* Up/Down buttons */}
           <div className="flex items-center gap-1 flex-shrink-0">
@@ -210,6 +268,61 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
         </div>
       </div>
     </div>
+
+      {/* Add Relay Dialog */}
+      <Dialog open={isAddRelayDialogOpen} onOpenChange={setIsAddRelayDialogOpen}>
+        <DialogContent className="max-w-md bg-gray-900/95 backdrop-blur-sm border border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Plus className="w-5 h-5 text-green-400" />
+              Add New Relay
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="relay-url" className="text-sm font-medium text-white/80">
+                Relay URL
+              </label>
+              <Input
+                id="relay-url"
+                value={newRelayUrl}
+                onChange={(e) => setNewRelayUrl(e.target.value)}
+                placeholder="wss://relay.example.com"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-green-500/30"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAddRelayDialogOpen(false);
+                  setNewRelayUrl('');
+                }}
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (newRelayUrl.trim()) {
+                    addRelay(newRelayUrl.trim());
+                    setIsAddRelayDialogOpen(false);
+                    setNewRelayUrl('');
+                  }
+                }}
+                disabled={!newRelayUrl.trim() || isAdding}
+                className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30"
+              >
+                {isAdding ? (
+                  <div className="w-4 h-4 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-2" />
+                ) : null}
+                Add Relay
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 );
