@@ -188,15 +188,15 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin }) =
           {/* Login Methods */}
           <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-white/5 rounded-lg mb-4 border border-white/10">
-              <TabsTrigger value="extension" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
+              <TabsTrigger value="extension" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
                 <Shield className="w-4 h-4" />
                 <span>Extension</span>
               </TabsTrigger>
-              <TabsTrigger value="key" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
+              <TabsTrigger value="key" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
                 <KeyRound className="w-4 h-4" />
                 <span>Key</span>
               </TabsTrigger>
-              <TabsTrigger value="bunker" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
+              <TabsTrigger value="bunker" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">
                 <Cloud className="w-4 h-4" />
                 <span>Bunker</span>
               </TabsTrigger>
