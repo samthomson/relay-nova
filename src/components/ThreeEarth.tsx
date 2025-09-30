@@ -185,8 +185,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     }
   };
 
-  // Auto pilot integration
-  const { stopAutoPilot, isAutoPilotMode } = useAutoPilotContext();
+  // Auto pilot integration - useAutoPilot hook will provide all necessary values
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -811,10 +810,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     isAutoMode.current = true;
   }, []);
 
-  // Update autopilot mode state when context changes
-  useEffect(() => {
-    isAutoPilotModeActive.current = isAutoPilotMode;
-  }, [isAutoPilotMode]);
+  // The useAutoPilot hook will handle autopilot mode state internally
 
   // Auto pilot controls implementation
   const rotateEarthToRelay = useCallback(async (relayUrl: string) => {
@@ -1006,7 +1002,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   }, [eventsLoaded, notes.length, currentRelayUrl]);
 
   // Update countdown display
-  const updateCountdown = useCallback((secondsLeft: number) => {
+  const updateCountdown = useCallback((secondsLeft: number | null) => {
     console.log(`⏱️ Countdown updated: ${secondsLeft} seconds left`);
     setCountdown(secondsLeft);
   }, []);
@@ -1025,7 +1021,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     }),
   }));
 
-  // Initialize auto pilot hook
+  // Initialize auto pilot hook and get state
   const autoPilotControls = {
     rotateEarthToRelay,
     openRelayPanel: openRelayPanelForAutoPilot,
@@ -1036,7 +1032,12 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     areEventsLoaded,
   };
 
-  useAutoPilot(autoPilotControls);
+  const { isAutoPilotMode, isAutoPilotActive, currentRelayIndex, totalRelays } = useAutoPilot(autoPilotControls);
+
+  // Update autopilot mode ref for the animation loop
+  useEffect(() => {
+    isAutoPilotModeActive.current = isAutoPilotMode;
+  }, [isAutoPilotMode]);
 
   // Create connection line from relay to panel
   const createConnectionLine = useCallback((relay: RelayLocation) => {
