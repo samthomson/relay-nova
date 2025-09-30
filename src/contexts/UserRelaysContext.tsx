@@ -101,8 +101,7 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
     if (localRelays && localRelays.length > 0) {
       const writeRelays = localRelays.filter(relay => relay.write);
       if (writeRelays.length > 0) {
-        // We'll handle this in AppProvider by listening to this context
-        // For now, we'll store the preferred relay in localStorage
+        // Store the preferred relay in localStorage without reloading
         const preferredRelay = writeRelays[0].url;
         const currentRelay = localStorage.getItem('nostr:app-config');
         if (currentRelay) {
@@ -112,8 +111,8 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
               // Update the config with the new relay
               const updatedConfig = { ...config, relayUrl: preferredRelay };
               localStorage.setItem('nostr:app-config', JSON.stringify(updatedConfig));
-              // Trigger a page reload to apply the new config
-              window.location.reload();
+              // Note: We removed the page reload to avoid closing dialogs and disrupting UX
+              // The app will use the new relay on next navigation/refresh
             }
           } catch (e) {
             // Ignore parsing errors

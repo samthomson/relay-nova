@@ -19,7 +19,7 @@ export function MyRelaysButton() {
         className="text-white border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-200"
       >
         <Server className="w-4 h-4 mr-2" />
-        My Relays
+        Relays
         <ChevronDown className="w-4 h-4 ml-2" />
       </Button>
 

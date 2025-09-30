@@ -1,18 +1,27 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { Plus, SkipForward } from 'lucide-react';
+import { Plus, SkipForward, X, Trash2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, MessageCircle, Loader2 } from 'lucide-react';
+import { MessageCircle, Loader2 } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { useAuthor } from '@/hooks/useAuthor';
 import { NoteContent } from './NoteContent';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface RelayLocation {
   url: string;
@@ -41,46 +50,71 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const scrollableRef = useRef<HTMLDivElement>(null);
-  const { userRelays } = useUserRelaysContext();
+  const { userRelays, updateRelayList, removeRelay } = useUserRelaysContext();
   const { user } = useCurrentUser();
-  const { mutate: publishEvent } = useNostrPublish();
-  const queryClient = useQueryClient();
 
-  const { mutate: addCurrentRelay, isPending: isAdding } = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error('User not logged in');
+  const [isAdding, setIsAdding] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
-      const currentRelays = userRelays || [];
-      const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
+  const addCurrentRelay = async () => {
+    if (!user || !userRelays) return;
 
-      // Check if relay already exists
-      if (currentRelays.some(r => r.url === relayUrl)) {
-        throw new Error('Relay already exists in your list');
-      }
+    const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
 
-      const tags = [
-        ...currentRelays.map(relay => {
-          const tag = ['r', relay.url];
-          if (relay.read && !relay.write) tag.push('read');
-          if (relay.write && !relay.read) tag.push('write');
-          return tag;
-        }),
-        ['r', relayUrl, 'read'] // Add current relay as read-only
-      ];
-
-      await publishEvent({
-        kind: 10002,
-        content: '',
-        tags,
-      });
-
-      // Invalidate the query to refresh the data
-      await queryClient.invalidateQueries({ queryKey: ['user-relays'] });
-
-      // Also refetch immediately to ensure fresh data
-      await queryClient.refetchQueries({ queryKey: ['user-relays'] });
+    // Check if relay already exists
+    if (userRelays.some(r => r.url === relayUrl)) {
+      return;
     }
-  });
+
+    setIsAdding(true);
+    try {
+      const newRelays = [...userRelays, { url: relayUrl, read: true, write: true }];
+      await updateRelayList(newRelays);
+    } catch (error) {
+      console.error('Error adding relay:', error);
+      alert('Failed to add relay. Please check the URL and try again.');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const removeCurrentRelay = async () => {
+    if (!user) return;
+
+    const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
+    console.log('🗑️ RELAY VIEWER: Attempting to remove relay:', relayUrl);
+    console.log('🗑️ RELAY VIEWER: Current userRelays:', userRelays);
+    console.log('🗑️ RELAY VIEWER: removeRelay function:', removeRelay);
+
+    setIsRemoving(true);
+    try {
+      console.log('🗑️ RELAY VIEWER: Calling removeRelay...');
+      await removeRelay(relayUrl);
+      console.log('🗑️ RELAY VIEWER: removeRelay completed');
+    } catch (error) {
+      console.error('🗑️ RELAY VIEWER: Error removing relay:', error);
+      alert('Failed to remove relay. Please try again.');
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
+  // Check if user already has this relay
+  const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
+  console.log('🔍 RELAY VIEWER: Original relay.url:', relay.url);
+  console.log('🔍 RELAY VIEWER: Normalized relayUrl:', relayUrl);
+
+  // Debug URL matching
+  const urlMatches = userRelays?.map(r => ({
+    url: r.url,
+    match: r.url === relayUrl,
+    alsoMatch: r.url === `wss://${relay.url.replace(/^wss:\/\//, '')}`,
+    alsoMatch2: r.url === relay.url.replace(/^wss:\/\//, '')
+  }));
+  console.log('🔍 RELAY VIEWER: URL matching analysis:', urlMatches);
+
+  const hasRelay = userRelays?.some(r => r.url === relayUrl) || false;
+  console.log('🔍 RELAY VIEWER: hasRelay final:', hasRelay);
 
   const { isAutoPilotMode, stopAutoPilot } = useAutoPilotContext();
 
@@ -275,23 +309,62 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
           </Button>
         </div>
 
-        {/* Add Relay Button on new line */}
+        {/* Add/Remove Relay Button on new line */}
         {user && (
           <div className="flex justify-start gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addCurrentRelay()}
-              disabled={isAdding}
-              className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 text-xs px-3 py-1 h-7"
-            >
-              {isAdding ? (
-                <div className="w-3 h-3 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-1" />
-              ) : (
-                <Plus className="w-3 h-3 mr-1" />
-              )}
-              add relay+
-            </Button>
+            {!hasRelay ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => addCurrentRelay()}
+                disabled={isAdding}
+                className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 text-xs px-3 py-1 h-7"
+              >
+                {isAdding ? (
+                  <div className="w-3 h-3 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-1" />
+                ) : (
+                  <Plus className="w-3 h-3 mr-1" />
+                )}
+                add relay
+              </Button>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isRemoving}
+                    className="bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30 text-xs px-3 py-1 h-7"
+                  >
+                    {isRemoving ? (
+                      <div className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin mr-1" />
+                    ) : (
+                      <Trash2 className="w-3 h-3 mr-1" />
+                    )}
+                    remove relay
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-gray-900/95 backdrop-blur-md border border-white/10 z-[1000000]">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">Remove Relay</AlertDialogTitle>
+                    <AlertDialogDescription className="text-white/70">
+                      Are you sure you want to remove "{relayUrl}" from your relay list? This action will update your NIP-65 event.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-white/10 text-white hover:bg-white/20 border-white/20">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => removeCurrentRelay()}
+                      className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30"
+                    >
+                      Remove
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
 
           {/* Stop Button - Only show in auto pilot mode */}
           {isAutoPilotMode && (

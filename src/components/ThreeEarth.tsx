@@ -243,19 +243,19 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Day/night lighting effect
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.4); // Base ambient light
+    // More balanced lighting for even Earth illumination
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Stronger ambient light for overall illumination
     scene.add(ambientLight);
 
-    // Main directional light acting as the sun
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    sunLight.position.set(8, 2, 8); // Sun position - creates day/night effect
+    // Main directional light positioned for even lighting
+    const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    sunLight.position.set(5, 3, 5); // Adjusted position for better lighting distribution
     scene.add(sunLight);
 
-    // Very subtle blue fill light for night side (moonlight effect)
-    const moonLight = new THREE.DirectionalLight(0x4477bb, 0.2);
-    moonLight.position.set(-8, -2, -8); // Opposite side of sun
-    scene.add(moonLight);
+    // Optional: Fill light to reduce harsh shadows
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    fillLight.position.set(-3, 1, -2); // Fill light from opposite direction
+    scene.add(fillLight);
 
     // Create Earth with proper satellite imagery texture
     const earthGeometry = new THREE.SphereGeometry(2, 64, 32);

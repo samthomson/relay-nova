@@ -1,7 +1,6 @@
 import { useSeoMeta } from '@unhead/react';
 import { ThreeEarth, type ThreeEarthRef } from '@/components/ThreeEarth';
 import { Navbar } from '@/components/Navbar';
-import { RelayInfoModal } from '@/components/RelayInfoModal';
 import { AutoPilotButton } from '@/components/AutoPilotButton';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 import { useRef } from 'react';
@@ -33,13 +32,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Relay Info button at bottom left */}
-        <div className="absolute bottom-6 left-6 z-20">
-          <RelayInfoModal
-            relays={relayLocations || []}
-            isLoading={isLoadingLocations}
-          />
-        </div>
+        
 
         {/* Auto Pilot button at bottom right */}
         <div className="absolute bottom-6 right-6 z-20">
