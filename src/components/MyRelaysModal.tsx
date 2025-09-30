@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
-import { Server, Network, X, Trash2 } from 'lucide-react';
+import { Server, Network, X, Trash2, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
@@ -39,8 +39,11 @@ function validateNip65Event(event: any): event is { tags: string[][] } {
 
 export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   const { userRelays: relays, isLoading } = useUserRelaysContext();
-  const { mutate: publishEvent } = useNostrPublish();
+  const { mutate: publishEvent, isPending: isPublishing } = useNostrPublish();
   const queryClient = useQueryClient();
+
+  // Track which relays are being toggled
+  const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
 
   const updateRelayList = async (updatedRelays: RelayListItem[]) => {
   const tags = updatedRelays.map(relay => {
@@ -68,13 +71,26 @@ const removeRelay = async (relayToRemove: RelayListItem) => {
 
 const togglePermission = async (relayUrl: string, permission: 'read' | 'write') => {
   if (!relays) return;
-  const updatedRelays = relays.map(relay => {
-    if (relay.url === relayUrl) {
-      return { ...relay, [permission]: !relay[permission] };
-    }
-    return relay;
-  });
-  await updateRelayList(updatedRelays);
+
+  // Add to toggling set
+  setTogglingRelays(prev => new Set(prev).add(relayUrl));
+
+  try {
+    const updatedRelays = relays.map(relay => {
+      if (relay.url === relayUrl) {
+        return { ...relay, [permission]: !relay[permission] };
+      }
+      return relay;
+    });
+    await updateRelayList(updatedRelays);
+  } finally {
+    // Remove from toggling set
+    setTogglingRelays(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(relayUrl);
+      return newSet;
+    });
+  }
 };
 
 return (
@@ -117,24 +133,32 @@ return (
                     {/* Toggleable Read Badge */}
                     <button
                       onClick={() => togglePermission(relay.url, 'read')}
-                      className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                      disabled={togglingRelays.has(relay.url) || isPublishing}
+                      className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
                         relay.read
                           ? 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
                           : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                      }`}
+                      } ${(togglingRelays.has(relay.url) || isPublishing) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
+                      {(togglingRelays.has(relay.url) || isPublishing) ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : null}
                       Read
                     </button>
 
                     {/* Toggleable Write Badge */}
                     <button
                       onClick={() => togglePermission(relay.url, 'write')}
-                      className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                      disabled={togglingRelays.has(relay.url) || isPublishing}
+                      className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
                         relay.write
                           ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30'
                           : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                      }`}
+                      } ${(togglingRelays.has(relay.url) || isPublishing) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
+                      {(togglingRelays.has(relay.url) || isPublishing) ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : null}
                       Write
                     </button>
 

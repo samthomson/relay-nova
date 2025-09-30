@@ -2,7 +2,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Info, MapPin, Globe, Signal, Wifi, WifiOff } from 'lucide-react';
+import { Info, MapPin, Globe, Signal, Wifi, WifiOff, Plus, X } from 'lucide-react';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 
 
@@ -20,6 +24,64 @@ interface RelayInfoModalProps {
 }
 
 export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
+  const { userRelays } = useUserRelaysContext();
+  const { user } = useCurrentUser();
+  const { mutate: publishEvent } = useNostrPublish();
+  const queryClient = useQueryClient();
+
+  const { mutate: addRelay, isPending: isAdding } = useMutation({
+    mutationFn: async (relayUrl: string) => {
+      if (!user) throw new Error('User not logged in');
+
+      const currentRelays = userRelays || [];
+      // Check if relay already exists
+      if (currentRelays.some(r => r.url === relayUrl)) {
+        return; // Already exists, do nothing
+      }
+
+      const tags = [
+        ...currentRelays.map(relay => {
+          const tag = ['r', relay.url];
+          if (relay.read && !relay.write) tag.push('read');
+          if (relay.write && !relay.read) tag.push('write');
+          return tag;
+        }),
+        ['r', relayUrl] // Add new relay with default read+write
+      ];
+
+      await publishEvent({
+        kind: 10002,
+        content: '',
+        tags,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+    }
+  });
+
+  const { mutate: removeRelay, isPending: isRemoving } = useMutation({
+    mutationFn: async (relayUrl: string) => {
+      if (!user) throw new Error('User not logged in');
+
+      const currentRelays = userRelays || [];
+      const updatedRelays = currentRelays.filter(r => r.url !== relayUrl);
+
+      const tags = updatedRelays.map(relay => {
+        const tag = ['r', relay.url];
+        if (relay.read && !relay.write) tag.push('read');
+        if (relay.write && !relay.read) tag.push('write');
+        return tag;
+      });
+
+      await publishEvent({
+        kind: 10002,
+        content: '',
+        tags,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+    }
+  });
 
   const groupedRelays = relays.reduce((acc, relay) => {
     const country = relay.country || 'Unknown';
@@ -91,34 +153,73 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                       </div>
 
                       <div className="grid gap-2">
-                        {countryRelays.map((relay, index) => (
-                          <div
-                            key={`${relay.url}-${index}`}
-                            className="flex items-center justify-between p-3 border border-white/10 rounded bg-white/5 hover:bg-white/10 transition-colors"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <Globe className="w-4 h-4 text-blue-400" />
-                                <div className="font-mono text-sm truncate">
-                                  {relay.url}
+                        {countryRelays.map((relay, index) => {
+                          const isInUserList = userRelays?.some(r => r.url === relay.url);
+
+                          return (
+                            <div
+                              key={`${relay.url}-${index}`}
+                              className="flex items-center justify-between p-3 border border-white/10 rounded bg-white/5 hover:bg-white/10 transition-colors"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <Globe className="w-4 h-4 text-blue-400" />
+                                  <div className="font-mono text-sm truncate">
+                                    {relay.url}
+                                  </div>
                                 </div>
+                                {relay.city && (
+                                  <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 ml-6">
+                                    <MapPin className="w-3 h-3" />
+                                    {relay.city}
+                                  </div>
+                                )}
                               </div>
-                              {relay.city && (
-                                <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 ml-6">
-                                  <MapPin className="w-3 h-3" />
-                                  {relay.city}
+
+                              {/* Add/Remove Relay Button */}
+                              {user && (
+                                <div className="ml-4">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (isInUserList) {
+                                        removeRelay(relay.url);
+                                      } else {
+                                        addRelay(relay.url);
+                                      }
+                                    }}
+                                    disabled={isAdding || isRemoving}
+                                    className={`h-8 px-3 text-xs ${
+                                      isInUserList
+                                        ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
+                                        : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'
+                                    }`}
+                                  >
+                                    {isAdding || isRemoving ? (
+                                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                    ) : isInUserList ? (
+                                      <X className="w-3 h-3" />
+                                    ) : (
+                                      <Plus className="w-3 h-3" />
+                                    )}
+                                    <span className="ml-1">
+                                      {isInUserList ? 'Remove' : 'Add'}
+                                    </span>
+                                  </Button>
                                 </div>
                               )}
-                            </div>
-                            <div className="text-right text-xs text-gray-500 ml-4">
-                              <div>{Math.abs(relay.lat).toFixed(2)}°{relay.lat >= 0 ? 'N' : 'S'}</div>
-                              <div>{Math.abs(relay.lng).toFixed(2)}°{relay.lng >= 0 ? 'E' : 'W'}</div>
-                              <div className="text-xs text-gray-400 mt-1">
-                                Raw: {relay.lat}, {relay.lng}
+
+                              <div className="text-right text-xs text-gray-500 ml-4">
+                                <div>{Math.abs(relay.lat).toFixed(2)}°{relay.lat >= 0 ? 'N' : 'S'}</div>
+                                <div>{Math.abs(relay.lng).toFixed(2)}°{relay.lng >= 0 ? 'E' : 'W'}</div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                  Raw: {relay.lat}, {relay.lng}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
