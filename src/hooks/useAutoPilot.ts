@@ -11,7 +11,6 @@ interface AutoPilotControls {
   getCurrentEvents: () => NostrEvent[] | null;
   isPanelOpen: () => boolean;
   areEventsLoaded: () => boolean;
-  updateCountdown: (secondsLeft: number) => void;
 }
 
 export function useAutoPilot(controls: AutoPilotControls) {
@@ -25,27 +24,22 @@ export function useAutoPilot(controls: AutoPilotControls) {
     setTotalRelays,
   } = useAutoPilotContext();
 
-  // Use refs to track current state and avoid circular dependencies
-  const isAutoPilotModeRef = useRef(isAutoPilotMode);
-  const isAutoPilotActiveRef = useRef(isAutoPilotActive);
-  const currentRelayIndexRef = useRef(currentRelayIndex);
-
-  // Update refs when state changes
-  useEffect(() => {
-    isAutoPilotModeRef.current = isAutoPilotMode;
-    isAutoPilotActiveRef.current = isAutoPilotActive;
-    currentRelayIndexRef.current = currentRelayIndex;
-  }, [isAutoPilotMode, isAutoPilotActive, currentRelayIndex]);
-
-  // Simple execution state
-  const isRunningRef = useRef(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const relayOrderRef = useRef<string[]>([]);
-
-  // Use refs to store function references to avoid circular dependencies
-  const runAutoPilotSequenceRef = useRef<() => Promise<void>>();
-  const scheduleNextRelayRef = useRef<() => Promise<void>>();
+  // Single master execution state to prevent multiple instances
+  const masterExecutionRef = useRef<{
+    isRunning: boolean;
+    currentSequenceId: string;
+    timeoutId: NodeJS.Timeout | null;
+    intervalId: NodeJS.Timeout | null;
+    abortController: AbortController | null;
+    relayOrder: string[];
+  }>({
+    isRunning: false,
+    currentSequenceId: '',
+    timeoutId: null,
+    intervalId: null,
+    abortController: null,
+    relayOrder: [],
+  });
 
   // Generate random order of relays
   const generateRandomRelayOrder = useCallback(() => {
@@ -59,123 +53,139 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
   // Completely abort current execution and clean up
   const abortCurrentExecution = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
+    const execution = masterExecutionRef.current;
+
+    if (execution.abortController) {
+      execution.abortController.abort();
+      execution.abortController = null;
     }
 
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+    if (execution.timeoutId) {
+      clearTimeout(execution.timeoutId);
+      execution.timeoutId = null;
     }
 
-    isRunningRef.current = false;
+    if (execution.intervalId) {
+      clearInterval(execution.intervalId);
+      execution.intervalId = null;
+    }
+
+    execution.isRunning = false;
+    execution.currentSequenceId = '';
 
     console.log('🧹 Aborted and cleaned up current autopilot execution');
   }, []);
 
-  // Auto pilot sequence runner - simple and clean
-  const runAutoPilotSequence = async () => {
+  // Auto pilot sequence runner with single execution guarantee
+  const runAutoPilotSequence = useCallback(async () => {
+    // Generate unique sequence ID
+    const sequenceId = `autopilot-${Date.now()}-${Math.random()}`;
+
     // Prevent multiple simultaneous executions
-    if (isRunningRef.current) {
+    if (masterExecutionRef.current.isRunning) {
       console.log('🔄 Auto pilot already running, aborting existing execution...');
       abortCurrentExecution();
       // Wait a moment for cleanup
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Check if autopilot is still active using refs
-    if (!isAutoPilotModeRef.current || !isAutoPilotActiveRef.current) {
+    // Check if autopilot is still active
+    if (!isAutoPilotMode || !isAutoPilotActive) {
       console.log('🛑 Auto pilot not active, stopping execution');
       return;
     }
 
-    // Initialize relay order if needed
-    if (relayOrderRef.current.length === 0) {
+    // Initialize or update relay order
+    if (masterExecutionRef.current.relayOrder.length === 0) {
       const newOrder = generateRandomRelayOrder();
       if (newOrder.length === 0) {
         console.error('❌ No relays available for auto pilot');
         stopAutoPilot();
         return;
       }
-      relayOrderRef.current = newOrder;
+      masterExecutionRef.current.relayOrder = newOrder;
       setTotalRelays(newOrder.length);
     }
 
-    const relayUrl = relayOrderRef.current[currentRelayIndexRef.current];
+    const relayUrl = masterExecutionRef.current.relayOrder[currentRelayIndex];
     if (!relayUrl) {
-      console.error('❌ No relay URL found at index:', currentRelayIndexRef.current);
+      console.error('❌ No relay URL found at index:', currentRelayIndex);
       return;
     }
 
     // Set execution state
-    isRunningRef.current = true;
-    abortControllerRef.current = new AbortController();
+    masterExecutionRef.current.isRunning = true;
+    masterExecutionRef.current.currentSequenceId = sequenceId;
+    masterExecutionRef.current.abortController = new AbortController();
 
-    console.log(`🛩️ Auto pilot: Processing relay ${currentRelayIndexRef.current + 1}/${relayOrderRef.current.length}: ${relayUrl}`);
+    console.log(`🛩️ [${sequenceId}] Auto pilot: Processing relay ${currentRelayIndex + 1}/${masterExecutionRef.current.relayOrder.length}: ${relayUrl}`);
 
     try {
-      const signal = abortControllerRef.current.signal;
+      const signal = masterExecutionRef.current.abortController.signal;
 
       // Step 1: Rotate earth to relay (750ms)
-      console.log(`🔄 Auto pilot: Rotating earth to relay...`);
+      console.log(`🔄 [${sequenceId}] Auto pilot: Rotating earth to relay...`);
       await controls.rotateEarthToRelay(relayUrl);
 
-      if (signal.aborted) return;
-      console.log(`✅ Auto pilot: Earth rotated`);
+      if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) return;
+      console.log(`✅ [${sequenceId}] Auto pilot: Earth rotated`);
 
       // Step 2: Open relay panel
-      console.log(`📂 Auto pilot: Opening relay panel...`);
+      console.log(`📂 [${sequenceId}] Auto pilot: Opening relay panel...`);
       await controls.openRelayPanel(relayUrl);
 
-      if (signal.aborted) return;
-      console.log(`✅ Auto pilot: Relay panel opened`);
+      if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) return;
+      console.log(`✅ [${sequenceId}] Auto pilot: Relay panel opened`);
 
       // Step 3: Wait for events to load (with proper timeout)
-      console.log(`⏳ Auto pilot: Waiting for events to load...`);
-      const eventsLoaded = await waitForEventsToLoad(signal);
+      console.log(`⏳ [${sequenceId}] Auto pilot: Waiting for events to load...`);
+      const eventsLoaded = await waitForEventsToLoad(signal, sequenceId);
 
-      if (signal.aborted) return;
+      if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) return;
 
       if (!eventsLoaded) {
-        console.log(`⏰ Auto pilot: Events loading failed, moving to next relay`);
-        scheduleNextRelay();
+        console.log(`⏰ [${sequenceId}] Auto pilot: Events loading failed, moving to next relay`);
+        scheduleNextRelay(sequenceId);
         return;
       }
-      console.log(`✅ Auto pilot: Events loaded`);
+      console.log(`✅ [${sequenceId}] Auto pilot: Events loaded`);
 
-      // Step 4: Display relay for exactly 15 seconds (with scrolling if events exist)
-      console.log(`📜 Auto pilot: Starting 15-second display period...`);
-      await displayRelayFor15Seconds(signal);
+      // Step 4: Scroll through events for exactly 5 seconds
+      console.log(`📜 [${sequenceId}] Auto pilot: Starting 5-second scroll through events...`);
+      await scrollThroughEvents(signal, sequenceId);
 
-      if (signal.aborted) return;
-      console.log(`✅ Auto pilot: Finished 15-second display period`);
+      if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) return;
+      console.log(`✅ [${sequenceId}] Auto pilot: Finished scrolling`);
 
       // Step 5: Move to next relay
-      await scheduleNextRelayRef.current?.();
+      scheduleNextRelay(sequenceId);
 
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log(`⏹️ Auto pilot sequence aborted`);
+        console.log(`⏹️ [${sequenceId}] Auto pilot sequence aborted`);
         return;
       }
-      console.error(`❌ Auto pilot error:`, error);
-      scheduleNextRelayRef.current?.();
+      console.error(`❌ [${sequenceId}] Auto pilot error:`, error);
+      scheduleNextRelay(sequenceId);
     } finally {
-      isRunningRef.current = false;
+      // Only clear if this is still the current sequence
+      if (masterExecutionRef.current.currentSequenceId === sequenceId) {
+        masterExecutionRef.current.isRunning = false;
+        masterExecutionRef.current.currentSequenceId = '';
+      }
     }
-  };
+  }, [isAutoPilotMode, isAutoPilotActive, currentRelayIndex, controls, generateRandomRelayOrder, setTotalRelays, stopAutoPilot, abortCurrentExecution]);
 
   // Wait for events to load with proper signal handling
-  const waitForEventsToLoad = useCallback(async (signal: AbortSignal): Promise<boolean> => {
+  const waitForEventsToLoad = useCallback(async (signal: AbortSignal, sequenceId: string): Promise<boolean> => {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
-        console.log(`⏰ Events loading timeout (5 seconds)`);
+        console.log(`⏰ [${sequenceId}] Events loading timeout (5 seconds)`);
         resolve(false);
       }, 5000);
 
       const checkInterval = setInterval(() => {
-        if (signal.aborted) {
+        if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) {
           clearTimeout(timeout);
           clearInterval(checkInterval);
           resolve(false);
@@ -183,12 +193,12 @@ export function useAutoPilot(controls: AutoPilotControls) {
         }
 
         if (controls.areEventsLoaded()) {
-          console.log(`✅ Events loaded successfully`);
+          console.log(`✅ [${sequenceId}] Events loaded successfully`);
           clearTimeout(timeout);
           clearInterval(checkInterval);
           resolve(true);
         }
-      }, 200); // Check every 200ms
+      }, 200); // Check every 200ms instead of 100ms
 
       signal.addEventListener('abort', () => {
         clearTimeout(timeout);
@@ -198,163 +208,144 @@ export function useAutoPilot(controls: AutoPilotControls) {
     });
   }, [controls]);
 
-  // Display relay for exactly 15 seconds (with scrolling if events exist)
-  const displayRelayFor15Seconds = useCallback(async (signal: AbortSignal): Promise<void> => {
+  // Scroll through events for exactly 5 seconds
+  const scrollThroughEvents = useCallback(async (signal: AbortSignal, sequenceId: string): Promise<void> => {
     return new Promise((resolve) => {
-      console.log(`📜 Starting 15-second display period...`);
-
       const events = controls.getCurrentEvents();
-      const startTime = Date.now();
-      const totalTime = 15000; // 15 seconds in milliseconds
-      let scrollInterval: NodeJS.Timeout | null = null;
+      if (!events || events.length === 0) {
+        console.log(`📜 [${sequenceId}] No events to scroll through - skipping scroll period`);
+        // Still wait 5 seconds even if no events, as per requirements
+        const waitTimeout = setTimeout(() => {
+          console.log(`📜 [${sequenceId}] Completed 5-second wait period (no events)`);
+          resolve();
+        }, 5000);
 
-      if (events && events.length > 0) {
-        console.log(`📜 Scrolling through ${events.length} events during 15-second period`);
-
-        let currentEventIndex = 0;
-
-        // Scroll to next event every 3 seconds (much slower)
-        scrollInterval = setInterval(() => {
-          if (signal.aborted) {
-            if (scrollInterval) clearInterval(scrollInterval);
-            resolve();
-            return;
-          }
-
-          // Scroll to current event
-          controls.scrollToEvent(currentEventIndex);
-          console.log(`📜 Scrolled to event ${currentEventIndex}`);
-
-          // Move to next event
-          currentEventIndex = (currentEventIndex + 1) % events.length;
-        }, 3000);
-      } else {
-        console.log(`📜 No events to scroll through - displaying empty relay for 15 seconds`);
+        signal.addEventListener('abort', () => {
+          clearTimeout(waitTimeout);
+          resolve();
+        });
+        return;
       }
 
-      // Update countdown every 100ms for smooth display
-      const countdownInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, totalTime - elapsed);
-        const secondsLeft = Math.ceil(remaining / 1000);
+      console.log(`📜 [${sequenceId}] Scrolling through ${events.length} events for 5 seconds`);
 
-        // Update countdown display
-        controls.updateCountdown(secondsLeft);
+      let currentEventIndex = 0;
+      let scrollCount = 0;
 
-        if (remaining <= 0) {
-          clearInterval(countdownInterval);
-        }
-      }, 100);
-
-      // Always wait exactly 15 seconds regardless of events
-      const fifteenSecondTimeout = setTimeout(() => {
-        if (scrollInterval) {
+      // Scroll to next event every 1 second for 5 seconds total
+      const scrollInterval = setInterval(() => {
+        if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) {
           clearInterval(scrollInterval);
+          resolve();
+          return;
         }
-        clearInterval(countdownInterval);
 
-        const elapsed = Date.now() - startTime;
-        console.log(`📜 Completed 15-second display period (actual: ${elapsed}ms)`);
-        resolve();
-      }, totalTime); // Exactly 15 seconds
+        scrollCount++;
+
+        // Scroll to current event
+        controls.scrollToEvent(currentEventIndex);
+        console.log(`📜 [${sequenceId}] Scrolled to event ${currentEventIndex} (${scrollCount}/5)`);
+
+        // Move to next event
+        currentEventIndex = (currentEventIndex + 1) % events.length;
+
+        // Stop after 5 seconds
+        if (scrollCount >= 5) {
+          clearInterval(scrollInterval);
+          console.log(`📜 [${sequenceId}] Completed 5-second scroll period`);
+          resolve();
+        }
+      }, 1000);
 
       signal.addEventListener('abort', () => {
-        clearTimeout(fifteenSecondTimeout);
-        if (scrollInterval) {
-          clearInterval(scrollInterval);
-        }
-        clearInterval(countdownInterval);
+        clearInterval(scrollInterval);
         resolve();
       });
     });
   }, [controls]);
 
   // Schedule next relay with proper cleanup
-  const scheduleNextRelay = async () => {
-    console.log(`⏭️ Scheduling next relay...`);
+  const scheduleNextRelay = useCallback((sequenceId: string) => {
+    console.log(`⏭️ [${sequenceId}] Scheduling next relay...`);
 
-    // Close current relay panel and wait for it to close
+    // Only proceed if this is still the current sequence
+    if (masterExecutionRef.current.currentSequenceId !== sequenceId) {
+      console.log(`⏹️ [${sequenceId}] Sequence superseded, not scheduling next relay`);
+      return;
+    }
+
+    // Close current relay panel
     if (controls.isPanelOpen()) {
-      console.log(`📂 Closing current relay panel...`);
-      try {
-        await controls.closeRelayPanel();
-        console.log(`✅ Relay panel closed`);
-      } catch (error) {
-        console.error(`❌ Error closing relay panel:`, error);
-      }
-      // Small delay to ensure panel is fully closed
-      await new Promise(resolve => setTimeout(resolve, 200));
+      controls.closeRelayPanel().catch(error => {
+        console.error(`❌ [${sequenceId}] Error closing relay panel:`, error);
+      });
     }
 
     // Move to next relay index
-    const nextIndex = currentRelayIndexRef.current + 1;
-    if (nextIndex >= relayOrderRef.current.length) {
+    const nextIndex = currentRelayIndex + 1;
+    if (nextIndex >= masterExecutionRef.current.relayOrder.length) {
       // Generate new random order and restart
-      console.log(`🔄 Completed all relays, generating new order...`);
+      console.log(`🔄 [${sequenceId}] Completed all relays, generating new order...`);
       const newOrder = generateRandomRelayOrder();
-      relayOrderRef.current = newOrder;
+      masterExecutionRef.current.relayOrder = newOrder;
       setCurrentRelayIndex(0);
       setTotalRelays(newOrder.length);
     } else {
       setCurrentRelayIndex(nextIndex);
     }
 
-    // Wait 1 second before processing next relay (as requested)
-    timeoutRef.current = setTimeout(() => {
-      if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current) {
-        console.log(`⏰ Travel time complete, starting next sequence`);
-        runAutoPilotSequenceRef.current?.();
+    // Wait 1 second before processing next relay
+    masterExecutionRef.current.timeoutId = setTimeout(() => {
+      if (isAutoPilotMode && isAutoPilotActive && masterExecutionRef.current.currentSequenceId === sequenceId) {
+        console.log(`⏰ [${sequenceId}] Timeout triggered, starting next sequence`);
+        runAutoPilotSequence();
       } else {
-        console.log(`⏹️ Travel cancelled - autopilot no longer active`);
+        console.log(`⏹️ [${sequenceId}] Timeout cancelled - autopilot no longer active or sequence superseded`);
       }
-    }, 1000); // 1 second travel time as requested
-  };
-
-  // Assign functions to refs to avoid circular dependencies
-  runAutoPilotSequenceRef.current = runAutoPilotSequence;
-  scheduleNextRelayRef.current = scheduleNextRelay;
+    }, 1000);
+  }, [currentRelayIndex, controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence]);
 
   // Start autopilot when activated
   useEffect(() => {
-    if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current && !isRunningRef.current) {
+    if (isAutoPilotMode && isAutoPilotActive && !masterExecutionRef.current.isRunning) {
       console.log('🚀 Starting autopilot mode');
 
       // Clean up any existing state
       abortCurrentExecution();
 
       // Reset state
-      relayOrderRef.current = [];
+      masterExecutionRef.current.relayOrder = [];
       setCurrentRelayIndex(0);
 
       // Start sequence after brief delay to ensure clean state
       const startTimeout = setTimeout(() => {
-        if (isAutoPilotModeRef.current && isAutoPilotActiveRef.current) {
-          runAutoPilotSequenceRef.current?.();
+        if (isAutoPilotMode && isAutoPilotActive) {
+          runAutoPilotSequence();
         }
       }, 100);
 
       return () => clearTimeout(startTimeout);
     }
-  }, [setCurrentRelayIndex, abortCurrentExecution]);
+  }, [isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence, setCurrentRelayIndex, abortCurrentExecution]);
 
   // Cleanup when autopilot stops
   useEffect(() => {
-    if (!isAutoPilotModeRef.current || !isAutoPilotActiveRef.current) {
+    if (!isAutoPilotMode || !isAutoPilotActive) {
       console.log('🛑 Cleaning up autopilot...');
       abortCurrentExecution();
-      relayOrderRef.current = [];
+      masterExecutionRef.current.relayOrder = [];
     }
 
     return () => {
       // Cleanup on unmount
       abortCurrentExecution();
     };
-  }, [abortCurrentExecution]);
+  }, [isAutoPilotMode, isAutoPilotActive, abortCurrentExecution]);
 
   return {
     isAutoPilotMode,
     isAutoPilotActive,
     currentRelayIndex,
-    totalRelays: relayOrderRef.current.length,
+    totalRelays: masterExecutionRef.current.relayOrder.length,
   };
 }

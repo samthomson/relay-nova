@@ -88,8 +88,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   // Store connection line reference for relay panel
   const connectionLineRef = useRef<THREE.Line | null>(null);
 
-
-
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
     if (!relayPanelRef.current?.element || !openRelayRef.current) return false;
@@ -187,19 +185,14 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     }
   };
 
-  // Auto pilot integration - useAutoPilot hook will provide all necessary values
+  // Auto pilot integration
+  const { stopAutoPilot, isAutoPilotMode } = useAutoPilotContext();
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
   const [openRelay, setOpenRelay] = useState<RelayLocation | null>(null);
   const [relaySide, setRelaySide] = useState<'left' | 'right' | 'bottom'>('right');
-
-  // Auto pilot state
-  const [notes, setNotes] = useState<NostrEvent[]>([]);
-  const [eventsLoaded, setEventsLoaded] = useState(false);
-  const [currentRelayUrl, setCurrentRelayUrl] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(null);
 
   // Create a ref to track the current openRelay state for event handlers
   const openRelayRef = useRef(openRelay);
@@ -812,7 +805,15 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     isAutoMode.current = true;
   }, []);
 
-  // The useAutoPilot hook will handle autopilot mode state internally
+  // Auto pilot integration - track events state
+  const [notes, setNotes] = useState<NostrEvent[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [currentRelayUrl, setCurrentRelayUrl] = useState<string | null>(null);
+
+  // Update autopilot mode state when context changes
+  useEffect(() => {
+    isAutoPilotModeActive.current = isAutoPilotMode;
+  }, [isAutoPilotMode]);
 
   // Auto pilot controls implementation
   const rotateEarthToRelay = useCallback(async (relayUrl: string) => {
@@ -1003,12 +1004,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     return false;
   }, [eventsLoaded, notes.length, currentRelayUrl]);
 
-  // Update countdown display
-  const updateCountdown = useCallback((secondsLeft: number | null) => {
-    console.log(`⏱️ Countdown updated: ${secondsLeft} seconds left`);
-    setCountdown(secondsLeft);
-  }, []);
-
   // Expose auto pilot controls
   useImperativeHandle(ref, () => ({
     getAutoPilotControls: () => ({
@@ -1019,11 +1014,10 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
       getCurrentEvents,
       isPanelOpen,
       areEventsLoaded,
-      updateCountdown,
     }),
   }));
 
-  // Initialize auto pilot hook and get state
+  // Initialize auto pilot hook
   const autoPilotControls = {
     rotateEarthToRelay,
     openRelayPanel: openRelayPanelForAutoPilot,
@@ -1034,11 +1028,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     areEventsLoaded,
   };
 
-  // AutoPilot temporarily disabled due to circular dependency issue
-  const isAutoPilotMode = false;
-  const isAutoPilotActive = false;
-  const currentRelayIndex = 0;
-  const totalRelays = 0;
+  useAutoPilot(autoPilotControls);
 
   // Create connection line from relay to panel
   const createConnectionLine = useCallback((relay: RelayLocation) => {
@@ -1502,6 +1492,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     // Relay markers created successfully
   }, [relayLocations, sceneReady]);
 
+
+
   return (
     <div className="relative w-full h-screen">
       {/* Loading indicator */}
@@ -1546,7 +1538,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
               setEventsLoaded(loaded);
               console.log(`📋 ThreeEarth: Set eventsLoaded to ${loaded}`);
             }}
-            countdown={countdown}
             forwardScrollableRef={relayPanelRef}
           />
         </div>

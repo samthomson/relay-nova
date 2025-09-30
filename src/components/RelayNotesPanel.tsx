@@ -32,11 +32,10 @@ interface RelayNotesPanelProps {
   onWheel?: (event: React.WheelEvent<HTMLDivElement>) => void;
   onEventsChange?: (events: NostrEvent[] | null, loaded: boolean) => void;
   forwardScrollableRef?: React.RefObject<{ scrollableRef: React.RefObject<HTMLDivElement> }>;
-  countdown?: number | null;
 }
 
 export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
-  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef, countdown }, ref) => {
+  ({ relay, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef }, ref) => {
   const { nostr } = useNostr();
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,11 +45,6 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
   const { user } = useCurrentUser();
   const { mutate: publishEvent } = useNostrPublish();
   const queryClient = useQueryClient();
-
-  // Debug: Log countdown changes
-  useEffect(() => {
-    console.log(`🎯 RelayNotesPanel: Countdown prop changed: ${countdown}, isAutoPilotMode: ${isAutoPilotMode}`);
-  }, [countdown, isAutoPilotMode]);
 
   const { mutate: addCurrentRelay, isPending: isAdding } = useMutation({
     mutationFn: async () => {
@@ -263,9 +257,9 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
               <h3 className="font-semibold text-lg truncate">
                 {relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`}
               </h3>
-              {(relay.city || relay.country) && (
+              {relay.city && (
                 <p className="text-sm text-gray-400 truncate">
-                  {relay.city ? `${relay.city}, ${relay.country}` : relay.country}
+                  {relay.city}, {relay.country}
                 </p>
               )}
             </div>
@@ -279,16 +273,6 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
           >
             <X className="w-4 h-4" />
           </Button>
-
-          {/* Countdown Timer - Only show in autopilot mode */}
-          {isAutoPilotMode && countdown !== null && (
-            <div className="bg-green-500/20 border border-green-500/30 px-3 py-1.5 rounded-full flex items-center gap-2 min-w-fit">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm font-mono text-green-300 font-semibold">
-                {countdown}s
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Add Relay Button on new line */}
