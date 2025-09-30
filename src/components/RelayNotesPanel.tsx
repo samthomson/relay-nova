@@ -184,7 +184,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
         setNotes(sortedEvents);
         console.log(`✅ Successfully loaded ${sortedEvents.length} notes from ${relay.url}`);
 
-        // Notify parent that events are loaded
+        // Notify parent that events are loaded (even if 0 events, it's still "loaded")
         if (onEventsChangeRef.current) {
           onEventsChangeRef.current(sortedEvents, true);
         }
