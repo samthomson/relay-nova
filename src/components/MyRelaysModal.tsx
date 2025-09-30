@@ -45,9 +45,6 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   // Track which relays are being toggled - now connected to mutation state
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
 
-  // Check if we're in a loading state (initial load or refetch)
-  const isAnyOperationPending = isPublishing || isToggling || togglingRelays.size > 0;
-
 
 
   const updateRelayList = async (updatedRelays: RelayListItem[]) => {
@@ -134,6 +131,9 @@ const { mutate: addRelay, isPending: isAddingRelay } = useMutation({
     queryClient.invalidateQueries({ queryKey: ['user-relays'] });
   }
 });
+
+// Check if we're in a loading state (initial load or refetch) - defined after all hooks
+const isAnyOperationPending = isPublishing || isToggling || isAddingRelay || togglingRelays.size > 0;
 
 return (
     <Dialog open={isOpen} onOpenChange={onClose}>
