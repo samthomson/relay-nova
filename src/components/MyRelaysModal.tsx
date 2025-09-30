@@ -65,11 +65,29 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
   queryClient.invalidateQueries({ queryKey: ['user-relays'] });
 };
 
-const removeRelay = async (relayToRemove: RelayListItem) => {
-  if (!relays) return;
-  const updatedRelays = relays.filter(relay => relay.url !== relayToRemove.url);
-  await updateRelayList(updatedRelays);
-};
+const { mutate: removeRelay, isPending: isRemoving } = useMutation({
+  mutationFn: async (relayToRemove: RelayListItem) => {
+    if (!relays) throw new Error('No relays available');
+
+    const updatedRelays = relays.filter(relay => relay.url !== relayToRemove.url);
+
+    const tags = updatedRelays.map(relay => {
+      const tag = ['r', relay.url];
+      if (relay.read && !relay.write) tag.push('read');
+      if (relay.write && !relay.read) tag.push('write');
+      return tag;
+    });
+
+    await publishEvent({
+      kind: 10002,
+      content: '',
+      tags,
+    });
+
+    // Invalidate to refresh data
+    queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+  }
+});
 
 const { mutate: togglePermission, isPending: isToggling } = useMutation({
   mutationFn: async ({ relayUrl, permission }: { relayUrl: string; permission: 'read' | 'write' }) => {
@@ -133,7 +151,7 @@ const { mutate: addRelay, isPending: isAddingRelay } = useMutation({
 });
 
 // Check if we're in a loading state (initial load or refetch) - defined after all hooks
-const isAnyOperationPending = isPublishing || isToggling || isAddingRelay || togglingRelays.size > 0;
+const isAnyOperationPending = isPublishing || isToggling || isAddingRelay || isRemoving || togglingRelays.size > 0;
 
 return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -228,9 +246,14 @@ return (
                           </AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => removeRelay(relay)}
-                            className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30"
+                            disabled={isRemoving}
+                            className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50"
                           >
-                            <Trash2 className="w-4 h-4 mr-2" />
+                            {isRemoving ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 mr-2" />
+                            )}
                             Remove
                           </AlertDialogAction>
                         </AlertDialogFooter>
