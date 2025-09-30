@@ -32,6 +32,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentEventIndexRef = useRef(0);
   const manualNextRequestedRef = useRef(false);
+  const isSequenceRunningRef = useRef(false);
 
   // Generate random order of relays
   const generateRandomRelayOrder = useCallback(() => {
@@ -45,83 +46,92 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
   // Start auto pilot sequence
   const startAutoPilotSequence = useCallback(async () => {
-    if (!isAutoPilotMode || !isAutoPilotActive) return;
-
-    // ALWAYS generate new random order when starting autopilot
-    console.log('🔄 Generating new random relay order...');
-    const newOrder = generateRandomRelayOrder();
-    console.log('📋 Generated order:', newOrder);
-    setCurrentRelayOrder(newOrder);
-    setTotalRelays(newOrder.length);
-    setCurrentRelayIndex(0);
-
-    if (newOrder.length === 0) {
-      console.error('No relays available for auto pilot');
-      stopAutoPilot();
+    console.log('🚀 startAutoPilotSequence called');
+    
+    if (!isAutoPilotMode || !isAutoPilotActive) {
+      console.log('⚠️ Autopilot not active, skipping sequence');
       return;
     }
 
-    console.log(`📊 Current relay order: [${currentRelayOrder.join(', ')}]`);
-    console.log(`📍 Current index: ${currentRelayIndex}`);
-    const currentRelayUrl = currentRelayOrder[currentRelayIndex];
-    console.log(`🎯 Selected relay URL: ${currentRelayUrl}`);
-    console.log(`🛩️ Auto Pilot: Processing relay ${currentRelayIndex + 1}/${currentRelayOrder.length}: ${currentRelayUrl}`);
+    // Prevent multiple sequences from running at same time
+    if (isSequenceRunningRef.current) {
+      console.log('⚠️ Sequence already running, skipping duplicate call');
+      return;
+    }
+
+    isSequenceRunningRef.current = true;
+    console.log('🔒 Sequence lock acquired');
 
     try {
-      // Step 1: Rotate earth to relay location
-      console.log('🔄 Step 1: Rotating earth to relay location');
-      console.log(`🎯 Target relay: ${currentRelayUrl}`);
-      await controls.rotateEarthToRelay(currentRelayUrl);
-      console.log('✅ Earth rotated to relay');
+      // ALWAYS generate new random order when starting autopilot
+      console.log('🔄 Generating new random relay order...');
+      const newOrder = generateRandomRelayOrder();
+      console.log('📋 Generated order:', newOrder);
+      setCurrentRelayOrder(newOrder);
+      setTotalRelays(newOrder.length);
+      setCurrentRelayIndex(0);
 
-      // Step 2: Open relay panel
-      console.log('🔄 Step 2: Opening relay panel');
-      await controls.openRelayPanel(currentRelayUrl);
-      console.log('✅ Relay panel opened');
-
-      // Step 3: Wait for events to load
-      console.log('🔄 Step 3: Waiting for events to load');
-      const eventsLoaded = await waitForEventsToLoad();
-      if (!eventsLoaded) {
-        console.log('⏰ Events loading timeout, moving to next relay');
-        await moveToNextRelayLocal();
-        return;
-      }
-      console.log('✅ Events loaded');
-
-      // Check if user requested manual next before starting auto-scroll
-      if (manualNextRequestedRef.current) {
-        console.log('⏭️ Manual next requested, skipping auto-scrolling');
-        manualNextRequestedRef.current = false;
-        await moveToNextRelayLocal();
+      if (newOrder.length === 0) {
+        console.error('No relays available for auto pilot');
+        stopAutoPilot();
         return;
       }
 
-      // Step 4: Wait 5 seconds, then start auto-scrolling through events
-      console.log('🔄 Step 4: Waiting 5 seconds before auto-scrolling');
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      console.log(`📊 Current relay order: [${currentRelayOrder.join(', ')}]`);
+      console.log(`📍 Current index: ${currentRelayIndex}`);
+      const currentRelayUrl = currentRelayOrder[currentRelayIndex];
+      console.log(`🎯 Selected relay URL: ${currentRelayUrl}`);
+      console.log(`🛩️ Auto Pilot: Processing relay ${currentRelayIndex + 1}/${currentRelayOrder.length}: ${currentRelayUrl}`);
 
-      console.log('🔄 Step 5: Starting auto-scrolling through events');
-      currentEventIndexRef.current = 0;
-      await startAutoScrolling();
-
-    } catch (error) {
-      console.error('❌ Auto pilot error:', error);
-
-      // Don't let errors break the autopilot - always try to continue
-      console.log('🔄 Attempting to continue to next relay despite error');
       try {
-        await moveToNextRelayLocal();
-      } catch (nextError) {
-        console.error('❌ Failed to move to next relay:', nextError);
-        // If even moving to next relay fails, wait and retry
-        console.log('⏳ Waiting 3 seconds before retry...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        if (isAutoPilotMode && isAutoPilotActive) {
-          console.log('🔄 Retrying autopilot sequence');
-          await startAutoPilotSequence();
+        // Step 1: Rotate earth to relay location
+        console.log('🔄 Step 1: Rotating earth to relay location');
+        console.log(`🎯 Target relay: ${currentRelayUrl}`);
+        await controls.rotateEarthToRelay(currentRelayUrl);
+        console.log('✅ Earth rotated to relay');
+
+        // Step 2: Open relay panel
+        console.log('🔄 Step 2: Opening relay panel');
+        await controls.openRelayPanel(currentRelayUrl);
+        console.log('✅ Relay panel opened');
+
+        // Step 3: Wait for events to load
+        console.log('🔄 Step 3: Waiting for events to load');
+        const eventsLoaded = await waitForEventsToLoad();
+        if (!eventsLoaded) {
+          console.log('⏰ Events loading timeout, moving to next relay');
+          await moveToNextRelayLocal();
+          return;
         }
+        console.log('✅ Events loaded');
+
+        // Check if user requested manual next before starting auto-scroll
+        if (manualNextRequestedRef.current) {
+          console.log('⏭️ Manual next requested, skipping auto-scrolling');
+          manualNextRequestedRef.current = false;
+          await moveToNextRelayLocal();
+          return;
+        }
+
+        // Step 4: Wait 5 seconds, then start auto-scrolling through events
+        console.log('🔄 Step 4: Waiting 5 seconds before auto-scrolling');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        console.log('🔄 Step 5: Starting auto-scrolling through events');
+        currentEventIndexRef.current = 0;
+        await startAutoScrolling();
+
+      } catch (error) {
+        console.error('❌ Auto pilot error:', error);
+
+        // Don't let errors break the autopilot - always try to continue
+        console.log('🔄 Attempting to continue to next relay despite error');
+        await moveToNextRelayLocal();
       }
+    } finally {
+      // Always release sequence lock
+      console.log('🔓 Sequence lock released');
+      isSequenceRunningRef.current = false;
     }
   }, [
     isAutoPilotMode,
@@ -259,7 +269,12 @@ export function useAutoPilot(controls: AutoPilotControls) {
       setCurrentRelayIndex(nextIndex);
     }
 
-    // Wait 1 second before processing next relay
+    // Release sequence lock before starting next sequence
+    isSequenceRunningRef.current = false;
+    console.log('🔓 Sequence lock released for next relay');
+
+    // Wait 3 seconds before processing next relay
+    console.log('⏳ Waiting 3 seconds before moving to next relay...');
     autoPilotTimeoutRef.current = setTimeout(() => {
       console.log(`🔍 Timeout triggered - isAutoPilotMode: ${isAutoPilotMode}, isAutoPilotActive: ${isAutoPilotActive}`);
       if (isAutoPilotMode && isAutoPilotActive) {
@@ -279,7 +294,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
       } else {
         console.log('⏹️ Auto pilot stopped, not starting next sequence');
       }
-    }, 1000);
+    }, 3000);
   }, [
     currentRelayIndex,
     currentRelayOrder,
@@ -294,13 +309,18 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
   // Main auto pilot effect
   useEffect(() => {
-    if (isAutoPilotMode && isAutoPilotActive) {
+    console.log('🎯 AutoPilot Effect Triggered:', { isAutoPilotMode, isAutoPilotActive });
+    
+    if (isAutoPilotMode && isAutoPilotActive && !isSequenceRunningRef.current) {
       console.log('🚀 Starting auto pilot sequence');
       startAutoPilotSequence();
+    } else if (isAutoPilotMode && isAutoPilotActive && isSequenceRunningRef.current) {
+      console.log('⚠️ Sequence already running, skipping effect trigger');
     }
 
     return () => {
       // Cleanup on unmount or when auto pilot is stopped
+      console.log('🧹 Cleaning up autopilot effect');
       if (scrollIntervalRef.current) {
         clearInterval(scrollIntervalRef.current);
         scrollIntervalRef.current = null;
@@ -309,6 +329,8 @@ export function useAutoPilot(controls: AutoPilotControls) {
         clearTimeout(autoPilotTimeoutRef.current);
         autoPilotTimeoutRef.current = null;
       }
+      // Reset sequence lock on cleanup
+      isSequenceRunningRef.current = false;
     };
   }, [isAutoPilotMode, isAutoPilotActive, startAutoPilotSequence]);
 

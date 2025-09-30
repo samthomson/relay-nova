@@ -24,6 +24,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
   const autoPilotTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const stopAutoPilot = useCallback(() => {
+    console.log('🛑 Stopping autopilot mode');
     setIsAutoPilotMode(false);
     setIsAutoPilotActive(false);
     setCurrentRelayIndex(0);
