@@ -1,4 +1,5 @@
 import React from 'react';
+import { LoginArea } from '@/components/auth/LoginArea';
 
 export function Navbar() {
   return (
@@ -12,9 +13,9 @@ export function Navbar() {
             </h1>
           </div>
 
-          {/* Right side - empty for now as requested */}
-          <div className="flex items-center space-x-4">
-            {/* Placeholder for future items */}
+          {/* Right side - Login Area */}
+          <div className="flex items-center">
+            <LoginArea className="max-w-60" />
           </div>
         </div>
       </div>
