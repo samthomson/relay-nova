@@ -49,7 +49,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
     // Generate new random order if needed
     if (currentRelayOrder.length === 0) {
+      console.log('🔄 Generating new random relay order...');
       const newOrder = generateRandomRelayOrder();
+      console.log('📋 Generated order:', newOrder);
       setCurrentRelayOrder(newOrder);
       setTotalRelays(newOrder.length);
       setCurrentRelayIndex(0);
@@ -61,7 +63,10 @@ export function useAutoPilot(controls: AutoPilotControls) {
       }
     }
 
+    console.log(`📊 Current relay order: [${currentRelayOrder.join(', ')}]`);
+    console.log(`📍 Current index: ${currentRelayIndex}`);
     const currentRelayUrl = currentRelayOrder[currentRelayIndex];
+    console.log(`🎯 Selected relay URL: ${currentRelayUrl}`);
     console.log(`🛩️ Auto Pilot: Processing relay ${currentRelayIndex + 1}/${currentRelayOrder.length}: ${currentRelayUrl}`);
 
     try {
@@ -199,6 +204,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
   // Move to next relay (local implementation)
   const moveToNextRelayLocal = useCallback(async () => {
     console.log('⏭️ Moving to next relay');
+    console.log(`📊 Current state - isAutoPilotMode: ${isAutoPilotMode}, isAutoPilotActive: ${isAutoPilotActive}`);
+    console.log(`📊 Relay order: [${currentRelayOrder.join(', ')}]`);
+    console.log(`📊 Current index: ${currentRelayIndex}, total: ${currentRelayOrder.length}`);
 
     // Clear any existing intervals/timeout
     if (scrollIntervalRef.current) {
@@ -230,6 +238,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
     // Wait 1 second before processing next relay
     autoPilotTimeoutRef.current = setTimeout(() => {
+      console.log(`🔍 Timeout triggered - isAutoPilotMode: ${isAutoPilotMode}, isAutoPilotActive: ${isAutoPilotActive}`);
       if (isAutoPilotMode && isAutoPilotActive) {
         console.log('🚀 Starting next relay sequence');
         startAutoPilotSequence();
