@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import * as THREE from 'three';
-import { useRelayLocations } from '@/hooks/useRelayLocations';
+// useRelayLocations is now passed as prop from parent component
 
 import { RelayNotesPanel } from './RelayNotesPanel';
 import { UserProfilePanel } from './UserProfilePanel';
@@ -35,7 +35,11 @@ export interface ThreeEarthRef {
   getAutoPilotControls: () => AutoPilotControls;
 }
 
-export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
+interface ThreeEarthProps {
+  relayLocations: RelayLocation[];
+}
+
+export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -266,7 +270,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
     };
   }, [openRelay, relaySide]);
 
-  const { data: relayLocations, isLoading: isLoadingLocations } = useRelayLocations();
+  // Use relayLocations from props
+  const relayLocations = props.relayLocations || [];
+  const isLoading = false; // Parent handles loading state
 
   // Calculate counts for display
   const totalCount = relayLocations?.length || 0;

@@ -11,7 +11,7 @@ const Index = () => {
     description: 'Explore Nostr relays around the world on an interactive 3D Earth visualization.',
   });
 
-  const { data: relayLocations, isLoading: isLoadingLocations } = useRelayLocations();
+  const { data: relayLocationsData, isLoading: isLoadingLocations } = useRelayLocations();
   const earthRef = useRef<ThreeEarthRef>(null);
 
   return (
@@ -32,7 +32,7 @@ const Index = () => {
           </div>
         </div>
 
-        
+
 
         {/* Auto Pilot button at bottom right */}
         <div className="absolute bottom-6 right-6 z-20">
@@ -40,7 +40,7 @@ const Index = () => {
         </div>
 
         {/* 3D Earth Visualization */}
-        <ThreeEarth ref={earthRef} />
+        <ThreeEarth ref={earthRef} relayLocations={relayLocationsData || []} />
       </div>
     </div>
   );
