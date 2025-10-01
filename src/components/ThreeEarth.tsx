@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 
 import { RelayNotesPanel } from './RelayNotesPanel';
+import { UserProfilePanel } from './RelayNotesPanel';
 import { useAutoPilot } from '@/hooks/useAutoPilot';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -193,6 +194,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   const [sceneReady, setSceneReady] = useState(false);
   const [openRelay, setOpenRelay] = useState<RelayLocation | null>(null);
   const [relaySide, setRelaySide] = useState<'left' | 'right' | 'bottom'>('right');
+  const [openUserProfile, setOpenUserProfile] = useState<{ pubkey: string; side: 'left' | 'right' | 'bottom' } | null>(null);
 
   // Create a ref to track the current openRelay state for event handlers
   const openRelayRef = useRef(openRelay);
@@ -201,6 +203,68 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
   useEffect(() => {
     openRelayRef.current = openRelay;
   }, [openRelay]);
+
+  // Handle relay panel opening events
+  useEffect(() => {
+    const handleOpenRelayPanel = (event: any) => {
+      const { relayUrl } = event.detail;
+      console.log('📂 Opening relay panel for:', relayUrl);
+
+      // Find relay in relay locations
+      const relay = relayLocations?.find(r => r.url === relayUrl);
+      if (!relay) {
+        console.error('❌ Relay not found in relay locations:', relayUrl);
+        return;
+      }
+
+      // Determine side based on screen size
+      let side: 'left' | 'right' | 'bottom' = 'right';
+      if (window.innerWidth < 768) {
+        side = 'bottom';
+      }
+
+      // Open relay panel
+      openRelayPanelInternal(relay, cameraRef.current);
+    };
+
+    // Add event listener
+    window.addEventListener('openRelayPanel', handleOpenRelayPanel);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('openRelayPanel', handleOpenRelayPanel);
+    };
+  }, [relayLocations]);
+
+  // Handle user profile opening events
+  useEffect(() => {
+    const handleOpenUserProfile = (event: any) => {
+      const { pubkey } = event.detail;
+      console.log('👤 Opening user profile for:', pubkey);
+
+      // Determine side based on open relay panel or default
+      let side: 'left' | 'right' | 'bottom' = 'right';
+      if (openRelay && relaySide === 'left') {
+        // Position right next to the left relay panel
+        side = 'right';
+      } else if (openRelay && relaySide === 'right') {
+        // Position left next to the right relay panel
+        side = 'left';
+      } else if (window.innerWidth < 768) {
+        side = 'bottom';
+      }
+
+      setOpenUserProfile({ pubkey, side });
+    };
+
+    // Add event listener
+    window.addEventListener('openUserProfile', handleOpenUserProfile);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('openUserProfile', handleOpenUserProfile);
+    };
+  }, [openRelay, relaySide]);
 
   const { data: relayLocations, isLoading: isLoadingLocations } = useRelayLocations();
 
@@ -1539,6 +1603,22 @@ export const ThreeEarth = forwardRef<ThreeEarthRef>((props, ref) => {
               console.log(`📋 ThreeEarth: Set eventsLoaded to ${loaded}`);
             }}
             forwardScrollableRef={relayPanelRef}
+          />
+        </div>
+      )}
+
+      {/* User Profile Panel */}
+      {openUserProfile && (
+        <div>
+          <UserProfilePanel
+            pubkey={openUserProfile.pubkey}
+            side={openUserProfile.side}
+            onClose={() => setOpenUserProfile(null)}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
+            onMouseDown={() => {}}
+            onEventsChange={() => {}}
+            forwardScrollableRef={null}
           />
         </div>
       )}

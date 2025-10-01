@@ -9,12 +9,14 @@ import { cn } from '@/lib/utils';
 interface NoteContentProps {
   event: NostrEvent;
   className?: string;
+  onUserClick?: (pubkey: string) => void;
 }
 
 /** Parses content of text note events so that URLs and hashtags are linkified. */
 export function NoteContent({
   event,
   className,
+  onUserClick,
 }: NoteContentProps) {
   // Process the content to render mentions, links, etc.
   const content = useMemo(() => {
@@ -87,7 +89,7 @@ export function NoteContent({
           if (decoded.type === 'npub') {
             const pubkey = decoded.data;
             parts.push(
-              <NostrMention key={`mention-${keyCounter++}`} pubkey={pubkey} />
+              <NostrMention key={`mention-${keyCounter++}`} pubkey={pubkey} onUserClick={onUserClick} />
             );
           } else {
             // For other types, just show as a link
@@ -143,23 +145,33 @@ export function NoteContent({
 }
 
 // Helper component to display user mentions
-function NostrMention({ pubkey }: { pubkey: string }) {
+function NostrMention({ pubkey, onUserClick }: { pubkey: string; onUserClick?: (pubkey: string) => void }) {
   const author = useAuthor(pubkey);
   const npub = nip19.npubEncode(pubkey);
   const hasRealName = !!author.data?.metadata?.name;
   const displayName = author.data?.metadata?.name ?? genUserName(pubkey);
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onUserClick) {
+      onUserClick(pubkey);
+    }
+  };
+
   return (
-    <Link
-      to={`/${npub}`}
+    <a
+      href={`/${npub}`}
+      onClick={handleClick}
       className={cn(
-        "font-medium hover:underline inline-block max-w-full align-top",
+        "font-medium hover:underline inline-block max-w-full align-top cursor-pointer",
         hasRealName
-          ? "text-blue-500"
+          ? "text-blue-500 hover:text-blue-400"
           : "text-gray-500 hover:text-gray-700"
       )}
+      title={`Click to view ${displayName}'s profile`}
     >
       @{displayName}
-    </Link>
+    </a>
   );
 }

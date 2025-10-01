@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Info, MapPin, Globe, Signal, Wifi, WifiOff, Plus, X } from 'lucide-react';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { Info, MapPin, Globe, Signal, Wifi, WifiOff, Plus, X, AlertTriangle } from 'lucide-react';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -24,10 +23,8 @@ interface RelayInfoModalProps {
 }
 
 export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
-  const { userRelays } = useUserRelaysContext();
+  const { userRelays, updateRelayList } = useUserRelaysContext();
   const { user } = useCurrentUser();
-  const { mutate: publishEvent } = useNostrPublish();
-  const queryClient = useQueryClient();
   const [isAddRelayDialogOpen, setIsAddRelayDialogOpen] = useState(false);
   const [newRelayUrl, setNewRelayUrl] = useState('');
 
@@ -43,23 +40,10 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
         throw new Error('Relay already exists in your list');
       }
 
-      const tags = [
-        ...currentRelays.map(relay => {
-          const tag = ['r', relay.url];
-          if (relay.read && !relay.write) tag.push('read');
-          if (relay.write && !relay.read) tag.push('write');
-          return tag;
-        }),
-        ['r', relayUrl.trim()] // Add new relay with default read+write
-      ];
+      // Add new relay with default read+write permissions
+      const updatedRelays = [...currentRelays, { url: relayUrl.trim(), read: true, write: true }];
 
-      await publishEvent({
-        kind: 10002,
-        content: '',
-        tags,
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+      await updateRelayList(updatedRelays);
     }
   });
 
@@ -70,20 +54,7 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
       const currentRelays = userRelays || [];
       const updatedRelays = currentRelays.filter(r => r.url !== relayUrl);
 
-      const tags = updatedRelays.map(relay => {
-        const tag = ['r', relay.url];
-        if (relay.read && !relay.write) tag.push('read');
-        if (relay.write && !relay.read) tag.push('write');
-        return tag;
-      });
-
-      await publishEvent({
-        kind: 10002,
-        content: '',
-        tags,
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['user-relays'] });
+      await updateRelayList(updatedRelays);
     }
   });
 
@@ -197,6 +168,7 @@ export function RelayInfoModal({ relays, isLoading }: RelayInfoModalProps) {
                                 {user && (
                                   <div className="ml-4">
                                     <Button
+                                      type="button"
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => {

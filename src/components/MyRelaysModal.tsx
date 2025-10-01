@@ -2,21 +2,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
-import { Server, Network, X, Trash2, Loader2, Plus } from 'lucide-react';
+import { Server, Network, X, Trash2, Loader2, Plus, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
@@ -58,6 +47,11 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
 
   // Track which relays are being toggled
   const [togglingRelays, setTogglingRelays] = useState<Set<string>>(new Set());
+
+  // State for custom confirmation dialog
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [relayToRemove, setRelayToRemove] = useState<RelayListItem | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const handleAddRelay = async () => {
     if (!newRelayUrl.trim() || !relays) return;
@@ -103,13 +97,30 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
     }
   };
 
-  const handleRemoveRelay = async (relayToRemove: RelayListItem) => {
+  const handleRemoveRelay = async () => {
+    if (!relayToRemove) return;
+
+    setIsRemoving(true);
     try {
       await removeRelay(relayToRemove.url);
+      setShowConfirmDialog(false);
+      setRelayToRemove(null);
     } catch (error) {
       console.error('Error removing relay:', error);
       alert('Failed to remove relay. Please try again.');
+    } finally {
+      setIsRemoving(false);
     }
+  };
+
+  const openConfirmDialog = (relay: RelayListItem) => {
+    setRelayToRemove(relay);
+    setShowConfirmDialog(true);
+  };
+
+  const cancelRemove = () => {
+    setShowConfirmDialog(false);
+    setRelayToRemove(null);
   };
 
   // Check if we're in a loading state
@@ -165,6 +176,7 @@ return (
                 onKeyPress={(e) => e.key === 'Enter' && handleAddRelay()}
               />
               <Button
+                type="button"
                 onClick={handleAddRelay}
                 disabled={!newRelayUrl.trim() || isAddingRelay}
                 className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30"
@@ -206,6 +218,7 @@ return (
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {/* Toggleable Read Badge */}
                       <button
+                        type="button"
                         onClick={() => handleTogglePermission(relay.url, 'read')}
                         disabled={togglingRelays.has(relay.url)}
                         className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
@@ -222,6 +235,7 @@ return (
 
                       {/* Toggleable Write Badge */}
                       <button
+                        type="button"
                         onClick={() => handleTogglePermission(relay.url, 'write')}
                         disabled={togglingRelays.has(relay.url)}
                         className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
@@ -237,37 +251,15 @@ return (
                       </button>
 
                       {/* Remove Button */}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-white/40 hover:text-red-400 hover:bg-red-500/10"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-gray-900/95 backdrop-blur-md border border-white/10">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Remove Relay</AlertDialogTitle>
-                            <AlertDialogDescription className="text-white/70">
-                              Are you sure you want to remove "{relay.url}" from your relay list? This action will update your NIP-65 event.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-white/10 text-white hover:bg-white/20 border-white/20">
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={async () => await handleRemoveRelay(relay)}
-                              className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Remove
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openConfirmDialog(relay)}
+                        className="h-8 w-8 p-0 text-white/40 hover:text-red-400 hover:bg-red-500/10"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -348,9 +340,29 @@ return (
                                   )}
                                 </div>
 
+                                {/* Quick Connect Button - Opens Relay Viewer Panel */}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    // Close modal and open relay viewer panel
+                                    onClose();
+                                    // Dispatch event to open relay panel
+                                    window.dispatchEvent(new CustomEvent('openRelayPanel', {
+                                      detail: { relayUrl: relay.url }
+                                    }));
+                                  }}
+                                  className="ml-4 bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30"
+                                  title="Open relay viewer"
+                                >
+                                  <Globe className="w-3 h-3" />
+                                </Button>
+
                                 {/* Add/Remove Relay Button */}
-                                <div className="ml-4">
+                                <div className="ml-2">
                                   <Button
+                                    type="button"
                                     variant="ghost"
                                     size="sm"
                                     onClick={async () => {
@@ -389,6 +401,54 @@ return (
             </ScrollArea>
           </TabsContent>
         </Tabs>
+
+      {/* Custom Confirmation Dialog - overlays within the main dialog */}
+      {showConfirmDialog && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
+          <div className="bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 text-orange-400 mt-1" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-2">Remove Relay</h3>
+                <p className="text-white/70 text-sm mb-4">
+                  Are you sure you want to remove "{relayToRemove?.url}" from your relay list? This action will update your NIP-65 event.
+                </p>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={cancelRemove}
+                    disabled={isRemoving}
+                    className="bg-white/10 text-white hover:bg-white/20 border-white/20"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleRemoveRelay}
+                    disabled={isRemoving}
+                    className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 min-w-[100px]"
+                  >
+                    {isRemoving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Removing...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </DialogContent>
     </Dialog>
   );
