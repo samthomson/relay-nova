@@ -40,6 +40,9 @@ interface ThreeEarthProps {
 }
 
 export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref) => {
+  // Use relayLocations from props - create local variable for convenience at the top
+  const relayLocations = props.relayLocations || [];
+
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -270,8 +273,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     };
   }, [openRelay, relaySide]);
 
-  // Use relayLocations from props - create local variable for convenience
-  const relayLocations = props.relayLocations || [];
   const isLoading = false; // Parent handles loading state
 
   // Calculate counts for display
