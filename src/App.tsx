@@ -52,9 +52,9 @@ export function App() {
         <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} presetRelays={presetRelays}>
           <QueryClientProvider client={queryClient}>
             <NostrLoginProvider storageKey='nostr:login'>
-              <NostrProvider>
-                <NWCProvider>
-                  <UserRelaysProvider>
+              <UserRelaysProvider>
+                <NostrProvider>
+                  <NWCProvider>
                     <AutoPilotProvider>
                       <TooltipProvider>
                         <Toaster />
@@ -63,9 +63,9 @@ export function App() {
                         </Suspense>
                       </TooltipProvider>
                     </AutoPilotProvider>
-                  </UserRelaysProvider>
-                </NWCProvider>
-              </NostrProvider>
+                  </NWCProvider>
+                </NostrProvider>
+              </UserRelaysProvider>
             </NostrLoginProvider>
           </QueryClientProvider>
         </AppProvider>
