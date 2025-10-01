@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useRelayLocations } from '@/hooks/useRelayLocations';
 
 import { RelayNotesPanel } from './RelayNotesPanel';
-import { UserProfilePanel } from './RelayNotesPanel';
+import { UserProfilePanel } from './UserProfilePanel';
 import { useAutoPilot } from '@/hooks/useAutoPilot';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
 import type { NostrEvent } from '@nostrify/nostrify';
