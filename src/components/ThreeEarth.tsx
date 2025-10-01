@@ -276,7 +276,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
 
   // Calculate counts for display
   const totalCount = relayLocations?.length || 0;
-  const isLoading = isLoadingLocations;
 
   useEffect(() => {
     if (!mountRef.current) return;
