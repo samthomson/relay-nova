@@ -3,7 +3,7 @@ import { NostrEvent, NPool, NRelay1 } from '@nostrify/nostrify';
 import { NostrContext } from '@nostrify/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppContext } from '@/hooks/useAppContext';
-import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
+import { useRelayConfigContext } from '@/contexts/RelayConfigContext';
 
 interface NostrProviderProps {
   children: React.ReactNode;
@@ -11,8 +11,8 @@ interface NostrProviderProps {
 
 const NostrProvider: React.FC<NostrProviderProps> = (props) => {
   const { children } = props;
-  const { config, presetRelays } = useAppContext();
-  const { userRelays } = useUserRelaysContext();
+  const { presetRelays } = useAppContext();
+  const { userRelays, currentRelayUrl } = useRelayConfigContext();
 
   const queryClient = useQueryClient();
 
@@ -20,20 +20,20 @@ const NostrProvider: React.FC<NostrProviderProps> = (props) => {
   const pool = useRef<NPool | undefined>(undefined);
 
   // Use refs so the pool always has the latest data
-  const relayUrl = useRef<string>(config.relayUrl);
+  const relayUrl = useRef<string>(currentRelayUrl);
   const userRelaysRef = useRef(userRelays);
 
   // Update refs when data changes
   useEffect(() => {
     console.log('🔄 NostrProvider updating refs:', {
-      relayUrl: config.relayUrl,
+      relayUrl: currentRelayUrl,
       userRelays: userRelays?.map(r => ({ url: r.url, read: r.read, write: r.write })),
     });
 
-    relayUrl.current = config.relayUrl;
+    relayUrl.current = currentRelayUrl;
     userRelaysRef.current = userRelays;
     queryClient.resetQueries();
-  }, [config.relayUrl, userRelays, queryClient]);
+  }, [currentRelayUrl, userRelays, queryClient]);
 
   // Initialize NPool only once
   if (!pool.current) {

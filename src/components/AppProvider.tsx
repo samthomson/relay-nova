@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from 'react';
 import { z } from 'zod';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { AppContext, type AppConfig, type AppContextType, type Theme } from '@/contexts/AppContext';
+import { useRelayConfigContext } from '@/contexts/RelayConfigContext';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -27,6 +28,8 @@ export function AppProvider(props: AppProviderProps) {
     presetRelays,
   } = props;
 
+  const { setCurrentRelayUrl } = useRelayConfigContext();
+
   // App configuration state with localStorage persistence
   const [config, setConfig] = useLocalStorage<AppConfig>(
     storageKey,
@@ -40,7 +43,10 @@ export function AppProvider(props: AppProviderProps) {
     }
   );
 
-  
+  // Update relay config context when config changes
+  useEffect(() => {
+    setCurrentRelayUrl(config.relayUrl);
+  }, [config.relayUrl, setCurrentRelayUrl]);
 
   // Generic config updater with callback pattern
   const updateConfig = (updater: (currentConfig: AppConfig) => AppConfig) => {

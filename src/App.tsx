@@ -12,6 +12,7 @@ import { NostrLoginProvider } from '@nostrify/react/login';
 import { AppProvider } from '@/components/AppProvider';
 import { NWCProvider } from '@/contexts/NWCContext';
 import { UserRelaysProvider } from '@/contexts/UserRelaysContext';
+import { RelayConfigProvider } from '@/contexts/RelayConfigContext';
 import { AutoPilotProvider } from '@/contexts/AutoPilotContext';
 import { AppConfig } from '@/contexts/AppContext';
 import AppRouter from './AppRouter';
@@ -52,20 +53,22 @@ export function App() {
         <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} presetRelays={presetRelays}>
           <QueryClientProvider client={queryClient}>
             <NostrLoginProvider storageKey='nostr:login'>
-              <UserRelaysProvider>
+              <RelayConfigProvider initialRelayUrl={defaultConfig.relayUrl}>
                 <NostrProvider>
-                  <NWCProvider>
-                    <AutoPilotProvider>
-                      <TooltipProvider>
-                        <Toaster />
-                        <Suspense>
-                          <AppRouter />
-                        </Suspense>
-                      </TooltipProvider>
-                    </AutoPilotProvider>
-                  </NWCProvider>
+                  <UserRelaysProvider>
+                    <NWCProvider>
+                      <AutoPilotProvider>
+                        <TooltipProvider>
+                          <Toaster />
+                          <Suspense>
+                            <AppRouter />
+                          </Suspense>
+                        </TooltipProvider>
+                      </AutoPilotProvider>
+                    </NWCProvider>
+                  </UserRelaysProvider>
                 </NostrProvider>
-              </UserRelaysProvider>
+              </RelayConfigProvider>
             </NostrLoginProvider>
           </QueryClientProvider>
         </AppProvider>

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useRelayConfigContext } from '@/contexts/RelayConfigContext';
 
 interface UserRelay {
   url: string;
@@ -31,6 +32,7 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
   const { user } = useCurrentUser();
   const { nostr } = useNostr();
   const queryClient = useQueryClient();
+  const { setUserRelays } = useRelayConfigContext();
 
   // Local state for immediate UI updates - this is the source of truth
   const [localRelays, setLocalRelays] = useState<UserRelay[]>([]);
@@ -93,34 +95,10 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
     if (networkRelays) {
       console.log('🔄 Syncing network relays to local state:', networkRelays);
       setLocalRelays(networkRelays);
+      // Update the shared relay config context
+      setUserRelays(networkRelays);
     }
-  }, [networkRelays]);
-
-  // Auto-switch to user's first write relay when available
-  useEffect(() => {
-    if (localRelays && localRelays.length > 0) {
-      const writeRelays = localRelays.filter(relay => relay.write);
-      if (writeRelays.length > 0) {
-        // Store the preferred relay in localStorage without reloading
-        const preferredRelay = writeRelays[0].url;
-        const currentRelay = localStorage.getItem('nostr:app-config');
-        if (currentRelay) {
-          try {
-            const config = JSON.parse(currentRelay);
-            if (config.relayUrl !== preferredRelay) {
-              // Update the config with the new relay
-              const updatedConfig = { ...config, relayUrl: preferredRelay };
-              localStorage.setItem('nostr:app-config', JSON.stringify(updatedConfig));
-              // Note: We removed the page reload to avoid closing dialogs and disrupting UX
-              // The app will use the new relay on next navigation/refresh
-            }
-          } catch (e) {
-            // Ignore parsing errors
-          }
-        }
-      }
-    }
-  }, [localRelays]);
+  }, [networkRelays, setUserRelays]);
 
   const { mutate: publishRelayList } = useMutation({
     mutationFn: async (relaysToPublish: UserRelay[]) => {
@@ -162,6 +140,8 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
 
     // Update local state immediately for instant UI feedback
     setLocalRelays(newRelays);
+    // Update the shared relay config context
+    setUserRelays(newRelays);
 
     // Publish to network in the background
     await publishRelayList(newRelays);
@@ -173,6 +153,8 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
     // Update local state immediately
     const updatedRelays = localRelays.filter(relay => relay.url !== relayUrl);
     setLocalRelays(updatedRelays);
+    // Update the shared relay config context
+    setUserRelays(updatedRelays);
 
     // Publish to network in the background
     await publishRelayList(updatedRelays);
@@ -189,6 +171,8 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
       return relay;
     });
     setLocalRelays(updatedRelays);
+    // Update the shared relay config context
+    setUserRelays(updatedRelays);
 
     // Publish to network in the background
     await publishRelayList(updatedRelays);
