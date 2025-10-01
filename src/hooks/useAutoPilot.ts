@@ -14,7 +14,7 @@ interface AutoPilotControls {
 }
 
 export function useAutoPilot(controls: AutoPilotControls) {
-  const { data: relayLocations } = useRelayLocations();
+  const relayLocationsQuery = useRelayLocations();
   const {
     isAutoPilotMode,
     isAutoPilotActive,
@@ -43,13 +43,14 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
   // Generate random order of relays
   const generateRandomRelayOrder = useCallback(() => {
+    const relayLocations = relayLocationsQuery.data;
     if (!relayLocations || relayLocations.length === 0) return [];
 
     const shuffled = [...relayLocations].sort(() => Math.random() - 0.5);
     const urlOrder = shuffled.map(relay => relay.url);
     console.log('🎲 Generated random relay order:', urlOrder.slice(0, 5), `(${urlOrder.length} total)`);
     return urlOrder;
-  }, [relayLocations]);
+  }, [relayLocationsQuery.data]);
 
   // Completely abort current execution and clean up
   const abortCurrentExecution = useCallback(() => {
