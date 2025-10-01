@@ -270,7 +270,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     };
   }, [openRelay, relaySide]);
 
-  // Use relayLocations from props
+  // Use relayLocations from props - create local variable for convenience
   const relayLocations = props.relayLocations || [];
   const isLoading = false; // Parent handles loading state
 
@@ -1390,7 +1390,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   };
 
   // Function to detect and cluster relays (only when zoomed in)
-  const clusterRelays = (locations: typeof relayLocations, cameraDistance: number) => {
+  const clusterRelays = (locations: any, cameraDistance: number) => {
     console.log('clusterRelays called with cameraDistance:', cameraDistance, 'locations count:', locations?.length);
 
     if (!locations) return [];
