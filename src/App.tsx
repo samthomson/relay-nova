@@ -45,30 +45,43 @@ const presetRelays = [
 ];
 
 export function App() {
-  return (
-    <UnheadProvider head={head}>
-      <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} presetRelays={presetRelays}>
-        <QueryClientProvider client={queryClient}>
-          <NostrLoginProvider storageKey='nostr:login'>
-            <NostrProvider>
-              <NWCProvider>
-                <UserRelaysProvider>
-                  <AutoPilotProvider>
-                    <TooltipProvider>
-                      <Toaster />
-                      <Suspense>
-                        <AppRouter />
-                      </Suspense>
-                    </TooltipProvider>
-                  </AutoPilotProvider>
-                </UserRelaysProvider>
-              </NWCProvider>
-            </NostrProvider>
-          </NostrLoginProvider>
-        </QueryClientProvider>
-      </AppProvider>
-    </UnheadProvider>
-  );
+  console.log('App component rendering');
+  try {
+    return (
+      <UnheadProvider head={head}>
+        <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} presetRelays={presetRelays}>
+          <QueryClientProvider client={queryClient}>
+            <NostrLoginProvider storageKey='nostr:login'>
+              <NostrProvider>
+                <NWCProvider>
+                  <UserRelaysProvider>
+                    <AutoPilotProvider>
+                      <TooltipProvider>
+                        <Toaster />
+                        <Suspense>
+                          <AppRouter />
+                        </Suspense>
+                      </TooltipProvider>
+                    </AutoPilotProvider>
+                  </UserRelaysProvider>
+                </NWCProvider>
+              </NostrProvider>
+            </NostrLoginProvider>
+          </QueryClientProvider>
+        </AppProvider>
+      </UnheadProvider>
+    );
+  } catch (error) {
+    console.error('App component error:', error);
+    return (
+      <div className="min-h-screen bg-black text-white p-8">
+        <h1 className="text-2xl font-bold text-red-500 mb-4">App Error</h1>
+        <pre className="text-sm bg-gray-800 p-4 rounded overflow-auto">
+          {error instanceof Error ? error.stack : JSON.stringify(error, null, 2)}
+        </pre>
+      </div>
+    );
+  }
 }
 
 export default App;

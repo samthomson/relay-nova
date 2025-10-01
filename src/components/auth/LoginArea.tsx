@@ -15,40 +15,62 @@ export interface LoginAreaProps {
 }
 
 export function LoginArea({ className }: LoginAreaProps) {
-  const { currentUser } = useLoggedInAccounts();
-  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  const [signupDialogOpen, setSignupDialogOpen] = useState(false);
+  console.log('LoginArea component rendering');
+  try {
+    const { currentUser } = useLoggedInAccounts();
+    console.log('LoginArea - currentUser:', currentUser);
 
-  const handleLogin = () => {
-    setLoginDialogOpen(false);
-    setSignupDialogOpen(false);
-  };
+    const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+    const [signupDialogOpen, setSignupDialogOpen] = useState(false);
 
-  return (
-    <div className={cn("inline-flex items-center justify-center", className)}>
-      {currentUser ? (
-        <AccountSwitcher onAddAccountClick={() => setLoginDialogOpen(true)} />
-      ) : (
-        <Button
-          onClick={() => setLoginDialogOpen(true)}
-          className='flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium transition-all hover:bg-primary/90 animate-scale-in'
-        >
-          <User className='w-4 h-4' />
-          <span className='truncate'>Log in</span>
-        </Button>
-      )}
+    const handleLogin = () => {
+      console.log('handleLogin called');
+      setLoginDialogOpen(false);
+      setSignupDialogOpen(false);
+    };
 
-      <LoginDialog
-        isOpen={loginDialogOpen}
-        onClose={() => setLoginDialogOpen(false)}
-        onLogin={handleLogin}
-        onSignup={() => setSignupDialogOpen(true)}
-      />
+    const handleLoginClick = () => {
+      console.log('Login button clicked');
+      try {
+        setLoginDialogOpen(true);
+      } catch (error) {
+        console.error('Error opening login dialog:', error);
+      }
+    };
 
-      <SignupDialog
-        isOpen={signupDialogOpen}
-        onClose={() => setSignupDialogOpen(false)}
-      />
-    </div>
-  );
+    return (
+      <div className={cn("inline-flex items-center justify-center", className)}>
+        {currentUser ? (
+          <AccountSwitcher onAddAccountClick={() => setLoginDialogOpen(true)} />
+        ) : (
+          <Button
+            onClick={handleLoginClick}
+            className='flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium transition-all hover:bg-primary/90 animate-scale-in'
+          >
+            <User className='w-4 h-4' />
+            <span className='truncate'>Log in</span>
+          </Button>
+        )}
+
+        <LoginDialog
+          isOpen={loginDialogOpen}
+          onClose={() => setLoginDialogOpen(false)}
+          onLogin={handleLogin}
+          onSignup={() => setSignupDialogOpen(true)}
+        />
+
+        <SignupDialog
+          isOpen={signupDialogOpen}
+          onClose={() => setSignupDialogOpen(false)}
+        />
+      </div>
+    );
+  } catch (error) {
+    console.error('Error in LoginArea:', error);
+    return (
+      <div className={cn("inline-flex items-center justify-center", className)}>
+        <div className="text-red-500 text-sm">Login Error</div>
+      </div>
+    );
+  }
 }
