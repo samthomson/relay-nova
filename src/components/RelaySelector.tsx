@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 import { useAppContext } from "@/hooks/useAppContext";
+import { useRelayConfigContext } from "@/contexts/RelayConfigContext";
 
 interface RelaySelectorProps {
   className?: string;
@@ -24,10 +25,12 @@ interface RelaySelectorProps {
 export function RelaySelector(props: RelaySelectorProps) {
   const { className } = props;
   const { config, updateConfig, presetRelays = [] } = useAppContext();
-  
+  const { setCurrentRelayUrl } = useRelayConfigContext();
+
   const selectedRelay = config.relayUrl;
   const setSelectedRelay = (relay: string) => {
     updateConfig((current) => ({ ...current, relayUrl: relay }));
+    setCurrentRelayUrl(relay);
   };
 
   const [open, setOpen] = useState(false);
@@ -39,12 +42,12 @@ export function RelaySelector(props: RelaySelectorProps) {
   const normalizeRelayUrl = (url: string): string => {
     const trimmed = url.trim();
     if (!trimmed) return trimmed;
-    
+
     // Check if it already has a protocol
     if (trimmed.includes('://')) {
       return trimmed;
     }
-    
+
     // Add wss:// prefix
     return `wss://${trimmed}`;
   };
@@ -60,7 +63,7 @@ export function RelaySelector(props: RelaySelectorProps) {
   const isValidRelayInput = (value: string): boolean => {
     const trimmed = value.trim();
     if (!trimmed) return false;
-    
+
     // Basic validation - should contain at least a domain-like structure
     const normalized = normalizeRelayUrl(trimmed);
     try {
@@ -83,9 +86,9 @@ export function RelaySelector(props: RelaySelectorProps) {
           <div className="flex items-center gap-2">
             <Wifi className="h-4 w-4" />
             <span className="truncate">
-              {selectedOption 
-                ? selectedOption.name 
-                : selectedRelay 
+              {selectedOption
+                ? selectedOption.name
+                : selectedRelay
                   ? selectedRelay.replace(/^wss?:\/\//, '')
                   : "Select relay..."
               }
@@ -96,8 +99,8 @@ export function RelaySelector(props: RelaySelectorProps) {
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0">
         <Command>
-          <CommandInput 
-            placeholder="Search relays or type URL..." 
+          <CommandInput
+            placeholder="Search relays or type URL..."
             value={inputValue}
             onValueChange={setInputValue}
           />
@@ -124,8 +127,8 @@ export function RelaySelector(props: RelaySelectorProps) {
             </CommandEmpty>
             <CommandGroup>
               {presetRelays
-                .filter((option) => 
-                  !inputValue || 
+                .filter((option) =>
+                  !inputValue ||
                   option.name.toLowerCase().includes(inputValue.toLowerCase()) ||
                   option.url.toLowerCase().includes(inputValue.toLowerCase())
                 )

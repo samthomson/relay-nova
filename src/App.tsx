@@ -50,10 +50,10 @@ export function App() {
   try {
     return (
       <UnheadProvider head={head}>
-        <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} presetRelays={presetRelays}>
-          <QueryClientProvider client={queryClient}>
-            <NostrLoginProvider storageKey='nostr:login'>
-              <RelayConfigProvider initialRelayUrl={defaultConfig.relayUrl}>
+        <RelayConfigProvider initialRelayUrl={defaultConfig.relayUrl}>
+          <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} presetRelays={presetRelays}>
+            <QueryClientProvider client={queryClient}>
+              <NostrLoginProvider storageKey='nostr:login'>
                 <NostrProvider>
                   <UserRelaysProvider>
                     <NWCProvider>
@@ -68,10 +68,10 @@ export function App() {
                     </NWCProvider>
                   </UserRelaysProvider>
                 </NostrProvider>
-              </RelayConfigProvider>
-            </NostrLoginProvider>
-          </QueryClientProvider>
-        </AppProvider>
+              </NostrLoginProvider>
+            </QueryClientProvider>
+          </AppProvider>
+        </RelayConfigProvider>
       </UnheadProvider>
     );
   } catch (error) {
