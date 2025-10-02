@@ -83,11 +83,11 @@ export function UserRelaysProvider({ children }: { children: React.ReactNode }) 
       return relayList;
     },
     enabled: !!user?.pubkey && !!nostr,
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't cache data at all
-    refetchOnWindowFocus: true,
-    refetchOnMount: 'always',
-    refetchOnReconnect: 'always',
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
   });
 
   // Sync network data to local state when network query completes

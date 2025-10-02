@@ -23,6 +23,9 @@ const NostrProvider: React.FC<NostrProviderProps> = (props) => {
   const relayUrl = useRef<string>(currentRelayUrl);
   const userRelaysRef = useRef(userRelays);
 
+  // Track previous relay URL to avoid unnecessary resets
+  const prevRelayUrlRef = useRef(currentRelayUrl);
+
   // Update refs when data changes
   useEffect(() => {
     console.log('🔄 NostrProvider updating refs:', {
@@ -32,7 +35,14 @@ const NostrProvider: React.FC<NostrProviderProps> = (props) => {
 
     relayUrl.current = currentRelayUrl;
     userRelaysRef.current = userRelays;
-    queryClient.resetQueries();
+
+    // Only reset queries if the relay URL actually changed
+    // This prevents infinite loops when userRelays are updated
+    if (prevRelayUrlRef.current !== currentRelayUrl) {
+      console.log('🔄 Relay URL changed, resetting queries');
+      queryClient.resetQueries();
+      prevRelayUrlRef.current = currentRelayUrl;
+    }
   }, [currentRelayUrl, userRelays, queryClient]);
 
   // Initialize NPool only once
