@@ -52,25 +52,12 @@ export function AppProvider(props: AppProviderProps) {
   };
 
   // Apply theme effects to document
-  useApplyTheme(config.theme);
-
-  return (
-    <AppContext.Provider value={appContextValue}>
-      {children}
-    </AppContext.Provider>
-  );
-}
-
-/**
- * Hook to apply theme changes to the document root
- */
-function useApplyTheme(theme: Theme) {
   useEffect(() => {
     const root = window.document.documentElement;
 
     root.classList.remove('light', 'dark');
 
-    if (theme === 'system') {
+    if (config.theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
         .matches
         ? 'dark'
@@ -80,12 +67,12 @@ function useApplyTheme(theme: Theme) {
       return;
     }
 
-    root.classList.add(theme);
-  }, [theme]);
+    root.classList.add(config.theme);
+  }, [config.theme]);
 
   // Handle system theme changes when theme is set to "system"
   useEffect(() => {
-    if (theme !== 'system') return;
+    if (config.theme !== 'system') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -99,5 +86,11 @@ function useApplyTheme(theme: Theme) {
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
+  }, [config.theme]);
+
+  return (
+    <AppContext.Provider value={appContextValue}>
+      {children}
+    </AppContext.Provider>
+  );
 }
