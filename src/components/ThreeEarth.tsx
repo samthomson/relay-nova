@@ -523,8 +523,30 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     };
 
     const onMouseDown = (event: MouseEvent) => {
-      // Don't process globe events when relay panel is open
-      if (openRelayRef.current) return;
+      // If relay panel is open and we click on globe, close both panels
+      if (openRelayRef.current) {
+        // Check if we're clicking on a relay marker first
+        const rect = renderer.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        // Raycast to see if we clicked on a relay marker
+        raycaster.setFromCamera(mouse, camera);
+        let clickedOnRelayMarker = false;
+
+        if (relayMarkersRef.current) {
+          const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
+          clickedOnRelayMarker = intersects.length > 0;
+        }
+
+        // If we clicked on globe (not relay marker), close both panels
+        if (!clickedOnRelayMarker) {
+          closeRelayPanelInternal();
+          setOpenUserProfile(null);
+          return;
+        }
+      }
 
       setManualMode();
       isMouseDown.current = true;
@@ -534,8 +556,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     };
 
     const onMouseMove = (event: MouseEvent) => {
-      // Don't process globe events when relay panel is open
-      if (openRelayRef.current) return;
+      // Allow globe interaction even when relay panel is open
+      // This enables users to rotate the globe to close panels
 
       // Handle dragging
       if (isMouseDown.current) {
@@ -610,8 +632,30 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     };
 
     const onMouseClick = (event: MouseEvent) => {
-      // Don't process globe events when relay panel is open
-      if (openRelayRef.current) return;
+      // If relay panel is open and clicking on globe, close both panels
+      if (openRelayRef.current) {
+        // Check if we're clicking on the globe (not on a relay marker)
+        const rect = renderer.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        // Raycast to see if we clicked on a relay marker
+        raycaster.setFromCamera(mouse, camera);
+        let clickedOnRelayMarker = false;
+
+        if (relayMarkersRef.current) {
+          const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
+          clickedOnRelayMarker = intersects.length > 0;
+        }
+
+        // If we clicked on globe (not relay marker), close both panels
+        if (!clickedOnRelayMarker) {
+          closeRelayPanelInternal();
+          setOpenUserProfile(null);
+          return;
+        }
+      }
 
       setManualMode();
 
@@ -1165,6 +1209,10 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     }
   }, []);
 
+  
+
+
+
   // Add click-outside-to-close functionality
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1173,7 +1221,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
 
       // Check if click is outside the relay panel
       if (relayPanelContainerRef.current && !relayPanelContainerRef.current.contains(event.target as Node)) {
+        // Close both relay panel AND user profile panel
         closeRelayPanelInternal();
+        setOpenUserProfile(null);
       }
     };
 
@@ -1186,7 +1236,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openRelay]);
+  }, [openRelay, closeRelayPanelInternal]);
 
 
 
