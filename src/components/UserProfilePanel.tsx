@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { X, MessageCircle, Loader2 } from 'lucide-react';
+import { X, MessageCircle, Loader2, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { NoteContent } from './NoteContent';
@@ -252,7 +252,7 @@ function UserNoteCard({ note }: { note: NostrEvent }) {
   const timeAgo = new Date(note.created_at * 1000).toLocaleDateString();
 
   return (
-    <Card data-note-card="true" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden">
+    <Card data-note-card="true" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden relative group">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
@@ -276,6 +276,22 @@ function UserNoteCard({ note }: { note: NostrEvent }) {
           />
         </div>
       </CardContent>
+      {/* Nostr.band link button */}
+      <a
+        href={`https://nostr.band/?q=${note.id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity z-10"
+        title="View on nostr.band"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          window.open(`https://nostr.band/?q=${note.id}`, '_blank', 'noopener,noreferrer');
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <ExternalLink className="w-3.5 h-3.5 text-white/70 hover:text-blue-400" />
+      </a>
     </Card>
   );
 }

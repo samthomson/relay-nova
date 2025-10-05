@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { Plus, SkipForward, X, Trash2, Globe, Server } from 'lucide-react';
+import { Plus, SkipForward, X, Trash2, Globe, Server, ExternalLink } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageCircle, Loader2 } from 'lucide-react';
@@ -471,7 +471,7 @@ function NoteCard({ note }: { note: NostrEvent }) {
   };
 
   return (
-    <Card data-note-card="true" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden">
+    <Card data-note-card="true" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden relative group">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Avatar */}
@@ -518,6 +518,17 @@ function NoteCard({ note }: { note: NostrEvent }) {
           />
         </div>
       </CardContent>
+      {/* Nostr.band link button */}
+      <a
+        href={`https://nostr.band/?q=${note.id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+        title="View on nostr.band"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ExternalLink className="w-3.5 h-3.5 text-white/70 hover:text-blue-400" />
+      </a>
     </Card>
   );
 }
