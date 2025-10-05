@@ -460,7 +460,17 @@ function NoteCard({ note }: { note: NostrEvent }) {
   const isLoadingAuthor = author.isLoading;
 
   const displayName = metadata?.name || metadata?.display_name || `@${note.pubkey.slice(0, 8)}`;
-  const timeAgo = new Date(note.created_at * 1000).toLocaleDateString();
+  
+  const date = new Date(note.created_at * 1000);
+  const relativeTime = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const fullDateTime = date.toLocaleString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 
   // Handler for clicking on author name
   const handleAuthorClick = () => {
@@ -501,7 +511,7 @@ function NoteCard({ note }: { note: NostrEvent }) {
             >
               {isLoadingAuthor ? 'Loading...' : displayName}
             </CardTitle>
-            <p className="text-xs text-gray-400">{timeAgo}</p>
+            <p className="text-xs text-gray-400" title={fullDateTime}>{relativeTime}</p>
           </div>
         </div>
       </CardHeader>

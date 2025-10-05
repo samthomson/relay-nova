@@ -5,6 +5,7 @@ import { X, MessageCircle, Loader2, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { NoteContent } from './NoteContent';
+import { nip19 } from 'nostr-tools';
 
 interface UserProfilePanelProps {
   pubkey: string;
@@ -152,31 +153,31 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
       >
         {/* Header */}
         <div className="flex-shrink-0 p-4 border-b border-white/20">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="flex-shrink-0">
                 {getPicture() ? (
                   <img
                     src={getPicture()}
                     alt={getDisplayName()}
-                    className="w-8 h-8 rounded-full object-cover border border-white/20"
+                    className="w-10 h-10 rounded-full object-cover border border-white/20"
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
                       target.style.display = 'none';
                     }}
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-semibold text-white">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-base font-semibold text-white">
                     {getDisplayName().charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
-              <div className="min-w-0 flex-1 ml-3">
+              <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-lg truncate">
                   {getDisplayName()}
                 </h3>
-                <p className="text-sm text-gray-400 truncate">
-                  {pubkey.slice(0, 16)}...
+                <p className="text-xs text-gray-400 truncate font-mono">
+                  {nip19.npubEncode(pubkey)}
                 </p>
               </div>
             </div>
@@ -190,6 +191,17 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
               <X className="w-4 h-4" />
             </Button>
           </div>
+
+          {/* Link to nostr.band profile */}
+          <a
+            href={`https://nostr.band/${nip19.npubEncode(pubkey)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" />
+            View on nostr.band
+          </a>
         </div>
 
         {/* Content */}
@@ -233,7 +245,12 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
             ) : (
               <div className="p-4 space-y-3">
                 {notes.map((note) => (
-                  <UserNoteCard key={note.id} note={note} />
+                  <UserNoteCard 
+                    key={note.id} 
+                    note={note}
+                    authorDisplayName={getDisplayName()}
+                    authorPicture={getPicture() || undefined}
+                  />
                 ))}
               </div>
             )}
@@ -244,22 +261,50 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
   );
 });
 
-function UserNoteCard({ note }: { note: NostrEvent }) {
-  // For notes (kind:1), content is plain text, not JSON
-  // We'll use first line as a title if it exists
-  const contentLines = note.content.split('\n');
-  const firstLine = contentLines[0]?.trim() || 'Note';
-  const timeAgo = new Date(note.created_at * 1000).toLocaleDateString();
+interface UserNoteCardProps {
+  note: NostrEvent;
+  authorDisplayName: string;
+  authorPicture?: string;
+}
+
+function UserNoteCard({ note, authorDisplayName, authorPicture }: UserNoteCardProps) {
+  const date = new Date(note.created_at * 1000);
+  const relativeTime = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const fullDateTime = date.toLocaleString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 
   return (
     <Card data-note-card="true" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden relative group">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Avatar */}
+          {authorPicture ? (
+            <img
+              src={authorPicture}
+              alt={authorDisplayName}
+              className="w-8 h-8 rounded-full object-cover border border-white/20 flex-shrink-0"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
+                const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                if (fallback) fallback.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0 avatar-fallback ${authorPicture ? 'hidden' : ''}`}>
+            {authorDisplayName.charAt(0).toUpperCase()}
+          </div>
           <div className="min-w-0 flex-1">
             <CardTitle className="text-sm font-medium text-white truncate">
-              {firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine}
+              {authorDisplayName}
             </CardTitle>
-            <p className="text-xs text-gray-400">{timeAgo}</p>
+            <p className="text-xs text-gray-400" title={fullDateTime}>{relativeTime}</p>
           </div>
         </div>
       </CardHeader>

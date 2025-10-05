@@ -89,6 +89,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
 
   // Track clicks outside the relay panel
   const relayPanelContainerRef = useRef<HTMLDivElement>(null);
+  const userProfilePanelContainerRef = useRef<HTMLDivElement>(null);
 
   // Store star layer references for animation
   const starLayersRef = useRef<any>(null);
@@ -160,6 +161,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   // Function to close relay panel
   const closeRelayPanelInternal = () => {
     setOpenRelay(null);
+    setOpenUserProfile(null); // Also close user profile panel when relay panel closes
     setHoveredRelay(null); // Clear the hovered relay to remove tooltip
     setTooltipPosition(null); // Clear tooltip position
     isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
@@ -1219,8 +1221,11 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       // Only close if relay panel is open
       if (!openRelay) return;
 
-      // Check if click is outside the relay panel
-      if (relayPanelContainerRef.current && !relayPanelContainerRef.current.contains(event.target as Node)) {
+      const clickedInsideRelayPanel = relayPanelContainerRef.current?.contains(event.target as Node);
+      const clickedInsideUserPanel = userProfilePanelContainerRef.current?.contains(event.target as Node);
+
+      // Only close if click is outside BOTH panels
+      if (!clickedInsideRelayPanel && !clickedInsideUserPanel) {
         // Close both relay panel AND user profile panel
         closeRelayPanelInternal();
         setOpenUserProfile(null);
@@ -1665,7 +1670,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
 
       {/* User Profile Panel */}
       {openUserProfile && (
-        <div>
+        <div ref={userProfilePanelContainerRef}>
           <UserProfilePanel
             pubkey={openUserProfile.pubkey}
             side={openUserProfile.side}
