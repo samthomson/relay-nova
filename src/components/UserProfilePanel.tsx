@@ -269,15 +269,17 @@ interface UserNoteCardProps {
 
 function UserNoteCard({ note, authorDisplayName, authorPicture }: UserNoteCardProps) {
   const date = new Date(note.created_at * 1000);
-  const relativeTime = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  const fullDateTime = date.toLocaleString('en-US', { 
-    month: 'long', 
-    day: 'numeric', 
-    year: 'numeric',
+  const time = date.toLocaleTimeString('en-US', { 
     hour: 'numeric',
     minute: '2-digit',
     hour12: true
   });
+  const dateStr = date.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric'
+  });
+  const fullDateTime = `${time} ${dateStr}`;
 
   return (
     <Card data-note-card="true" className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors w-full overflow-hidden relative group">
@@ -304,7 +306,7 @@ function UserNoteCard({ note, authorDisplayName, authorPicture }: UserNoteCardPr
             <CardTitle className="text-sm font-medium text-white truncate">
               {authorDisplayName}
             </CardTitle>
-            <p className="text-xs text-gray-400" title={fullDateTime}>{relativeTime}</p>
+            <p className="text-xs text-gray-400">{fullDateTime}</p>
           </div>
         </div>
       </CardHeader>
