@@ -203,7 +203,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   const [sceneReady, setSceneReady] = useState(false);
   const [openRelay, setOpenRelay] = useState<RelayLocation | null>(null);
   const [relaySide, setRelaySide] = useState<'left' | 'right' | 'bottom'>('right');
-  const [openUserProfile, setOpenUserProfile] = useState<{ pubkey: string; side: 'left' | 'right' | 'bottom' } | null>(null);
+  const [openUserProfile, setOpenUserProfile] = useState<{ pubkey: string; side: 'left' | 'right' | 'bottom'; relayUrl?: string } | null>(null);
 
   // Create a ref to track the current openRelay state for event handlers
   const openRelayRef = useRef(openRelay);
@@ -263,7 +263,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
         side = 'bottom';
       }
 
-      setOpenUserProfile({ pubkey, side });
+      // Pass the current relay URL so the user profile panel queries the same relay
+      setOpenUserProfile({ pubkey, side, relayUrl: openRelay?.url });
     };
 
     // Add event listener
@@ -1674,6 +1675,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
           <UserProfilePanel
             pubkey={openUserProfile.pubkey}
             side={openUserProfile.side}
+            relayUrl={openUserProfile.relayUrl}
             onClose={() => setOpenUserProfile(null)}
             onMouseEnter={() => {}}
             onMouseLeave={() => {}}

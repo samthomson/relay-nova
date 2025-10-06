@@ -10,6 +10,7 @@ import { nip19 } from 'nostr-tools';
 interface UserProfilePanelProps {
   pubkey: string;
   side: 'left' | 'right' | 'bottom';
+  relayUrl?: string;
   onClose: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -20,7 +21,7 @@ interface UserProfilePanelProps {
 }
 
 export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps>(
-  ({ pubkey, side, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef }, ref) => {
+  ({ pubkey, side, relayUrl, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef }, ref) => {
   const { nostr } = useNostr();
   const [notes, setNotes] = useState<NostrEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,8 +33,9 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
     if (!nostr) return;
 
     try {
-      console.log('🔍 Fetching author metadata for:', pubkey);
-      const relayConnection = nostr.relay('wss://relay.damus.io');
+      const targetRelay = relayUrl || 'wss://relay.damus.io';
+      console.log('🔍 Fetching author metadata for:', pubkey, 'from relay:', targetRelay);
+      const relayConnection = nostr.relay(targetRelay);
 
       const authors = await relayConnection.query([
         {
@@ -57,14 +59,15 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
   const fetchNotes = async () => {
     if (!nostr) return;
 
-    console.log('🔍 Fetching notes from author:', pubkey);
+    const targetRelay = relayUrl || 'wss://relay.damus.io';
+    console.log('🔍 Fetching notes from author:', pubkey, 'from relay:', targetRelay);
     setIsLoading(true);
     setError(null);
     setNotes([]);
 
     try {
-      // Connect to a reliable relay to fetch author's notes
-      const relayConnection = nostr.relay('wss://relay.damus.io');
+      // Connect to the specific relay (or fallback to relay.damus.io)
+      const relayConnection = nostr.relay(targetRelay);
 
       // Query for latest 20 notes by this author (kind:1 events)
       const events = await relayConnection.query([
@@ -80,14 +83,14 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
       // Sort by created_at (newest first)
       const sortedEvents = events.sort((a, b) => b.created_at - a.created_at);
       setNotes(sortedEvents);
-      console.log(`✅ Successfully loaded ${sortedEvents.length} notes from author ${pubkey}`);
+      console.log(`✅ Successfully loaded ${sortedEvents.length} notes from author ${pubkey} from ${targetRelay}`);
 
       // Notify parent that events are loaded
       if (onEventsChange) {
         onEventsChange(sortedEvents, true);
       }
     } catch (err) {
-      console.error(`❌ Failed to fetch notes from author ${pubkey}:`, err);
+      console.error(`❌ Failed to fetch notes from author ${pubkey} on ${targetRelay}:`, err);
       setError('Failed to fetch notes from this author');
 
       // Notify parent that events failed to load
@@ -104,7 +107,7 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
       fetchAuthor();
       fetchNotes();
     }
-  }, [pubkey]);
+  }, [pubkey, relayUrl]);
 
   // Expose scrollable ref to parent
   useEffect(() => {
