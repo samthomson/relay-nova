@@ -33,11 +33,16 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
     if (!nostr) return;
 
     try {
-      const targetRelay = relayUrl || 'wss://relay.damus.io';
-      console.log('🔍 Fetching author metadata for:', pubkey, 'from relay:', targetRelay);
-      const relayConnection = nostr.relay(targetRelay);
+      // Try to fetch metadata from multiple relays for better chance of finding profile info
+      const relaysToTry = relayUrl 
+        ? [relayUrl, 'wss://relay.damus.io', 'wss://relay.nostr.band']
+        : ['wss://relay.damus.io', 'wss://relay.nostr.band'];
 
-      const authors = await relayConnection.query([
+      console.log('🔍 Fetching author metadata for:', pubkey, 'from relays:', relaysToTry);
+      
+      const relayGroup = nostr.group(relaysToTry);
+
+      const authors = await relayGroup.query([
         {
           kinds: [0],
           authors: [pubkey]
@@ -47,9 +52,13 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
       });
 
       if (authors.length > 0) {
-        const metadata = authors[0];
+        // Use the most recent metadata
+        const sortedAuthors = authors.sort((a, b) => b.created_at - a.created_at);
+        const metadata = sortedAuthors[0];
         console.log('✅ Found author metadata:', metadata);
         setAuthor(metadata);
+      } else {
+        console.log('⚠️ No metadata found for author:', pubkey);
       }
     } catch (err) {
       console.error('❌ Failed to fetch author metadata:', err);
