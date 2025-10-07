@@ -9,8 +9,8 @@ interface AppProviderProps {
   storageKey: string;
   /** Default app configuration */
   defaultConfig: AppConfig;
-  /** Optional list of preset relays to display in the RelaySelector */
-  presetRelays?: { name: string; url: string }[];
+  /** Initial relays for smart routing - mainstream popular relays */
+  initialRelays: string[];
 }
 
 // Zod schema for AppConfig validation
@@ -24,7 +24,7 @@ export function AppProvider(props: AppProviderProps) {
     children,
     storageKey,
     defaultConfig,
-    presetRelays,
+    initialRelays,
   } = props;
 
   // App configuration state with localStorage persistence
@@ -48,7 +48,7 @@ export function AppProvider(props: AppProviderProps) {
   const appContextValue: AppContextType = {
     config,
     updateConfig,
-    presetRelays,
+    initialRelays,
   };
 
   // Apply theme effects to document
