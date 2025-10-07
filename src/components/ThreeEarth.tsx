@@ -1381,7 +1381,14 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     }
 
     const updateAllMarkers = () => {
-      const cameraDistance = cameraRef.current!.position.z;
+      // Calculate actual distance from origin (not just Z position)
+      // This works correctly whether camera is on Z-axis (normal) or positioned in 3D space (autopilot)
+      const camera = cameraRef.current!;
+      const cameraDistance = Math.sqrt(
+        camera.position.x ** 2 +
+        camera.position.y ** 2 +
+        camera.position.z ** 2
+      );
       console.log('updateAllMarkers called - cameraDistance:', cameraDistance);
 
       // Clear existing markers
@@ -1490,9 +1497,18 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     updateAllMarkers();
 
     // Set up a listener for zoom changes (using requestAnimationFrame for performance)
-    let lastDistance = cameraRef.current.position.z;
+    const calculateDistance = () => {
+      const camera = cameraRef.current!;
+      return Math.sqrt(
+        camera.position.x ** 2 +
+        camera.position.y ** 2 +
+        camera.position.z ** 2
+      );
+    };
+
+    let lastDistance = calculateDistance();
     const checkZoomChange = () => {
-      const currentDistance = cameraRef.current!.position.z;
+      const currentDistance = calculateDistance();
       if (Math.abs(currentDistance - lastDistance) > 0.1) {
         updateAllMarkers();
         lastDistance = currentDistance;
