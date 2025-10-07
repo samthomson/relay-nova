@@ -22,11 +22,10 @@ const Index = () => {
       {/* Main content area */}
       <div className="relative min-h-screen">
         {/* Instructions overlay */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
-          <div className="text-center text-white/70 text-sm">
+        <div className="absolute bottom-0 left-0 z-10 p-6">
+          <div className="text-left text-white/70 text-sm">
             <p className="mb-2">🌍 Drag to rotate • 🔍 Scroll to zoom • ⚡ Click dots for relay info</p>
             <p className="text-xs opacity-60">
-              Green: relay locations •
               Vibed with <a href="https://soapbox.pub/mkstack" className="underline hover:text-white">MKStack</a>
             </p>
           </div>
