@@ -1,51 +1,83 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
-import { Plane, Square } from 'lucide-react';
+import { Plane, Radio } from 'lucide-react';
 
 export function AutoPilotButton() {
-  const {
-    isAutoPilotMode,
-    isAutoPilotActive,
-    toggleAutoPilot,
-    currentRelayIndex,
-    totalRelays
-  } = useAutoPilotContext();
+  const { isAutoPilotMode, toggleAutoPilot } = useAutoPilotContext();
+  const [isRadioMode, setIsRadioMode] = useState(false);
+
+  const toggleRadio = () => {
+    setIsRadioMode(!isRadioMode);
+    // TODO: Implement radio mode functionality
+  };
 
   return (
-    <button
-      onClick={toggleAutoPilot}
-      className={`
-        fixed bottom-6 right-6 z-50 
-        px-6 py-3 rounded-xl
-        backdrop-blur-sm border-2
-        transition-all duration-300 
-        font-semibold text-sm
-        shadow-lg hover:shadow-xl
-        flex flex-col items-center gap-2
-        ${isAutoPilotMode
-          ? 'bg-red-500/20 border-red-500/60 text-red-400 hover:bg-red-500/30 hover:border-red-500'
-          : 'bg-blue-500/20 border-blue-500/60 text-blue-400 hover:bg-blue-500/30 hover:border-blue-500'
-        }
-      `}
-    >
-      {/* Icon and main label */}
-      <div className="flex items-center gap-2">
-        {isAutoPilotMode ? (
-          <Square className="w-4 h-4 fill-current" />
-        ) : (
-          <Plane className="w-4 h-4" />
+    <div className="fixed bottom-6 right-6 z-50 flex shadow-2xl">
+      {/* Auto Pilot Button - Left */}
+      <button
+        onClick={toggleAutoPilot}
+        className={`
+          relative overflow-hidden
+          px-6 py-4
+          rounded-l-2xl
+          backdrop-blur-md
+          transition-all duration-300 
+          font-semibold text-sm
+          border-y border-l border-white/10
+          group
+          ${isAutoPilotMode
+            ? 'bg-gradient-to-br from-purple-500/90 to-orange-500/90 hover:from-purple-600/90 hover:to-orange-600/90'
+            : 'bg-black/40 hover:bg-black/60'
+          }
+        `}
+      >
+        {/* Hover gradient for inactive state */}
+        {!isAutoPilotMode && (
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         )}
-        <span className="uppercase tracking-wide">
-          {isAutoPilotMode ? 'Stop' : 'Auto Pilot'}
-        </span>
-      </div>
 
-      {/* Status indicator */}
-      {isAutoPilotMode && (
-        <div className="text-xs opacity-80">
-          {isAutoPilotActive ? `${currentRelayIndex + 1}/${totalRelays}` : 'Starting...'}
+        <div className="relative flex items-center gap-3">
+          <Plane className={`w-4 h-4 transition-transform duration-300 ${isAutoPilotMode ? 'rotate-45' : ''}`} />
+          <div className="flex flex-col items-start">
+            <span className="text-white whitespace-nowrap">
+              Auto Pilot: <span className={isAutoPilotMode ? 'text-white font-bold' : 'text-white/60'}>{isAutoPilotMode ? 'On' : 'Off'}</span>
+            </span>
+          </div>
         </div>
-      )}
-    </button>
+      </button>
+
+      {/* Radio Button - Right */}
+      <button
+        onClick={toggleRadio}
+        className={`
+          relative overflow-hidden
+          px-6 py-4
+          rounded-r-2xl
+          backdrop-blur-md
+          transition-all duration-300 
+          font-semibold text-sm
+          border-y border-r border-l-0 border-white/10
+          group
+          ${isRadioMode
+            ? 'bg-gradient-to-br from-blue-500/90 to-cyan-500/90 hover:from-blue-600/90 hover:to-cyan-600/90'
+            : 'bg-black/40 hover:bg-black/60'
+          }
+        `}
+      >
+        {/* Hover gradient for inactive state */}
+        {!isRadioMode && (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        )}
+
+        <div className="relative flex items-center gap-3">
+          <Radio className={`w-4 h-4 ${isRadioMode ? 'animate-pulse' : ''}`} />
+          <div className="flex flex-col items-start">
+            <span className="text-white whitespace-nowrap">
+              Radio: <span className={isRadioMode ? 'text-white font-bold' : 'text-white/60'}>{isRadioMode ? 'On' : 'Off'}</span>
+            </span>
+          </div>
+        </div>
+      </button>
+    </div>
   );
 }
