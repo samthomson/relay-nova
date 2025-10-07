@@ -3,6 +3,7 @@ import * as THREE from 'three';
 // useRelayLocations is now passed as prop from parent component
 
 import { RelayNotesPanel } from './RelayNotesPanel';
+import { RadioStatusPanel } from './RadioStatusPanel';
 import { UserProfilePanel } from './UserProfilePanel';
 import { useAutoPilot } from '@/hooks/useAutoPilot';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
@@ -234,7 +235,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       }
 
       // Open relay panel
-      openRelayPanelInternal(relay, cameraRef.current);
+      if (cameraRef.current) {
+        openRelayPanelInternal(relay, cameraRef.current);
+      }
     };
 
     // Add event listener
@@ -978,6 +981,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   // Update autopilot mode state when context changes
   useEffect(() => {
     isAutoPilotModeActive.current = isAutoPilotMode;
+    // Note: This does NOT close panels - panels remain open when toggling autopilot/radio mode
   }, [isAutoPilotMode]);
 
   // Register camera reset function for when autopilot is stopped
@@ -1052,7 +1056,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       // Transform relay position from Earth's local space to world space
       // This accounts for the Earth's current rotation!
       const relayWorldPos = new THREE.Vector3(relayLocalX, relayLocalY, relayLocalZ);
-      relayWorldPos.applyMatrix4(earthRef.current.matrixWorld);
+      if (earthRef.current) {
+        relayWorldPos.applyMatrix4(earthRef.current.matrixWorld);
+      }
 
       console.log(`🎯 Relay local position: X=${relayLocalX.toFixed(2)}, Y=${relayLocalY.toFixed(2)}, Z=${relayLocalZ.toFixed(2)}`);
       console.log(`🎯 Relay world position: X=${relayWorldPos.x.toFixed(2)}, Y=${relayWorldPos.y.toFixed(2)}, Z=${relayWorldPos.z.toFixed(2)}`);
@@ -1075,6 +1081,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       console.log(`🎯 Target camera position: X=${targetCameraX.toFixed(2)}, Y=${targetCameraY.toFixed(2)}, Z=${targetCameraZ.toFixed(2)}`);
 
       // Current camera state
+      if (!cameraRef.current) return;
+
       const startCameraX = cameraRef.current.position.x;
       const startCameraY = cameraRef.current.position.y;
       const startCameraZ = cameraRef.current.position.z;
@@ -1394,8 +1402,13 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       const clickedInsideRelayPanel = relayPanelContainerRef.current?.contains(event.target as Node);
       const clickedInsideUserPanel = userProfilePanelContainerRef.current?.contains(event.target as Node);
 
-      // Only close if click is outside BOTH panels
-      if (!clickedInsideRelayPanel && !clickedInsideUserPanel) {
+      // Check if click is on autopilot/radio buttons (bottom-right corner)
+      const target = event.target as HTMLElement;
+      const isAutoPilotButton = target.closest('[data-autopilot-button]') ||
+        target.closest('.fixed.bottom-6.right-6');
+
+      // Only close if click is outside BOTH panels AND not on autopilot buttons
+      if (!clickedInsideRelayPanel && !clickedInsideUserPanel && !isAutoPilotButton) {
         // Close both relay panel AND user profile panel
         closeRelayPanelInternal();
         setOpenUserProfile(null);
@@ -1433,8 +1446,10 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       console.log('updateAllMarkers called - cameraDistance:', cameraDistance);
 
       // Clear existing markers
-      while (relayMarkersRef.current.children.length > 0) {
-        relayMarkersRef.current.remove(relayMarkersRef.current.children[0]);
+      if (relayMarkersRef.current) {
+        while (relayMarkersRef.current.children.length > 0) {
+          relayMarkersRef.current.remove(relayMarkersRef.current.children[0]);
+        }
       }
 
       // Cluster relays based on zoom level
@@ -1838,8 +1853,11 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
             onMouseLeave={() => isMouseOverRelayPanel.current = false}
             onMouseDown={() => { }}
             onEventsChange={handleEventsChange}
-            forwardScrollableRef={relayPanelRef}
+            forwardScrollableRef={relayPanelRef as React.RefObject<{ scrollableRef: React.RefObject<HTMLDivElement> }>}
           />
+
+          {/* Radio Status Panel - appears below relay panel when radio mode is on */}
+          <RadioStatusPanel side={relaySide} relay={openRelay} />
         </div>
       )}
 
@@ -1855,7 +1873,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
             onMouseLeave={() => { }}
             onMouseDown={() => { }}
             onEventsChange={() => { }}
-            forwardScrollableRef={null}
+            forwardScrollableRef={undefined}
           />
         </div>
       )}

@@ -6,6 +6,7 @@ interface RelayLocation {
   lng: number;
   city?: string;
   country?: string;
+  countryCode?: string;
 }
 
 // Load relay locations from the JSON file in public directory
@@ -26,6 +27,7 @@ async function fetchRelayLocations(): Promise<RelayLocation[]> {
       lat: relay.location.latitude,
       lng: relay.location.longitude,
       country: relay.location.country,
+      countryCode: relay.location.countryCode,
       // Note: city is not in the JSON format, but we can add it later if needed
     }));
 

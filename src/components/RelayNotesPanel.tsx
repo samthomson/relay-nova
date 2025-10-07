@@ -138,10 +138,10 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
 
     // Expose scrollable ref to parent
     useEffect(() => {
-      if (forwardScrollableRef) {
-        forwardScrollableRef.current = { scrollableRef };
+      if (forwardScrollableRef && forwardScrollableRef.current) {
+        forwardScrollableRef.current.scrollableRef = scrollableRef;
       }
-    }, [forwardScrollableRef]);
+    }, [forwardScrollableRef, scrollableRef]);
 
     // Panel classes function - handles both relay and user panel positioning
     const getPanelClasses = (isUserPanel: boolean = false) => {
@@ -287,7 +287,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
               ) : error ? (
                 <div className="flex items-center justify-center h-full p-4">
                   <div className="text-center">
-                    <p className="text-sm text-red-400 mb-2">{error}</p>
+                    <p className="text-sm text-red-400 mb-2">{error?.message || 'An error occurred'}</p>
                     <p className="text-xs text-gray-500">This relay may be offline or not responding</p>
                   </div>
                 </div>

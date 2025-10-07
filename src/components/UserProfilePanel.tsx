@@ -48,8 +48,8 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
 
     // Expose scrollable ref to parent
     useEffect(() => {
-      if (forwardScrollableRef) {
-        forwardScrollableRef.current = { scrollableRef };
+      if (forwardScrollableRef && forwardScrollableRef.current) {
+        forwardScrollableRef.current.scrollableRef = scrollableRef;
       }
     }, [forwardScrollableRef]);
 
@@ -97,7 +97,7 @@ export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps
                 <div className="flex-shrink-0">
                   {getPicture() ? (
                     <img
-                      src={getPicture()}
+                      src={getPicture() || undefined}
                       alt={getDisplayName()}
                       className="w-10 h-10 rounded-full object-cover border border-white/20"
                       onError={(e) => {

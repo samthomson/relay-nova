@@ -13,6 +13,7 @@ import { AppProvider } from '@/components/AppProvider';
 import { NWCProvider } from '@/contexts/NWCContext';
 import { UserRelaysProvider } from '@/contexts/UserRelaysContext';
 import { AutoPilotProvider } from '@/contexts/AutoPilotContext';
+import { RadioModeProvider } from '@/contexts/RadioModeContext';
 import { AppConfig } from '@/contexts/AppContext';
 import AppRouter from './AppRouter';
 
@@ -58,12 +59,14 @@ export function App() {
                 <UserRelaysProvider>
                   <NWCProvider>
                     <AutoPilotProvider>
-                      <TooltipProvider>
+                      <RadioModeProvider>
+                        <TooltipProvider>
                         <Toaster />
                         <Suspense>
                           <AppRouter />
                         </Suspense>
                       </TooltipProvider>
+                      </RadioModeProvider>
                     </AutoPilotProvider>
                   </NWCProvider>
                 </UserRelaysProvider>

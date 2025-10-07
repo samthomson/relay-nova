@@ -1,18 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
+import { useRadioModeContext } from '@/contexts/RadioModeContext';
 import { Plane, Radio } from 'lucide-react';
 
 export function AutoPilotButton() {
   const { isAutoPilotMode, toggleAutoPilot } = useAutoPilotContext();
-  const [isRadioMode, setIsRadioMode] = useState(false);
-
-  const toggleRadio = () => {
-    setIsRadioMode(!isRadioMode);
-    // TODO: Implement radio mode functionality
-  };
+  const { isRadioMode, toggleRadioMode } = useRadioModeContext();
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex shadow-2xl">
+    <div className="fixed bottom-6 right-6 z-50 flex shadow-2xl" data-autopilot-button>
       {/* Auto Pilot Button - Left */}
       <button
         onClick={toggleAutoPilot}
@@ -26,8 +22,8 @@ export function AutoPilotButton() {
           border-2
           group
           ${isAutoPilotMode
-            ? 'bg-gradient-to-br from-purple-500 to-orange-500 hover:from-purple-600 hover:to-orange-600 border-purple-400/50 scale-105'
-            : 'bg-gradient-to-br from-purple-500/20 to-orange-500/20 hover:from-purple-500/30 hover:to-orange-500/30 border-purple-500/30 hover:border-purple-400/50'
+            ? 'bg-gradient-to-br from-purple-400/60 to-orange-400/60 hover:from-purple-500/70 hover:to-orange-500/70 border-purple-300/40 scale-105'
+            : 'bg-gradient-to-br from-purple-400/20 to-orange-400/20 hover:from-purple-400/30 hover:to-orange-400/30 border-purple-400/20 hover:border-purple-300/30'
           }
         `}
       >
@@ -43,7 +39,7 @@ export function AutoPilotButton() {
 
       {/* Radio Button - Right */}
       <button
-        onClick={toggleRadio}
+        onClick={toggleRadioMode}
         className={`
           relative overflow-hidden
           px-6 py-4
@@ -54,8 +50,8 @@ export function AutoPilotButton() {
           border-2 border-l-0
           group
           ${isRadioMode
-            ? 'bg-gradient-to-br from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 border-orange-400/50 scale-105'
-            : 'bg-gradient-to-br from-orange-500/20 to-purple-500/20 hover:from-orange-500/30 hover:to-purple-500/30 border-orange-500/30 hover:border-orange-400/50'
+            ? 'bg-gradient-to-br from-orange-400/60 to-purple-400/60 hover:from-orange-500/70 hover:to-purple-500/70 border-orange-300/40 scale-105'
+            : 'bg-gradient-to-br from-orange-400/20 to-purple-400/20 hover:from-orange-400/30 hover:to-purple-400/30 border-orange-400/20 hover:border-orange-300/30'
           }
         `}
       >

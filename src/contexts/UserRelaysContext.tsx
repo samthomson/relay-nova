@@ -14,7 +14,7 @@ interface UserRelay {
 interface UserRelaysContextType {
   userRelays: UserRelay[] | undefined;
   isLoading: boolean;
-  refetch: () => Promise<void>;
+  refetch: () => Promise<any>;
   updateRelayList: (newRelays: UserRelay[]) => Promise<void>;
   removeRelay: (relayUrl: string) => Promise<void>;
   togglePermission: (relayUrl: string, permission: 'read' | 'write') => Promise<void>;

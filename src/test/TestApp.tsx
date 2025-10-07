@@ -28,7 +28,7 @@ export function TestApp({ children }: TestAppProps) {
 
   return (
     <UnheadProvider head={head}>
-      <AppProvider storageKey='test-app-config' defaultConfig={defaultConfig}>
+      <AppProvider storageKey='test-app-config' defaultConfig={defaultConfig} initialRelays={[]}>
         <QueryClientProvider client={queryClient}>
           <NostrLoginProvider storageKey='test-login'>
             <NostrProvider>
