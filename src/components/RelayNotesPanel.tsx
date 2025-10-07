@@ -102,11 +102,11 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
     const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
     const hasRelay = userRelays?.some(r => r.url === relayUrl) || false;
 
-    const { isAutoPilotMode, stopAutoPilot, relayDisplayProgress } = useAutoPilotContext();
+    const { isAutoPilotMode, skipToNextRelay, relayDisplayProgress } = useAutoPilotContext();
 
     const handleNextRelay = () => {
       if (isAutoPilotMode) {
-        stopAutoPilot();
+        skipToNextRelay();
       }
     };
 
@@ -245,16 +245,16 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
                   </Button>
                 )}
 
-                {/* Stop Button - Only show in auto pilot mode */}
+                {/* Next Relay Button - Only show in auto pilot mode */}
                 {isAutoPilotMode && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleNextRelay}
-                    className="bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30 text-xs px-3 py-1 h-7"
+                    className="bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30 text-xs px-3 py-1 h-7"
                   >
                     <SkipForward className="w-3 h-3 mr-1" />
-                    stop
+                    next relay
                   </Button>
                 )}
               </div>

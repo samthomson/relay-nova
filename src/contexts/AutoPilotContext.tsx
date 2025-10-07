@@ -5,6 +5,7 @@ interface AutoPilotContextType {
   startAutoPilot: () => void;
   stopAutoPilot: () => void;
   toggleAutoPilot: () => void;
+  skipToNextRelay: () => void;
   isAutoPilotActive: boolean;
   currentRelayIndex: number;
   totalRelays: number;
@@ -13,6 +14,7 @@ interface AutoPilotContextType {
   relayDisplayProgress: number; // 0-100 percentage
   setRelayDisplayProgress: (progress: number) => void;
   registerCameraReset: (resetFn: () => void) => void;
+  registerSkipFunction: (skipFn: () => void) => void;
 }
 
 const AutoPilotContext = createContext<AutoPilotContextType | undefined>(undefined);
@@ -24,10 +26,22 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
   const [totalRelays, setTotalRelays] = useState(0);
   const [relayDisplayProgress, setRelayDisplayProgress] = useState(0);
   const cameraResetFn = useRef<(() => void) | null>(null);
+  const skipFn = useRef<(() => void) | null>(null);
 
   const registerCameraReset = useCallback((resetFn: () => void) => {
     cameraResetFn.current = resetFn;
   }, []);
+
+  const registerSkipFunction = useCallback((fn: () => void) => {
+    skipFn.current = fn;
+  }, []);
+
+  const skipToNextRelay = useCallback(() => {
+    if (skipFn.current && isAutoPilotMode) {
+      console.log('⏭️ Skipping to next relay');
+      skipFn.current();
+    }
+  }, [isAutoPilotMode]);
 
   const stopAutoPilot = useCallback(() => {
     console.log('🛑 Stopping autopilot mode');
@@ -64,6 +78,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     startAutoPilot,
     stopAutoPilot,
     toggleAutoPilot,
+    skipToNextRelay,
     isAutoPilotActive,
     currentRelayIndex,
     totalRelays,
@@ -72,6 +87,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     relayDisplayProgress,
     setRelayDisplayProgress,
     registerCameraReset,
+    registerSkipFunction,
   };
 
   return (

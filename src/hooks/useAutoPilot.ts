@@ -28,6 +28,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     setCurrentRelayIndex,
     setTotalRelays,
     setRelayDisplayProgress,
+    registerSkipFunction,
   } = useAutoPilotContext();
 
   // Single master execution state to prevent multiple instances
@@ -323,6 +324,38 @@ export function useAutoPilot(controls: AutoPilotControls) {
       abortCurrentExecution();
     };
   }, [isAutoPilotMode, isAutoPilotActive, abortCurrentExecution]);
+
+  // Register skip function
+  useEffect(() => {
+    const skipToNext = () => {
+      if (!isAutoPilotMode || !masterExecutionRef.current.isRunning) {
+        console.log('⚠️ Skip ignored - autopilot not running');
+        return;
+      }
+
+      const currentSequenceId = masterExecutionRef.current.currentSequenceId;
+      console.log(`⏭️ [${currentSequenceId}] Skipping to next relay`);
+
+      // Abort current sequence
+      if (masterExecutionRef.current.abortController) {
+        masterExecutionRef.current.abortController.abort();
+      }
+
+      // Clear any timers
+      if (masterExecutionRef.current.timeoutId) {
+        clearTimeout(masterExecutionRef.current.timeoutId);
+        masterExecutionRef.current.timeoutId = null;
+      }
+
+      // Stop scrolling
+      controls.stopSmoothScroll();
+
+      // Schedule next relay immediately
+      scheduleNextRelay(currentSequenceId);
+    };
+
+    registerSkipFunction(skipToNext);
+  }, [isAutoPilotMode, controls, scheduleNextRelay, registerSkipFunction]);
 
   return {
     isAutoPilotMode,
