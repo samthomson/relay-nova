@@ -99,6 +99,16 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   // Store connection line reference for relay panel
   const connectionLineRef = useRef<THREE.Line | null>(null);
 
+  // Store relay switching timer reference for autopilot
+  const relaySwitchingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Store skip function reference to avoid circular dependency
+  const skipToNextRelayRef = useRef<(() => void) | null>(null);
+
+  // Store remaining time when timer is paused
+  const remainingTimeRef = useRef<number | null>(null);
+  const timerStartTimeRef = useRef<number | null>(null);
+
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
     if (!relayPanelRef.current.element || !openRelayRef.current) return false;
@@ -198,7 +208,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   };
 
   // Auto pilot integration
-  const { stopAutoPilot, isAutoPilotMode, registerCameraReset } = useAutoPilotContext();
+  const { stopAutoPilot, isAutoPilotMode, registerCameraReset, isPaused, registerSkipFunction } = useAutoPilotContext();
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -923,6 +933,11 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
         inactivityTimer.current = null;
       }
 
+      if (relaySwitchingTimerRef.current) {
+        clearTimeout(relaySwitchingTimerRef.current);
+        relaySwitchingTimerRef.current = null;
+      }
+
       // Clean up DOM
       if (mountRef.current && rendererRef.current?.domElement) {
         try {
@@ -1150,12 +1165,26 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
         console.log('📜 clientHeight:', scrollableElement.clientHeight);
         console.log('📜 Can scroll:', scrollableElement.scrollHeight > scrollableElement.clientHeight);
 
-        // Reset scroll to top before starting
-        scrollableElement.scrollTop = 0;
-        console.log('📜 Starting smooth scroll from top');
+        // Only reset scroll position if we're not resuming from a pause
+        if (!isPaused) {
+          scrollableElement.scrollTop = 0;
+          console.log('📜 Starting smooth scroll from top');
+        } else {
+          console.log('📜 Resuming scroll from current position:', scrollableElement.scrollTop);
+        }
 
         smoothScrollIntervalRef.current = setInterval(() => {
           if (scrollableElement) {
+            // Check if autopilot is paused - if so, stop scrolling
+            if (isPaused) {
+              console.log('📜 Scrolling paused - clearing interval');
+              if (smoothScrollIntervalRef.current) {
+                clearInterval(smoothScrollIntervalRef.current);
+                smoothScrollIntervalRef.current = null;
+              }
+              return;
+            }
+
             const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
             const currentScroll = scrollableElement.scrollTop;
 
@@ -1166,6 +1195,24 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
                 clearInterval(smoothScrollIntervalRef.current);
                 smoothScrollIntervalRef.current = null;
               }
+
+              // Start timer to switch to next relay after a delay (only in autopilot mode and not paused)
+              if (isAutoPilotMode && !isPaused) {
+                console.log('⏰ Starting relay switching timer');
+                const delay = remainingTimeRef.current ?? 3000; // Use remaining time if paused, otherwise full delay
+                remainingTimeRef.current = null; // Reset remaining time
+                timerStartTimeRef.current = Date.now(); // Store start time for pause calculations
+
+                relaySwitchingTimerRef.current = setTimeout(() => {
+                  console.log('⏰ Relay switching timer triggered - moving to next relay');
+                  if (skipToNextRelayRef.current) {
+                    skipToNextRelayRef.current();
+                  }
+                  relaySwitchingTimerRef.current = null;
+                  timerStartTimeRef.current = null;
+                }, delay); // Use calculated delay
+              }
+
               return;
             }
 
@@ -1181,7 +1228,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
         console.log('📜 Scroll interval started!');
       });
     });
-  }, []);
+  }, [isPaused, isAutoPilotMode]);
 
   // Auto-start scrolling when notes are loaded in autopilot mode
   useEffect(() => {
@@ -1286,6 +1333,125 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     console.log('❌ No panel element found');
     return false;
   }, [eventsLoaded, notes.length, currentRelayUrl]);
+
+  // Create skip function for autopilot
+  const skipToNextRelay = useCallback(() => {
+    console.log('⏭️ skipToNextRelay called');
+
+    // Clear any existing relay switching timer
+    if (relaySwitchingTimerRef.current) {
+      clearTimeout(relaySwitchingTimerRef.current);
+      relaySwitchingTimerRef.current = null;
+    }
+
+    // Stop current scrolling
+    stopSmoothScroll();
+
+    // Close current panel
+    closeRelayPanelInternal();
+
+    // Find next relay
+    if (relayLocations.length > 0) {
+      const currentIndex = relayLocations.findIndex(r => r.url === currentRelayUrl);
+      const nextIndex = (currentIndex + 1) % relayLocations.length;
+      const nextRelay = relayLocations[nextIndex];
+
+      console.log(`⏭️ Moving to next relay: ${nextRelay.url} (index ${nextIndex})`);
+
+      // Open next relay panel
+      setTimeout(() => {
+        if (cameraRef.current) {
+          openRelayPanelInternal(nextRelay, cameraRef.current);
+        }
+      }, 500); // Small delay to allow panel to close
+    }
+  }, [relayLocations, currentRelayUrl, stopSmoothScroll]);
+
+  // Store skip function in ref to avoid circular dependency
+  useEffect(() => {
+    skipToNextRelayRef.current = skipToNextRelay;
+  }, [skipToNextRelay]);
+
+  // Register skip function with autopilot context
+  useEffect(() => {
+    registerSkipFunction(skipToNextRelay);
+  }, [registerSkipFunction, skipToNextRelay]);
+
+  // Clean up timers when autopilot stops
+  useEffect(() => {
+    if (!isAutoPilotMode) {
+      // Clear relay switching timer when autopilot stops
+      if (relaySwitchingTimerRef.current) {
+        clearTimeout(relaySwitchingTimerRef.current);
+        relaySwitchingTimerRef.current = null;
+      }
+
+      // Reset timer state
+      timerStartTimeRef.current = null;
+      remainingTimeRef.current = null;
+
+      // Stop smooth scrolling when autopilot stops
+      stopSmoothScroll();
+    }
+  }, [isAutoPilotMode, stopSmoothScroll]);
+
+  // Handle pause state changes
+  useEffect(() => {
+    if (isPaused) {
+      console.log('⏸️ Pause detected - stopping scrolling and pausing timer');
+      // Stop smooth scrolling when paused
+      stopSmoothScroll();
+
+      // Calculate and store remaining time for the timer
+      if (relaySwitchingTimerRef.current && timerStartTimeRef.current) {
+        const elapsedTime = Date.now() - timerStartTimeRef.current;
+        remainingTimeRef.current = Math.max(0, 3000 - elapsedTime); // Store remaining time from 3s total
+        console.log('⏰ Pausing timer with remaining time:', remainingTimeRef.current);
+
+        clearTimeout(relaySwitchingTimerRef.current);
+        relaySwitchingTimerRef.current = null;
+      }
+    } else if (isAutoPilotMode && !isPaused) {
+      console.log('▶️ Resume detected - restarting scroll and timer if needed');
+      // Restart scrolling if we're in autopilot mode and not paused
+      // Only restart if we have events loaded and notes
+      if (eventsLoaded && notes.length > 0) {
+        // Get current scroll position
+        const scrollableElement = relayPanelRef.current.scrollableRef?.current;
+        if (scrollableElement) {
+          const currentScroll = scrollableElement.scrollTop;
+          const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
+
+          // If we're at the bottom, check if we have remaining time
+          if (currentScroll >= maxScroll - 1) {
+            if (remainingTimeRef.current !== null) {
+              console.log('⏰ Resuming timer with remaining time:', remainingTimeRef.current);
+              // Resume timer with remaining time
+              relaySwitchingTimerRef.current = setTimeout(() => {
+                console.log('⏰ Resumed timer finished - moving to next relay');
+                if (skipToNextRelayRef.current) {
+                  skipToNextRelayRef.current();
+                }
+                relaySwitchingTimerRef.current = null;
+                timerStartTimeRef.current = null;
+                remainingTimeRef.current = null;
+              }, remainingTimeRef.current);
+              timerStartTimeRef.current = Date.now();
+            } else {
+              console.log('📜 At bottom when resuming - moving to next relay');
+              if (skipToNextRelayRef.current) {
+                skipToNextRelayRef.current();
+              }
+            }
+          } else {
+            // Otherwise, resume scrolling from current position
+            console.log('✅ Restarting scroll from current position');
+            startSmoothScroll();
+          }
+        }
+      }
+    }
+  }, [isPaused, isAutoPilotMode, eventsLoaded, notes.length, stopSmoothScroll, startSmoothScroll]);
 
   // Expose auto pilot controls
   useImperativeHandle(ref, () => ({

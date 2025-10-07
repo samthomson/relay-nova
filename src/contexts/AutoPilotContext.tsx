@@ -15,6 +15,10 @@ interface AutoPilotContextType {
   setRelayDisplayProgress: (progress: number) => void;
   registerCameraReset: (resetFn: () => void) => void;
   registerSkipFunction: (skipFn: () => void) => void;
+  isPaused: boolean;
+  pauseAutoPilot: () => void;
+  resumeAutoPilot: () => void;
+  togglePause: () => void;
 }
 
 const AutoPilotContext = createContext<AutoPilotContextType | undefined>(undefined);
@@ -25,6 +29,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
   const [currentRelayIndex, setCurrentRelayIndex] = useState(0);
   const [totalRelays, setTotalRelays] = useState(0);
   const [relayDisplayProgress, setRelayDisplayProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const cameraResetFn = useRef<(() => void) | null>(null);
   const skipFn = useRef<(() => void) | null>(null);
 
@@ -47,6 +52,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     console.log('🛑 Stopping autopilot mode');
     setIsAutoPilotMode(false);
     setIsAutoPilotActive(false);
+    setIsPaused(false); // Reset pause state when stopping autopilot
     setCurrentRelayIndex(0);
     setTotalRelays(0);
     setRelayDisplayProgress(0);
@@ -62,6 +68,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     console.log('🚀 Starting autopilot mode');
     setIsAutoPilotMode(true);
     setIsAutoPilotActive(true);
+    setIsPaused(false); // Reset pause state when starting
     setCurrentRelayIndex(0);
   }, []);
 
@@ -72,6 +79,28 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
       startAutoPilot();
     }
   }, [isAutoPilotMode, startAutoPilot, stopAutoPilot]);
+
+  const pauseAutoPilot = useCallback(() => {
+    console.log('⏸️ Pausing autopilot');
+    setIsPaused(true);
+    // When paused, we're not active but still in autopilot mode
+    setIsAutoPilotActive(false);
+  }, []);
+
+  const resumeAutoPilot = useCallback(() => {
+    console.log('▶️ Resuming autopilot');
+    setIsPaused(false);
+    // When resumed, we become active again
+    setIsAutoPilotActive(true);
+  }, []);
+
+  const togglePause = useCallback(() => {
+    if (isPaused) {
+      resumeAutoPilot();
+    } else {
+      pauseAutoPilot();
+    }
+  }, [isPaused, pauseAutoPilot, resumeAutoPilot]);
 
   const value: AutoPilotContextType = {
     isAutoPilotMode,
@@ -88,6 +117,10 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     setRelayDisplayProgress,
     registerCameraReset,
     registerSkipFunction,
+    isPaused,
+    pauseAutoPilot,
+    resumeAutoPilot,
+    togglePause,
   };
 
   return (

@@ -29,6 +29,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     setTotalRelays,
     setRelayDisplayProgress,
     registerSkipFunction,
+    isPaused,
   } = useAutoPilotContext();
 
   // Single master execution state to prevent multiple instances
@@ -39,6 +40,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
     intervalId: NodeJS.Timeout | null;
     abortController: AbortController | null;
     relayOrder: string[];
+    progressStartTime: number | null;
+    progressPauseTime: number | null;
+    totalElapsedTime: number;
   }>({
     isRunning: false,
     currentSequenceId: '',
@@ -46,6 +50,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
     intervalId: null,
     abortController: null,
     relayOrder: [],
+    progressStartTime: null,
+    progressPauseTime: null,
+    totalElapsedTime: 0,
   });
 
   // Generate random order of relays
@@ -80,6 +87,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
 
     execution.isRunning = false;
     execution.currentSequenceId = '';
+    execution.progressStartTime = null;
+    execution.progressPauseTime = null;
+    execution.totalElapsedTime = 0;
 
     console.log('🧹 Aborted and cleaned up current autopilot execution');
   }, []);
@@ -97,9 +107,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Check if autopilot is still active
-    if (!isAutoPilotMode || !isAutoPilotActive) {
-      console.log('🛑 Auto pilot not active, stopping execution');
+    // Check if autopilot is still active and not paused
+    if (!isAutoPilotMode || !isAutoPilotActive || isPaused) {
+      console.log('🛑 Auto pilot not active or paused, stopping execution');
       return;
     }
 
@@ -161,24 +171,68 @@ export function useAutoPilot(controls: AutoPilotControls) {
       // Step 4: Wait for display time (scrolling starts automatically via useEffect)
       console.log(`📜 [${sequenceId}] Auto pilot: Displaying relay for ${RELAY_DISPLAY_TIME_MS / 1000} seconds (scroll auto-starts)...`);
 
-      // Update progress bar during display time
-      const progressStartTime = Date.now();
-      const progressInterval = setInterval(() => {
-        const elapsed = Date.now() - progressStartTime;
-        const progress = Math.min((elapsed / RELAY_DISPLAY_TIME_MS) * 100, 100);
-        setRelayDisplayProgress(progress);
-      }, 50); // Update every 50ms
+      // Update progress bar and handle display time
+      let startTime = Date.now();
+      let progress = 0;
+      let displayTimeoutId: NodeJS.Timeout | null = null;
+      let progressIntervalId: NodeJS.Timeout | null = null;
 
-      await new Promise(resolve => {
-        const displayTimeout = setTimeout(resolve, RELAY_DISPLAY_TIME_MS);
+      await new Promise<void>(resolve => {
+        // Function to clean up all timers
+        const cleanup = () => {
+          if (displayTimeoutId) clearTimeout(displayTimeoutId);
+          if (progressIntervalId) clearInterval(progressIntervalId);
+          displayTimeoutId = null;
+          progressIntervalId = null;
+        };
+
+        // Function to start/resume timers
+        const startTimers = () => {
+          // Clear any existing timers
+          cleanup();
+
+          // Calculate remaining time based on current progress
+          const remainingTime = RELAY_DISPLAY_TIME_MS * (1 - progress / 100);
+
+          // Start display timeout
+          displayTimeoutId = setTimeout(() => {
+            cleanup();
+            resolve();
+          }, remainingTime);
+
+          // Start progress updates
+          progressIntervalId = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            progress = Math.min((elapsed / RELAY_DISPLAY_TIME_MS) * 100, 100);
+            setRelayDisplayProgress(progress);
+          }, 50);
+        };
+
+        // Start initial timers if not paused
+        if (!isPaused) {
+          startTimers();
+        }
+
+        // Watch for pause state changes
+        const pauseObserver = setInterval(() => {
+          if (isPaused) {
+            // When paused, stop all timers but remember progress
+            cleanup();
+          } else if (!displayTimeoutId) {
+            // When unpaused and no timers running, restart from current progress
+            startTime = Date.now() - (progress / 100 * RELAY_DISPLAY_TIME_MS);
+            startTimers();
+          }
+        }, 50);
+
+        // Handle abort signal
         signal.addEventListener('abort', () => {
-          clearTimeout(displayTimeout);
-          clearInterval(progressInterval);
-          resolve(undefined);
+          cleanup();
+          clearInterval(pauseObserver);
+          resolve();
         });
       });
 
-      clearInterval(progressInterval);
       setRelayDisplayProgress(100); // Ensure we hit 100% at the end
       controls.stopSmoothScroll();
 
@@ -209,7 +263,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
         masterExecutionRef.current.currentSequenceId = '';
       }
     }
-  }, [isAutoPilotMode, isAutoPilotActive, currentRelayIndex, controls, generateRandomRelayOrder, setTotalRelays, stopAutoPilot, abortCurrentExecution]);
+  }, [isAutoPilotMode, isAutoPilotActive, isPaused, currentRelayIndex, controls, generateRandomRelayOrder, setTotalRelays, stopAutoPilot, abortCurrentExecution]);
 
   // Wait for events to load with proper signal handling
   const waitForEventsToLoad = useCallback(async (signal: AbortSignal, sequenceId: string): Promise<boolean> => {
@@ -248,9 +302,14 @@ export function useAutoPilot(controls: AutoPilotControls) {
   const scheduleNextRelay = useCallback((sequenceId: string) => {
     console.log(`⏭️ [${sequenceId}] Scheduling next relay...`);
 
-    // Only proceed if this is still the current sequence
+    // Only proceed if this is still the current sequence and not paused
     if (masterExecutionRef.current.currentSequenceId !== sequenceId) {
       console.log(`⏹️ [${sequenceId}] Sequence superseded, not scheduling next relay`);
+      return;
+    }
+
+    if (isPaused) {
+      console.log(`⏸️ [${sequenceId}] Autopilot paused, not scheduling next relay`);
       return;
     }
 
@@ -277,39 +336,64 @@ export function useAutoPilot(controls: AutoPilotControls) {
       setCurrentRelayIndex(nextIndex);
     }
 
-    // Wait 1 second before processing next relay
-    masterExecutionRef.current.timeoutId = setTimeout(() => {
+    // Function to start next sequence
+    const startNext = () => {
+      // Double-check pause state before starting
+      if (isPaused) {
+        console.log(`⏸️ [${sequenceId}] Still paused, not starting next sequence`);
+        return;
+      }
+
       if (isAutoPilotMode && isAutoPilotActive && masterExecutionRef.current.currentSequenceId === sequenceId) {
-        console.log(`⏰ [${sequenceId}] Timeout triggered, starting next sequence`);
+        console.log(`⏰ [${sequenceId}] Starting next sequence`);
         runAutoPilotSequence();
       } else {
-        console.log(`⏹️ [${sequenceId}] Timeout cancelled - autopilot no longer active or sequence superseded`);
+        console.log(`⏹️ [${sequenceId}] Cannot start - autopilot no longer active or sequence superseded`);
       }
-    }, 1000);
-  }, [currentRelayIndex, controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence, setRelayDisplayProgress]);
+    };
 
-  // Start autopilot when activated
+    // Wait 1 second before processing next relay
+    masterExecutionRef.current.timeoutId = setTimeout(startNext, 1000);
+  }, [currentRelayIndex, controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, isAutoPilotMode, isAutoPilotActive, isPaused, runAutoPilotSequence, setRelayDisplayProgress]);
+
+  // Handle autopilot state changes
   useEffect(() => {
-    if (isAutoPilotMode && isAutoPilotActive && !masterExecutionRef.current.isRunning) {
-      console.log('🚀 Starting autopilot mode');
+    if (!isAutoPilotMode) {
+      // Stop everything when autopilot is off
+      console.log('🛑 Autopilot mode off - stopping everything');
+      abortCurrentExecution();
+      return;
+    }
+
+    if (isPaused) {
+      // When paused, stop the current sequence but keep state
+      console.log('⏸️ Autopilot paused - stopping current sequence');
+      abortCurrentExecution();
+      return;
+    }
+
+    if (isAutoPilotActive && !masterExecutionRef.current.isRunning) {
+      console.log('🚀 Starting autopilot sequence');
 
       // Clean up any existing state
       abortCurrentExecution();
 
-      // Reset state
-      masterExecutionRef.current.relayOrder = [];
-      setCurrentRelayIndex(0);
+      // Reset state if we're starting fresh (not resuming)
+      if (!isPaused) {
+        masterExecutionRef.current.relayOrder = [];
+        setCurrentRelayIndex(0);
+      }
 
       // Start sequence after brief delay to ensure clean state
       const startTimeout = setTimeout(() => {
-        if (isAutoPilotMode && isAutoPilotActive) {
+        if (isAutoPilotMode && isAutoPilotActive && !isPaused) {
           runAutoPilotSequence();
         }
       }, 100);
 
       return () => clearTimeout(startTimeout);
     }
-  }, [isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence, setCurrentRelayIndex, abortCurrentExecution]);
+  }, [isAutoPilotMode, isAutoPilotActive, isPaused, runAutoPilotSequence, setCurrentRelayIndex, abortCurrentExecution]);
 
   // Cleanup when autopilot stops
   useEffect(() => {

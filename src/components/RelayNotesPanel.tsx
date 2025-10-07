@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
 import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
-import { Plus, SkipForward, X, Trash2, Globe, Server, ExternalLink } from 'lucide-react';
+import { Plus, SkipForward, X, Trash2, Globe, Server, ExternalLink, Pause, Play } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageCircle, Loader2 } from 'lucide-react';
@@ -102,12 +102,17 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
     const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
     const hasRelay = userRelays?.some(r => r.url === relayUrl) || false;
 
-    const { isAutoPilotMode, skipToNextRelay, relayDisplayProgress } = useAutoPilotContext();
+    const { isAutoPilotMode, skipToNextRelay, relayDisplayProgress, isPaused, togglePause } = useAutoPilotContext();
 
     const handleNextRelay = () => {
       if (isAutoPilotMode) {
         skipToNextRelay();
       }
+    };
+
+    const handleTogglePause = () => {
+      console.log('🔄 Toggle pause clicked, current pause state:', isPaused);
+      togglePause();
     };
 
     const scrollUp = () => {
@@ -242,6 +247,31 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
                       <Trash2 className="w-3 h-3 mr-1" />
                     )}
                     remove relay
+                  </Button>
+                )}
+
+                {/* Pause/Resume Button - Only show in auto pilot mode */}
+                {isAutoPilotMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTogglePause}
+                    className={`text-xs px-3 py-1 h-7 ${isPaused
+                      ? 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30'
+                      : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30'
+                      }`}
+                  >
+                    {isPaused ? (
+                      <>
+                        <Play className="w-3 h-3 mr-1" />
+                        resume
+                      </>
+                    ) : (
+                      <>
+                        <Pause className="w-3 h-3 mr-1" />
+                        pause
+                      </>
+                    )}
                   </Button>
                 )}
 
