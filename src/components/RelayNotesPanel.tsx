@@ -168,7 +168,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
         >
           {/* Autopilot Progress Bar - at the very top, inside rounded corners */}
           {isAutoPilotMode && (
-            <div className="h-[2px] bg-white/10 relative overflow-hidden rounded-t-2xl">
+            <div className="h-[3px] bg-white/10 relative overflow-hidden rounded-t-2xl">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 via-purple-600 to-orange-500 transition-all duration-100 ease-linear"
                 style={{ width: `${relayDisplayProgress}%` }}
