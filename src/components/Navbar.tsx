@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { MyRelaysButton } from '@/components/MyRelaysButton';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAuthor } from '@/hooks/useAuthor';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Server, Globe } from 'lucide-react';
+import { ChevronDown, Server, Globe, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ const DEFAULT_RELAYS = [
 
 export function Navbar() {
   const { user } = useCurrentUser();
+  const author = useAuthor(user?.pubkey || '');
   const [selectedRelay, setSelectedRelay] = useState(DEFAULT_RELAYS[0]);
 
   const handleRelaySelect = (relay: typeof DEFAULT_RELAYS[0]) => {
@@ -74,13 +76,22 @@ export function Navbar() {
             </DropdownMenu>
           </div>
 
-          {/* Right side - Authentication */}
-          <div className="flex items-center">
-            {user ? (
-              <MyRelaysButton />
-            ) : (
-              <LoginArea className="max-w-60" />
-            )}
+          {/* Right side - Authentication and Debug Info */}
+          <div className="flex items-center space-x-4">
+            {/* Debug Info */}
+            <div className="text-xs text-gray-300">
+              {user ? (
+                <div className="flex items-center space-x-2">
+                  <User className="w-3 h-3" />
+                  <span>Logged in: {author.data?.metadata?.name || user.pubkey?.slice(0, 8) + '...'}</span>
+                </div>
+              ) : (
+                <span>Not logged in</span>
+              )}
+            </div>
+
+            <LoginArea className="max-w-60" />
+            {user && <MyRelaysButton />}
           </div>
         </div>
       </div>
