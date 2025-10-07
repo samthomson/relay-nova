@@ -1829,10 +1829,10 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
             transform: 'translate(0, -100%)',
           }}
         >
-          <div className="text-xs text-gray-300">
+          <div className="text-sm font-semibold">
             {hoveredRelay.url.replace('wss://', '').replace('ws://', '')}
           </div>
-          <div className="text-sm font-semibold mt-1">
+          <div className="text-xs text-gray-400 mt-1">
             {hoveredRelay.country || 'Unknown Location'}
           </div>
           {hoveredRelay.lat && hoveredRelay.lng && (
