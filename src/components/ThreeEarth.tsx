@@ -1104,7 +1104,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
         scrollableElement.scrollTop = 0;
         console.log('📜 Starting smooth scroll from top');
 
-        // Scroll down by 2 pixels every 50ms (40 pixels per second)
         smoothScrollIntervalRef.current = setInterval(() => {
           if (scrollableElement) {
             const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
@@ -1120,7 +1119,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
               return;
             }
 
-            scrollableElement.scrollTop += 2;
+            scrollableElement.scrollTop += 12;
 
             // Log every 100px to verify scrolling is happening
             if (Math.floor(currentScroll) % 100 === 0) {
