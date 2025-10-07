@@ -16,7 +16,7 @@ export function MyRelaysButton() {
         variant="outline"
         size="sm"
         onClick={() => setIsModalOpen(true)}
-        className="text-white border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-200"
+        className="text-white border-white/20 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-200"
       >
         <Server className="w-4 h-4 mr-2" />
         Relays
