@@ -3,11 +3,16 @@ import { useRelayLocations } from './useRelayLocations';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
 import type { NostrEvent } from '@nostrify/nostrify';
 
+// Autopilot configuration constants
+const RELAY_DISPLAY_TIME_MS = 15000; // 15 seconds to display each relay
+const ROTATION_DURATION_MS = 1000; // 1 second to rotate to relay
+
 interface AutoPilotControls {
   rotateEarthToRelay: (relayUrl: string) => Promise<void>;
   openRelayPanel: (relayUrl: string) => Promise<void>;
   closeRelayPanel: () => Promise<void>;
-  scrollToEvent: (eventIndex: number) => Promise<void>;
+  startSmoothScroll: () => void;
+  stopSmoothScroll: () => void;
   getCurrentEvents: () => NostrEvent[] | null;
   isPanelOpen: () => boolean;
   areEventsLoaded: () => boolean;
@@ -22,6 +27,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
     currentRelayIndex,
     setCurrentRelayIndex,
     setTotalRelays,
+    setRelayDisplayProgress,
   } = useAutoPilotContext();
 
   // Single master execution state to prevent multiple instances
@@ -151,12 +157,33 @@ export function useAutoPilot(controls: AutoPilotControls) {
       }
       console.log(`✅ [${sequenceId}] Auto pilot: Events loaded`);
 
-      // Step 4: Scroll through events for exactly 5 seconds
-      console.log(`📜 [${sequenceId}] Auto pilot: Starting 5-second scroll through events...`);
-      await scrollThroughEvents(signal, sequenceId);
+      // Step 4: Start smooth scrolling and wait for display time
+      console.log(`📜 [${sequenceId}] Auto pilot: Starting ${RELAY_DISPLAY_TIME_MS / 1000}-second display with smooth scrolling...`);
+      controls.startSmoothScroll();
+
+      // Update progress bar during display time
+      const progressStartTime = Date.now();
+      const progressInterval = setInterval(() => {
+        const elapsed = Date.now() - progressStartTime;
+        const progress = Math.min((elapsed / RELAY_DISPLAY_TIME_MS) * 100, 100);
+        setRelayDisplayProgress(progress);
+      }, 50); // Update every 50ms
+
+      await new Promise(resolve => {
+        const displayTimeout = setTimeout(resolve, RELAY_DISPLAY_TIME_MS);
+        signal.addEventListener('abort', () => {
+          clearTimeout(displayTimeout);
+          clearInterval(progressInterval);
+          resolve(undefined);
+        });
+      });
+
+      clearInterval(progressInterval);
+      setRelayDisplayProgress(100); // Ensure we hit 100% at the end
+      controls.stopSmoothScroll();
 
       if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) return;
-      console.log(`✅ [${sequenceId}] Auto pilot: Finished scrolling`);
+      console.log(`✅ [${sequenceId}] Auto pilot: Finished displaying relay`);
 
       // Step 5: Move to next relay
       scheduleNextRelay(sequenceId);
@@ -209,61 +236,6 @@ export function useAutoPilot(controls: AutoPilotControls) {
     });
   }, [controls]);
 
-  // Scroll through events for exactly 5 seconds
-  const scrollThroughEvents = useCallback(async (signal: AbortSignal, sequenceId: string): Promise<void> => {
-    return new Promise((resolve) => {
-      const events = controls.getCurrentEvents();
-      if (!events || events.length === 0) {
-        console.log(`📜 [${sequenceId}] No events to scroll through - skipping scroll period`);
-        // Still wait 5 seconds even if no events, as per requirements
-        const waitTimeout = setTimeout(() => {
-          console.log(`📜 [${sequenceId}] Completed 5-second wait period (no events)`);
-          resolve();
-        }, 5000);
-
-        signal.addEventListener('abort', () => {
-          clearTimeout(waitTimeout);
-          resolve();
-        });
-        return;
-      }
-
-      console.log(`📜 [${sequenceId}] Scrolling through ${events.length} events for 5 seconds`);
-
-      let currentEventIndex = 0;
-      let scrollCount = 0;
-
-      // Scroll to next event every 1 second for 5 seconds total
-      const scrollInterval = setInterval(() => {
-        if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) {
-          clearInterval(scrollInterval);
-          resolve();
-          return;
-        }
-
-        scrollCount++;
-
-        // Scroll to current event
-        controls.scrollToEvent(currentEventIndex);
-        console.log(`📜 [${sequenceId}] Scrolled to event ${currentEventIndex} (${scrollCount}/5)`);
-
-        // Move to next event
-        currentEventIndex = (currentEventIndex + 1) % events.length;
-
-        // Stop after 5 seconds
-        if (scrollCount >= 5) {
-          clearInterval(scrollInterval);
-          console.log(`📜 [${sequenceId}] Completed 5-second scroll period`);
-          resolve();
-        }
-      }, 1000);
-
-      signal.addEventListener('abort', () => {
-        clearInterval(scrollInterval);
-        resolve();
-      });
-    });
-  }, [controls]);
 
   // Schedule next relay with proper cleanup
   const scheduleNextRelay = useCallback((sequenceId: string) => {
@@ -274,6 +246,9 @@ export function useAutoPilot(controls: AutoPilotControls) {
       console.log(`⏹️ [${sequenceId}] Sequence superseded, not scheduling next relay`);
       return;
     }
+
+    // Reset progress bar
+    setRelayDisplayProgress(0);
 
     // Close current relay panel
     if (controls.isPanelOpen()) {
@@ -304,7 +279,7 @@ export function useAutoPilot(controls: AutoPilotControls) {
         console.log(`⏹️ [${sequenceId}] Timeout cancelled - autopilot no longer active or sequence superseded`);
       }
     }, 1000);
-  }, [currentRelayIndex, controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence]);
+  }, [currentRelayIndex, controls, generateRandomRelayOrder, setCurrentRelayIndex, setTotalRelays, isAutoPilotMode, isAutoPilotActive, runAutoPilotSequence, setRelayDisplayProgress]);
 
   // Start autopilot when activated
   useEffect(() => {

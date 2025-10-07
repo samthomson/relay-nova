@@ -25,7 +25,8 @@ export interface AutoPilotControls {
   rotateEarthToRelay: (relayUrl: string) => Promise<void>;
   openRelayPanel: (relayUrl: string) => Promise<void>;
   closeRelayPanel: () => Promise<void>;
-  scrollToEvent: (eventIndex: number) => Promise<void>;
+  startSmoothScroll: () => void;
+  stopSmoothScroll: () => void;
   getCurrentEvents: () => NostrEvent[] | null;
   isPanelOpen: () => boolean;
   areEventsLoaded: () => boolean;
@@ -288,556 +289,556 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     const initTimeout = setTimeout(() => {
       if (!mountRef.current) return;
 
-    try {
+      try {
 
-    // Scene setup with pure black space
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000); // Pure black space
-    sceneRef.current = scene;
+        // Scene setup with pure black space
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000); // Pure black space
+        sceneRef.current = scene;
 
-    // Ensure we have proper dimensions first
-    const width = mountRef.current.clientWidth || window.innerWidth;
-    const height = mountRef.current.clientHeight || window.innerHeight;
+        // Ensure we have proper dimensions first
+        const width = mountRef.current.clientWidth || window.innerWidth;
+        const height = mountRef.current.clientHeight || window.innerHeight;
 
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(
-      50,
-      width / height,
-      0.1,
-      1000
-    );
-    camera.position.set(0, 0, 6); // Less zoomed in
-    cameraRef.current = camera;
+        // Camera setup
+        const camera = new THREE.PerspectiveCamera(
+          50,
+          width / height,
+          0.1,
+          1000
+        );
+        camera.position.set(0, 0, 6); // Less zoomed in
+        cameraRef.current = camera;
 
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    mountRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+        // Renderer setup
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        mountRef.current.appendChild(renderer.domElement);
+        rendererRef.current = renderer;
 
-    // More balanced lighting for even Earth illumination
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Stronger ambient light for overall illumination
-    scene.add(ambientLight);
+        // More balanced lighting for even Earth illumination
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Stronger ambient light for overall illumination
+        scene.add(ambientLight);
 
-    // Main directional light positioned for even lighting
-    const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    sunLight.position.set(5, 3, 5); // Adjusted position for better lighting distribution
-    scene.add(sunLight);
+        // Main directional light positioned for even lighting
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        sunLight.position.set(5, 3, 5); // Adjusted position for better lighting distribution
+        scene.add(sunLight);
 
-    // Optional: Fill light to reduce harsh shadows
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-    fillLight.position.set(-3, 1, -2); // Fill light from opposite direction
-    scene.add(fillLight);
+        // Optional: Fill light to reduce harsh shadows
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        fillLight.position.set(-3, 1, -2); // Fill light from opposite direction
+        scene.add(fillLight);
 
-    // Create Earth with proper satellite imagery texture
-    const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
+        // Create Earth with proper satellite imagery texture
+        const earthGeometry = new THREE.SphereGeometry(2, 64, 32);
 
-    // Start with a simple material (no fallback texture to avoid flash)
-    const earthMaterial = new THREE.MeshLambertMaterial({
-      color: 0x1a1a2e // Dark blue color as placeholder
-    });
+        // Start with a simple material (no fallback texture to avoid flash)
+        const earthMaterial = new THREE.MeshLambertMaterial({
+          color: 0x1a1a2e // Dark blue color as placeholder
+        });
 
-    // Create relay markers group first
-    const relayMarkersGroup = new THREE.Group();
-    relayMarkersRef.current = relayMarkersGroup;
+        // Create relay markers group first
+        const relayMarkersGroup = new THREE.Group();
+        relayMarkersRef.current = relayMarkersGroup;
 
-    const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
 
-    // Rotate Earth to align with standard coordinate system
-    // This rotates the entire mesh so that 0° longitude faces the correct direction
-    earth.rotation.y = -Math.PI / 2; // Rotate -90 degrees around Y axis
+        // Rotate Earth to align with standard coordinate system
+        // This rotates the entire mesh so that 0° longitude faces the correct direction
+        earth.rotation.y = -Math.PI / 2; // Rotate -90 degrees around Y axis
 
-    scene.add(earth);
-    earthRef.current = earth;
+        scene.add(earth);
+        earthRef.current = earth;
 
-    // Add relay markers as children of Earth so they rotate together
-    earth.add(relayMarkersGroup);
+        // Add relay markers as children of Earth so they rotate together
+        earth.add(relayMarkersGroup);
 
-    // Load real Earth texture asynchronously with day/night cycle
-    const textureLoader = new THREE.TextureLoader();
+        // Load real Earth texture asynchronously with day/night cycle
+        const textureLoader = new THREE.TextureLoader();
 
-    // Load day texture
-    textureLoader.load(
-      'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
-      (dayTexture) => {
-        console.log('Earth texture loaded successfully');
+        // Load day texture
+        textureLoader.load(
+          'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+          (dayTexture) => {
+            console.log('Earth texture loaded successfully');
 
-        // Apply day texture only for now
-        if (earthRef.current) {
-          const newMaterial = new THREE.MeshLambertMaterial({
-            map: dayTexture
+            // Apply day texture only for now
+            if (earthRef.current) {
+              const newMaterial = new THREE.MeshLambertMaterial({
+                map: dayTexture
+              });
+              earthRef.current.material = newMaterial;
+            }
+          },
+          undefined,
+          (error) => {
+            console.error('Failed to load Earth texture:', error);
+            // Keep the dark blue placeholder if texture fails to load
+          }
+        );
+
+
+        // Create atmosphere with better visibility
+        const atmosphereGeometry = new THREE.SphereGeometry(2.05, 64, 32);
+        const atmosphereMaterial = new THREE.MeshBasicMaterial({
+          color: 0x87ceeb,
+          transparent: true,
+          opacity: 0.2, // Increased opacity
+          side: THREE.BackSide // Only render the inside
+        });
+        const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+        scene.add(atmosphere);
+
+        // Create enhanced starfield with multiple layers for better visual depth
+        const createStarLayer = (count: number, minRadius: number, maxRadius: number, size: number, opacity: number) => {
+          const geometry = new THREE.BufferGeometry();
+          const positions = new Float32Array(count * 3);
+
+          for (let i = 0; i < count; i++) {
+            const radius = minRadius + Math.random() * (maxRadius - minRadius);
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(Math.random() * 2 - 1);
+
+            positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            positions[i * 3 + 2] = radius * Math.cos(phi);
+          }
+
+          geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          const material = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: size,
+            transparent: true,
+            opacity: opacity,
+            sizeAttenuation: true
           });
-          earthRef.current.material = newMaterial;
+
+          return new THREE.Points(geometry, material);
+        };
+
+        // Create multiple star layers for depth
+        const farStars = createStarLayer(8000, 200, 400, 0.4, 0.6);  // Distant, small stars
+        const midStars = createStarLayer(4000, 150, 250, 0.8, 0.8); // Medium stars
+        const nearStars = createStarLayer(2000, 100, 180, 1.2, 1.0); // Closer, brighter stars
+
+        // Add some colored stars for visual interest
+        const coloredStarsGeometry = new THREE.BufferGeometry();
+        const coloredStarsPositions = new Float32Array(1000 * 3);
+        const coloredStarColors = new Float32Array(1000 * 3);
+
+        for (let i = 0; i < 1000; i++) {
+          const radius = 120 + Math.random() * 180;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(Math.random() * 2 - 1);
+
+          coloredStarsPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+          coloredStarsPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+          coloredStarsPositions[i * 3 + 2] = radius * Math.cos(phi);
+
+          // Add some color variation (blues, yellows, slight oranges)
+          const colorChoice = Math.random();
+          if (colorChoice < 0.3) {
+            // Blue stars
+            coloredStarColors[i * 3] = 0.7 + Math.random() * 0.3;     // R
+            coloredStarColors[i * 3 + 1] = 0.8 + Math.random() * 0.2; // G
+            coloredStarColors[i * 3 + 2] = 1.0;                          // B
+          } else if (colorChoice < 0.7) {
+            // Yellow-white stars
+            coloredStarColors[i * 3] = 1.0;                          // R
+            coloredStarColors[i * 3 + 1] = 0.9 + Math.random() * 0.1; // G
+            coloredStarColors[i * 3 + 2] = 0.7 + Math.random() * 0.3; // B
+          } else {
+            // Slightly orange stars
+            coloredStarColors[i * 3] = 1.0;                          // R
+            coloredStarColors[i * 3 + 1] = 0.8 + Math.random() * 0.2; // G
+            coloredStarColors[i * 3 + 2] = 0.6 + Math.random() * 0.2; // B
+          }
         }
-      },
-      undefined,
-      (error) => {
-        console.error('Failed to load Earth texture:', error);
-        // Keep the dark blue placeholder if texture fails to load
-      }
-    );
 
+        coloredStarsGeometry.setAttribute('position', new THREE.BufferAttribute(coloredStarsPositions, 3));
+        coloredStarsGeometry.setAttribute('color', new THREE.BufferAttribute(coloredStarColors, 3));
+        const coloredStarsMaterial = new THREE.PointsMaterial({
+          size: 1.5,
+          transparent: true,
+          opacity: 0.9,
+          vertexColors: true,
+          sizeAttenuation: true
+        });
+        const coloredStars = new THREE.Points(coloredStarsGeometry, coloredStarsMaterial);
 
-    // Create atmosphere with better visibility
-    const atmosphereGeometry = new THREE.SphereGeometry(2.05, 64, 32);
-    const atmosphereMaterial = new THREE.MeshBasicMaterial({
-      color: 0x87ceeb,
-      transparent: true,
-      opacity: 0.2, // Increased opacity
-      side: THREE.BackSide // Only render the inside
-    });
-    const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-    scene.add(atmosphere);
+        // Add all star layers to scene
+        scene.add(farStars);
+        scene.add(midStars);
+        scene.add(nearStars);
+        scene.add(coloredStars);
 
-    // Create enhanced starfield with multiple layers for better visual depth
-    const createStarLayer = (count: number, minRadius: number, maxRadius: number, size: number, opacity: number) => {
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(count * 3);
+        // Store references for animation
+        starLayersRef.current = { farStars, midStars, nearStars, coloredStars };
 
-      for (let i = 0; i < count; i++) {
-        const radius = minRadius + Math.random() * (maxRadius - minRadius);
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(Math.random() * 2 - 1);
+        // Relay markers group was already created above
 
-        positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-        positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-        positions[i * 3 + 2] = radius * Math.cos(phi);
-      }
-
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const material = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: size,
-        transparent: true,
-        opacity: opacity,
-        sizeAttenuation: true
-      });
-
-      return new THREE.Points(geometry, material);
-    };
-
-    // Create multiple star layers for depth
-    const farStars = createStarLayer(8000, 200, 400, 0.4, 0.6);  // Distant, small stars
-    const midStars = createStarLayer(4000, 150, 250, 0.8, 0.8); // Medium stars
-    const nearStars = createStarLayer(2000, 100, 180, 1.2, 1.0); // Closer, brighter stars
-
-    // Add some colored stars for visual interest
-    const coloredStarsGeometry = new THREE.BufferGeometry();
-    const coloredStarsPositions = new Float32Array(1000 * 3);
-    const coloredStarColors = new Float32Array(1000 * 3);
-
-    for (let i = 0; i < 1000; i++) {
-      const radius = 120 + Math.random() * 180;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
-
-      coloredStarsPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      coloredStarsPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      coloredStarsPositions[i * 3 + 2] = radius * Math.cos(phi);
-
-      // Add some color variation (blues, yellows, slight oranges)
-      const colorChoice = Math.random();
-      if (colorChoice < 0.3) {
-        // Blue stars
-        coloredStarColors[i * 3] = 0.7 + Math.random() * 0.3;     // R
-        coloredStarColors[i * 3 + 1] = 0.8 + Math.random() * 0.2; // G
-        coloredStarColors[i * 3 + 2] = 1.0;                          // B
-      } else if (colorChoice < 0.7) {
-        // Yellow-white stars
-        coloredStarColors[i * 3] = 1.0;                          // R
-        coloredStarColors[i * 3 + 1] = 0.9 + Math.random() * 0.1; // G
-        coloredStarColors[i * 3 + 2] = 0.7 + Math.random() * 0.3; // B
-      } else {
-        // Slightly orange stars
-        coloredStarColors[i * 3] = 1.0;                          // R
-        coloredStarColors[i * 3 + 1] = 0.8 + Math.random() * 0.2; // G
-        coloredStarColors[i * 3 + 2] = 0.6 + Math.random() * 0.2; // B
-      }
-    }
-
-    coloredStarsGeometry.setAttribute('position', new THREE.BufferAttribute(coloredStarsPositions, 3));
-    coloredStarsGeometry.setAttribute('color', new THREE.BufferAttribute(coloredStarColors, 3));
-    const coloredStarsMaterial = new THREE.PointsMaterial({
-      size: 1.5,
-      transparent: true,
-      opacity: 0.9,
-      vertexColors: true,
-      sizeAttenuation: true
-    });
-    const coloredStars = new THREE.Points(coloredStarsGeometry, coloredStarsMaterial);
-
-    // Add all star layers to scene
-    scene.add(farStars);
-    scene.add(midStars);
-    scene.add(nearStars);
-    scene.add(coloredStars);
-
-    // Store references for animation
-    starLayersRef.current = { farStars, midStars, nearStars, coloredStars };
-
-    // Relay markers group was already created above
-
-    // Raycaster for mouse picking
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    // Mouse controls
-    const setManualMode = () => {
-      isAutoMode.current = false;
-      lastInteraction.current = Date.now();
-
-      // Clear any existing timer
-      if (inactivityTimer.current) {
-        clearTimeout(inactivityTimer.current);
-      }
-
-      // Set timer to return to auto mode after 3 seconds
-      inactivityTimer.current = setTimeout(() => {
-        isAutoMode.current = true;
-      }, 3000);
-    };
-
-    // Function to immediately resume auto mode
-    const resumeAutoMode = () => {
-      console.log('resumeAutoMode called - setting isAutoMode to true');
-      isAutoMode.current = true;
-      console.log('isAutoMode.current is now:', isAutoMode.current);
-
-      // Clear any existing timer
-      if (inactivityTimer.current) {
-        clearTimeout(inactivityTimer.current);
-        inactivityTimer.current = null;
-      }
-
-      // Reset dragging state to ensure auto rotation works
-      isDragging.current = false;
-      isMouseDown.current = false;
-      console.log('Drag states reset - isDragging:', isDragging.current, 'isMouseDown:', isMouseDown.current);
-
-      // Update last interaction time
-      lastInteraction.current = Date.now();
-
-      // Force a small rotation to kickstart auto mode
-      if (earthRef.current) {
-        earthRef.current.rotation.y += 0.001;
-        console.log('Forced small rotation, new rotation:', earthRef.current.rotation.y);
-      }
-    };
-
-    const onMouseDown = (event: MouseEvent) => {
-      // If relay panel is open and we click on globe, close both panels
-      if (openRelayRef.current) {
-        // Check if we're clicking on a relay marker first
-        const rect = renderer.domElement.getBoundingClientRect();
+        // Raycaster for mouse picking
+        const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-        // Raycast to see if we clicked on a relay marker
-        raycaster.setFromCamera(mouse, camera);
-        let clickedOnRelayMarker = false;
+        // Mouse controls
+        const setManualMode = () => {
+          isAutoMode.current = false;
+          lastInteraction.current = Date.now();
 
-        if (relayMarkersRef.current) {
+          // Clear any existing timer
+          if (inactivityTimer.current) {
+            clearTimeout(inactivityTimer.current);
+          }
+
+          // Set timer to return to auto mode after 3 seconds
+          inactivityTimer.current = setTimeout(() => {
+            isAutoMode.current = true;
+          }, 3000);
+        };
+
+        // Function to immediately resume auto mode
+        const resumeAutoMode = () => {
+          console.log('resumeAutoMode called - setting isAutoMode to true');
+          isAutoMode.current = true;
+          console.log('isAutoMode.current is now:', isAutoMode.current);
+
+          // Clear any existing timer
+          if (inactivityTimer.current) {
+            clearTimeout(inactivityTimer.current);
+            inactivityTimer.current = null;
+          }
+
+          // Reset dragging state to ensure auto rotation works
+          isDragging.current = false;
+          isMouseDown.current = false;
+          console.log('Drag states reset - isDragging:', isDragging.current, 'isMouseDown:', isMouseDown.current);
+
+          // Update last interaction time
+          lastInteraction.current = Date.now();
+
+          // Force a small rotation to kickstart auto mode
+          if (earthRef.current) {
+            earthRef.current.rotation.y += 0.001;
+            console.log('Forced small rotation, new rotation:', earthRef.current.rotation.y);
+          }
+        };
+
+        const onMouseDown = (event: MouseEvent) => {
+          // If relay panel is open and we click on globe, close both panels
+          if (openRelayRef.current) {
+            // Check if we're clicking on a relay marker first
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Raycast to see if we clicked on a relay marker
+            raycaster.setFromCamera(mouse, camera);
+            let clickedOnRelayMarker = false;
+
+            if (relayMarkersRef.current) {
+              const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
+              clickedOnRelayMarker = intersects.length > 0;
+            }
+
+            // If we clicked on globe (not relay marker), close both panels
+            if (!clickedOnRelayMarker) {
+              closeRelayPanelInternal();
+              setOpenUserProfile(null);
+              return;
+            }
+          }
+
+          setManualMode();
+          isMouseDown.current = true;
+          previousMouse.current = { x: event.clientX, y: event.clientY };
+          dragStartPosition.current = { x: event.clientX, y: event.clientY };
+          isDragging.current = false; // Don't set to true immediately
+        };
+
+        const onMouseMove = (event: MouseEvent) => {
+          // Allow globe interaction even when relay panel is open
+          // This enables users to rotate the globe to close panels
+
+          // Handle dragging
+          if (isMouseDown.current) {
+            // Check if we've moved enough to start dragging
+            if (!isDragging.current) {
+              const dragDistance = Math.sqrt(
+                Math.pow(event.clientX - dragStartPosition.current.x, 2) +
+                Math.pow(event.clientY - dragStartPosition.current.y, 2)
+              );
+              if (dragDistance > DRAG_THRESHOLD) {
+                isDragging.current = true;
+              }
+            }
+
+            if (isDragging.current && earthRef.current) {
+              setManualMode();
+              const deltaX = event.clientX - previousMouse.current.x;
+              const deltaY = event.clientY - previousMouse.current.y;
+
+              earthRef.current.rotation.y += deltaX * 0.005;
+              earthRef.current.rotation.x += deltaY * 0.005;
+
+              // Clamp X rotation to prevent flipping
+              earthRef.current.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, earthRef.current.rotation.x));
+            }
+
+            previousMouse.current = { x: event.clientX, y: event.clientY };
+            return;
+          }
+
+          // Handle hover detection (only when not dragging)
+          if (!relayMarkersRef.current || !cameraRef.current || !rendererRef.current) return;
+
+          // Calculate mouse position in normalized device coordinates
+          const rect = rendererRef.current.domElement.getBoundingClientRect();
+          const mouse = new THREE.Vector2();
+          mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+          mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+          // Raycast to find intersected objects
+          const raycaster = new THREE.Raycaster();
+          raycaster.setFromCamera(mouse, cameraRef.current);
+
           const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
-          clickedOnRelayMarker = intersects.length > 0;
-        }
 
-        // If we clicked on globe (not relay marker), close both panels
-        if (!clickedOnRelayMarker) {
-          closeRelayPanelInternal();
-          setOpenUserProfile(null);
-          return;
-        }
-      }
+          if (intersects.length > 0) {
+            let relayData = null;
 
-      setManualMode();
-      isMouseDown.current = true;
-      previousMouse.current = { x: event.clientX, y: event.clientY };
-      dragStartPosition.current = { x: event.clientX, y: event.clientY };
-      isDragging.current = false; // Don't set to true immediately
-    };
+            // Check the intersected object and its parent for relay data
+            let currentObject = intersects[0].object;
+            while (currentObject && !relayData) {
+              relayData = (currentObject as any).relayData;
+              currentObject = currentObject.parent as THREE.Object3D;
+            }
 
-    const onMouseMove = (event: MouseEvent) => {
-      // Allow globe interaction even when relay panel is open
-      // This enables users to rotate the globe to close panels
+            if (relayData) {
+              setHoveredRelay(relayData);
+              setTooltipPosition({ x: event.clientX, y: event.clientY });
+            } else {
+              setHoveredRelay(null);
+              setTooltipPosition(null);
+            }
+          } else {
+            setHoveredRelay(null);
+            setTooltipPosition(null);
+          }
+        };
 
-      // Handle dragging
-      if (isMouseDown.current) {
-        // Check if we've moved enough to start dragging
-        if (!isDragging.current) {
+        const onMouseUp = () => {
+          isMouseDown.current = false;
+          isDragging.current = false;
+        };
+
+        const onMouseClick = (event: MouseEvent) => {
+          // If relay panel is open and clicking on globe, close both panels
+          if (openRelayRef.current) {
+            // Check if we're clicking on the globe (not on a relay marker)
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Raycast to see if we clicked on a relay marker
+            raycaster.setFromCamera(mouse, camera);
+            let clickedOnRelayMarker = false;
+
+            if (relayMarkersRef.current) {
+              const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
+              clickedOnRelayMarker = intersects.length > 0;
+            }
+
+            // If we clicked on globe (not relay marker), close both panels
+            if (!clickedOnRelayMarker) {
+              closeRelayPanelInternal();
+              setOpenUserProfile(null);
+              return;
+            }
+          }
+
+          setManualMode();
+
+          // Only handle click if we didn't drag
           const dragDistance = Math.sqrt(
             Math.pow(event.clientX - dragStartPosition.current.x, 2) +
             Math.pow(event.clientY - dragStartPosition.current.y, 2)
           );
+
           if (dragDistance > DRAG_THRESHOLD) {
-            isDragging.current = true;
-          }
-        }
-
-        if (isDragging.current && earthRef.current) {
-          setManualMode();
-          const deltaX = event.clientX - previousMouse.current.x;
-          const deltaY = event.clientY - previousMouse.current.y;
-
-          earthRef.current.rotation.y += deltaX * 0.005;
-          earthRef.current.rotation.x += deltaY * 0.005;
-
-          // Clamp X rotation to prevent flipping
-          earthRef.current.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, earthRef.current.rotation.x));
-        }
-
-        previousMouse.current = { x: event.clientX, y: event.clientY };
-        return;
-      }
-
-      // Handle hover detection (only when not dragging)
-      if (!relayMarkersRef.current || !cameraRef.current || !rendererRef.current) return;
-
-      // Calculate mouse position in normalized device coordinates
-      const rect = rendererRef.current.domElement.getBoundingClientRect();
-      const mouse = new THREE.Vector2();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      // Raycast to find intersected objects
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, cameraRef.current);
-
-      const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
-
-      if (intersects.length > 0) {
-        let relayData = null;
-
-        // Check the intersected object and its parent for relay data
-        let currentObject = intersects[0].object;
-        while (currentObject && !relayData) {
-          relayData = (currentObject as any).relayData;
-          currentObject = currentObject.parent as THREE.Object3D;
-        }
-
-        if (relayData) {
-          setHoveredRelay(relayData);
-          setTooltipPosition({ x: event.clientX, y: event.clientY });
-        } else {
-          setHoveredRelay(null);
-          setTooltipPosition(null);
-        }
-      } else {
-        setHoveredRelay(null);
-        setTooltipPosition(null);
-      }
-    };
-
-    const onMouseUp = () => {
-      isMouseDown.current = false;
-      isDragging.current = false;
-    };
-
-    const onMouseClick = (event: MouseEvent) => {
-      // If relay panel is open and clicking on globe, close both panels
-      if (openRelayRef.current) {
-        // Check if we're clicking on the globe (not on a relay marker)
-        const rect = renderer.domElement.getBoundingClientRect();
-        const mouse = new THREE.Vector2();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        // Raycast to see if we clicked on a relay marker
-        raycaster.setFromCamera(mouse, camera);
-        let clickedOnRelayMarker = false;
-
-        if (relayMarkersRef.current) {
-          const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
-          clickedOnRelayMarker = intersects.length > 0;
-        }
-
-        // If we clicked on globe (not relay marker), close both panels
-        if (!clickedOnRelayMarker) {
-          closeRelayPanelInternal();
-          setOpenUserProfile(null);
-          return;
-        }
-      }
-
-      setManualMode();
-
-      // Only handle click if we didn't drag
-      const dragDistance = Math.sqrt(
-        Math.pow(event.clientX - dragStartPosition.current.x, 2) +
-        Math.pow(event.clientY - dragStartPosition.current.y, 2)
-      );
-
-      if (dragDistance > DRAG_THRESHOLD) {
-        return; // This was a drag, not a click
-      }
-
-      // Calculate mouse position in normalized device coordinates
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      // Raycast to find intersected objects
-      raycaster.setFromCamera(mouse, camera);
-
-      if (relayMarkersRef.current) {
-        const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
-
-        if (intersects.length > 0) {
-          let relayData = null;
-
-          // Check the intersected object and its parent for relay data
-          let currentObject = intersects[0].object;
-          while (currentObject && !relayData) {
-            relayData = (currentObject as any).relayData;
-            currentObject = currentObject.parent as THREE.Object3D;
+            return; // This was a drag, not a click
           }
 
-          if (relayData) {
-            // Only open relay panel, don't set hover state (that's for mouse hover only)
-            openRelayPanelInternal(relayData, camera);
-          } else {
-            // Clicked on a line or other non-marker object - just clear selection
-            setHoveredRelay(null);
-            setTooltipPosition(null);
+          // Calculate mouse position in normalized device coordinates
+          const rect = renderer.domElement.getBoundingClientRect();
+          mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+          mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+          // Raycast to find intersected objects
+          raycaster.setFromCamera(mouse, camera);
+
+          if (relayMarkersRef.current) {
+            const intersects = raycaster.intersectObjects(relayMarkersRef.current.children, true);
+
+            if (intersects.length > 0) {
+              let relayData = null;
+
+              // Check the intersected object and its parent for relay data
+              let currentObject = intersects[0].object;
+              while (currentObject && !relayData) {
+                relayData = (currentObject as any).relayData;
+                currentObject = currentObject.parent as THREE.Object3D;
+              }
+
+              if (relayData) {
+                // Only open relay panel, don't set hover state (that's for mouse hover only)
+                openRelayPanelInternal(relayData, camera);
+              } else {
+                // Clicked on a line or other non-marker object - just clear selection
+                setHoveredRelay(null);
+                setTooltipPosition(null);
+              }
+            } else {
+              setHoveredRelay(null);
+              setTooltipPosition(null);
+            }
           }
-        } else {
-          setHoveredRelay(null);
-          setTooltipPosition(null);
-        }
-      }
-    };
+        };
 
-    const onWheel = (event: WheelEvent) => {
-      // Completely ignore wheel events when relay panel is open
-      if (!wheelEventsEnabled.current || openRelayRef.current) {
-        return; // Let events bubble through to relay panel
-      }
+        const onWheel = (event: WheelEvent) => {
+          // Completely ignore wheel events when relay panel is open
+          if (!wheelEventsEnabled.current || openRelayRef.current) {
+            return; // Let events bubble through to relay panel
+          }
 
-      // Check if the mouse is over a relay panel using multiple methods
-      const isOverRelayPanel = isMouseOverRelayPanel.current ||
-        (openRelayRef.current && event.target instanceof Element &&
-         event.target.closest('[data-relay-panel]')) ||
-        isMouseOverRelayPanelBounds(event.clientX, event.clientY);
+          // Check if the mouse is over a relay panel using multiple methods
+          const isOverRelayPanel = isMouseOverRelayPanel.current ||
+            (openRelayRef.current && event.target instanceof Element &&
+              event.target.closest('[data-relay-panel]')) ||
+            isMouseOverRelayPanelBounds(event.clientX, event.clientY);
 
-      if (isOverRelayPanel) {
-        return; // Don't handle wheel events over relay panel
-      }
+          if (isOverRelayPanel) {
+            return; // Don't handle wheel events over relay panel
+          }
 
-      // Check if the event target is the Three.js renderer or its parent
-      const isOverGlobe = event.target instanceof Element &&
-        (event.target === rendererRef.current?.domElement ||
-         event.target.closest('canvas'));
+          // Check if the event target is the Three.js renderer or its parent
+          const isOverGlobe = event.target instanceof Element &&
+            (event.target === rendererRef.current?.domElement ||
+              event.target.closest('canvas'));
 
-      if (!isOverGlobe) {
-        return; // Don't handle wheel events outside the globe
-      }
+          if (!isOverGlobe) {
+            return; // Don't handle wheel events outside the globe
+          }
 
-      // Only prevent default if we're going to handle the zoom
-      event.preventDefault();
-      const zoomSpeed = 0.2;
-      const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
-      camera.position.z = Math.max(3, Math.min(15, newZ)); // Allow closer zoom and farther out view
-    };
+          // Only prevent default if we're going to handle the zoom
+          event.preventDefault();
+          const zoomSpeed = 0.2;
+          const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
+          camera.position.z = Math.max(3, Math.min(15, newZ)); // Allow closer zoom and farther out view
+        };
 
-    // Store event handlers in refs and add listeners
-    mouseDownHandlerRef.current = onMouseDown;
-    mouseMoveHandlerRef.current = onMouseMove;
-    mouseUpHandlerRef.current = onMouseUp;
-    mouseClickHandlerRef.current = onMouseClick;
+        // Store event handlers in refs and add listeners
+        mouseDownHandlerRef.current = onMouseDown;
+        mouseMoveHandlerRef.current = onMouseMove;
+        mouseUpHandlerRef.current = onMouseUp;
+        mouseClickHandlerRef.current = onMouseClick;
 
-    renderer.domElement.addEventListener('mousedown', mouseDownHandlerRef.current);
-    renderer.domElement.addEventListener('mousemove', mouseMoveHandlerRef.current);
-    renderer.domElement.addEventListener('mouseup', mouseUpHandlerRef.current);
-    renderer.domElement.addEventListener('click', mouseClickHandlerRef.current);
+        renderer.domElement.addEventListener('mousedown', mouseDownHandlerRef.current);
+        renderer.domElement.addEventListener('mousemove', mouseMoveHandlerRef.current);
+        renderer.domElement.addEventListener('mouseup', mouseUpHandlerRef.current);
+        renderer.domElement.addEventListener('click', mouseClickHandlerRef.current);
 
-    // Store the wheel event handler and attach to document
-    wheelEventHandlerRef.current = onWheel;
-    document.addEventListener('wheel', wheelEventHandlerRef.current, { passive: false });
+        // Store the wheel event handler and attach to document
+        wheelEventHandlerRef.current = onWheel;
+        document.addEventListener('wheel', wheelEventHandlerRef.current, { passive: false });
 
-    // Animation loop
-    const animate = () => {
-      frameRef.current = requestAnimationFrame(animate);
+        // Animation loop
+        const animate = () => {
+          frameRef.current = requestAnimationFrame(animate);
 
-      // Auto rotation only when in auto mode AND NOT in autopilot mode
-      if (isAutoMode.current && !isDragging.current && !isAutoPilotModeActive.current && earthRef.current) {
-        earthRef.current.rotation.y += 0.002;
-      }
+          // Auto rotation only when in auto mode AND NOT in autopilot mode
+          if (isAutoMode.current && !isDragging.current && !isAutoPilotModeActive.current && earthRef.current) {
+            earthRef.current.rotation.y += 0.002;
+          }
 
-      // Subtle relay marker animation
-      if (relayMarkersRef.current) {
-        const time = Date.now() * 0.001; // Animation time
-        relayMarkersRef.current.children.forEach((child, index) => {
-          if (child instanceof THREE.Group) {
-            child.children.forEach((marker, subIndex) => {
-              if (subIndex === 0) {
-                // Main marker - very subtle scale animation
-                const scale = 1 + Math.sin(time * 2 + index * 0.5) * 0.1;
-                marker.scale.setScalar(scale);
-              } else if (subIndex === 1 && marker instanceof THREE.Mesh) {
-                // Outer ring - gentle opacity pulse
-                const material = marker.material as THREE.MeshBasicMaterial;
-                material.opacity = 0.6 + Math.sin(time * 1.5 + index * 0.3) * 0.3;
-              } else if (subIndex === 2 && marker instanceof THREE.Mesh) {
-                // Inner pulse point - bright white pulse
-                const material = marker.material as THREE.MeshBasicMaterial;
-                const pulse = Math.sin(time * 3 + index * 0.7) * 0.5 + 0.5;
-                material.opacity = 0.3 + pulse * 0.7;
-                const scale = 1 + pulse * 0.5;
-                marker.scale.setScalar(scale);
+          // Subtle relay marker animation
+          if (relayMarkersRef.current) {
+            const time = Date.now() * 0.001; // Animation time
+            relayMarkersRef.current.children.forEach((child, index) => {
+              if (child instanceof THREE.Group) {
+                child.children.forEach((marker, subIndex) => {
+                  if (subIndex === 0) {
+                    // Main marker - very subtle scale animation
+                    const scale = 1 + Math.sin(time * 2 + index * 0.5) * 0.1;
+                    marker.scale.setScalar(scale);
+                  } else if (subIndex === 1 && marker instanceof THREE.Mesh) {
+                    // Outer ring - gentle opacity pulse
+                    const material = marker.material as THREE.MeshBasicMaterial;
+                    material.opacity = 0.6 + Math.sin(time * 1.5 + index * 0.3) * 0.3;
+                  } else if (subIndex === 2 && marker instanceof THREE.Mesh) {
+                    // Inner pulse point - bright white pulse
+                    const material = marker.material as THREE.MeshBasicMaterial;
+                    const pulse = Math.sin(time * 3 + index * 0.7) * 0.5 + 0.5;
+                    material.opacity = 0.3 + pulse * 0.7;
+                    const scale = 1 + pulse * 0.5;
+                    marker.scale.setScalar(scale);
+                  }
+                });
               }
             });
           }
-        });
-      }
 
-      // Animate star system
-      if (starLayersRef.current) {
-        const time = Date.now() * 0.001; // Animation time
+          // Animate star system
+          if (starLayersRef.current) {
+            const time = Date.now() * 0.001; // Animation time
 
-        // Update shader uniforms for star animation
-        const { material } = starLayersRef.current;
-        if (material) {
-          material.uniforms.time.value = time;
-        }
-      }
+            // Update shader uniforms for star animation
+            const { material } = starLayersRef.current;
+            if (material) {
+              material.uniforms.time.value = time;
+            }
+          }
 
-      renderer.render(scene, camera);
-    };
+          renderer.render(scene, camera);
+        };
 
-    // Force an immediate render to avoid white screen
-    renderer.render(scene, camera);
+        // Force an immediate render to avoid white screen
+        renderer.render(scene, camera);
 
-    // Start animation loop
-    animate();
+        // Start animation loop
+        animate();
 
-    // Mark scene as ready for relay markers
-    setSceneReady(true);
+        // Mark scene as ready for relay markers
+        setSceneReady(true);
 
-    // Handle resize
-    const handleResize = () => {
-      if (!mountRef.current || !renderer || !camera) return;
+        // Handle resize
+        const handleResize = () => {
+          if (!mountRef.current || !renderer || !camera) return;
 
-      const width = mountRef.current.clientWidth;
-      const height = mountRef.current.clientHeight;
+          const width = mountRef.current.clientWidth;
+          const height = mountRef.current.clientHeight;
 
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
 
-      // Force render after resize
-      renderer.render(scene, camera);
-    };
+          // Force render after resize
+          renderer.render(scene, camera);
+        };
 
-    resizeHandlerRef.current = handleResize;
-    window.addEventListener('resize', resizeHandlerRef.current);
+        resizeHandlerRef.current = handleResize;
+        window.addEventListener('resize', resizeHandlerRef.current);
 
-    } catch (error) {
-      console.error('ThreeEarth initialization failed:', error);
+      } catch (error) {
+        console.error('ThreeEarth initialization failed:', error);
 
-      // Create a simple fallback display
-      if (mountRef.current) {
-        mountRef.current.innerHTML = `
+        // Create a simple fallback display
+        if (mountRef.current) {
+          mountRef.current.innerHTML = `
           <div style="
             display: flex;
             align-items: center;
@@ -855,8 +856,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
             </div>
           </div>
         `;
+        }
       }
-    }
     }, 10); // Small delay to ensure DOM is ready
 
     return () => {
@@ -927,6 +928,27 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   const [eventsLoaded, setEventsLoaded] = useState(false);
   const [currentRelayUrl, setCurrentRelayUrl] = useState<string | null>(null);
 
+  // Smooth scroll state for autopilot
+  const smoothScrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Callback for events change - memoized to prevent render loops
+  const handleEventsChange = useCallback((events: NostrEvent[] | null, loaded: boolean) => {
+    // Only update state if values have actually changed to prevent render loops
+    setNotes(prevNotes => {
+      // Check if arrays are different (by length and reference)
+      if (!events && prevNotes.length === 0) return prevNotes;
+      if (events && events.length === prevNotes.length && events === prevNotes) return prevNotes;
+      console.log(`📋 ThreeEarth: onEventsChange - updating notes to ${events?.length || 0} events`);
+      return events || [];
+    });
+
+    setEventsLoaded(prevLoaded => {
+      if (prevLoaded === loaded) return prevLoaded;
+      console.log(`📋 ThreeEarth: onEventsChange - updating eventsLoaded to ${loaded}`);
+      return loaded;
+    });
+  }, []);
+
   // Update autopilot mode state when context changes
   useEffect(() => {
     isAutoPilotModeActive.current = isAutoPilotMode;
@@ -945,86 +967,166 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       throw new Error(`Relay not found: ${relayUrl}`);
     }
 
-    console.log(`🌍 Rotating earth to relay: ${relayUrl} at ${relay.lat}, ${relay.lng}`);
+    console.log(`🌍 Moving camera to relay: ${relayUrl} at ${relay.lat}, ${relay.lng}`);
 
     return new Promise<void>((resolve) => {
-      // Convert relay coordinates to 3D position on unit sphere
+      // Convert relay coordinates to 3D position in Earth's local space
+      // Use NEGATIVE longitude to match how markers are positioned
       const latRad = relay.lat * (Math.PI / 180);
-      const lngRad = relay.lng * (Math.PI / 180);
+      const lngRad = -relay.lng * (Math.PI / 180); // Invert longitude for correct direction
 
-      // Calculate 3D position of relay on earth surface
+      // Calculate 3D position of relay on earth surface (in Earth's local coordinates)
       const earthRadius = 2.05;
-      const relayX = earthRadius * Math.cos(latRad) * Math.cos(lngRad);
-      const relayY = earthRadius * Math.sin(latRad);
-      const relayZ = earthRadius * Math.cos(latRad) * Math.sin(lngRad);
+      const relayLocalX = earthRadius * Math.cos(latRad) * Math.cos(lngRad);
+      const relayLocalY = earthRadius * Math.sin(latRad);
+      const relayLocalZ = earthRadius * Math.cos(latRad) * Math.sin(lngRad);
 
-      // Calculate target earth rotations to bring relay to front
-      // We want the relay to be at the front-right of the earth when viewed from camera
-      const targetRotationY = -lngRad; // Simple longitude rotation
-      const targetRotationX = latRad;   // Simple latitude rotation (positive for correct direction)
+      // Transform relay position from Earth's local space to world space
+      // This accounts for the Earth's current rotation!
+      const relayWorldPos = new THREE.Vector3(relayLocalX, relayLocalY, relayLocalZ);
+      relayWorldPos.applyMatrix4(earthRef.current.matrixWorld);
 
-      // Calculate camera position to view the relay from optimal angle
-      // Camera should be positioned to see the relay clearly
-      const cameraDistance = 8;
-      const cameraAngle = Math.PI / 8; // 22.5 degrees elevation
+      console.log(`🎯 Relay local position: X=${relayLocalX.toFixed(2)}, Y=${relayLocalY.toFixed(2)}, Z=${relayLocalZ.toFixed(2)}`);
+      console.log(`🎯 Relay world position: X=${relayWorldPos.x.toFixed(2)}, Y=${relayWorldPos.y.toFixed(2)}, Z=${relayWorldPos.z.toFixed(2)}`);
 
-      // Calculate camera position based on relay longitude (opposite side of earth)
-      const targetCameraX = Math.sin(lngRad + Math.PI) * cameraDistance * Math.cos(cameraAngle);
-      const targetCameraY = cameraDistance * Math.sin(cameraAngle);
-      const targetCameraZ = Math.cos(lngRad + Math.PI) * cameraDistance * Math.cos(cameraAngle);
+      // Position camera directly above the relay (same direction, further out)
+      // Use current camera distance to maintain zoom level
+      const currentCameraDistance = Math.sqrt(
+        cameraRef.current.position.x ** 2 +
+        cameraRef.current.position.y ** 2 +
+        cameraRef.current.position.z ** 2
+      );
 
-      console.log(`🎯 Relay 3D position: X=${relayX.toFixed(2)}, Y=${relayY.toFixed(2)}, Z=${relayZ.toFixed(2)}`);
+      // Normalize relay world position to get direction, then multiply by camera distance
+      const relayWorldDistance = Math.sqrt(
+        relayWorldPos.x ** 2 +
+        relayWorldPos.y ** 2 +
+        relayWorldPos.z ** 2
+      );
+      const targetCameraX = (relayWorldPos.x / relayWorldDistance) * currentCameraDistance;
+      const targetCameraY = (relayWorldPos.y / relayWorldDistance) * currentCameraDistance;
+      const targetCameraZ = (relayWorldPos.z / relayWorldDistance) * currentCameraDistance;
 
-      console.log(`🎯 Target rotations: Y=${targetRotationY.toFixed(2)}, X=${targetRotationX.toFixed(2)}`);
-      console.log(`🎯 Target camera: X=${targetCameraX.toFixed(2)}, Y=${targetCameraY.toFixed(2)}, Z=${targetCameraZ.toFixed(2)}`);
+      console.log(`🎯 Current camera distance: ${currentCameraDistance.toFixed(2)}`);
+      console.log(`🎯 Target camera position: X=${targetCameraX.toFixed(2)}, Y=${targetCameraY.toFixed(2)}, Z=${targetCameraZ.toFixed(2)}`);
 
-      // Current state
-      const startRotationY = earthRef.current.rotation.y;
-      const startRotationX = earthRef.current.rotation.x;
+      // Current camera state
       const startCameraX = cameraRef.current.position.x;
       const startCameraY = cameraRef.current.position.y;
       const startCameraZ = cameraRef.current.position.z;
 
-      const animationDuration = 750; // 750ms as specified
+      const animationDuration = 1000; // 1000ms as specified
       const startTime = Date.now();
 
-      const animateRotation = () => {
+      const animateCamera = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / animationDuration, 1);
 
         // Easing function for smooth animation
         const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-        if (earthRef.current && cameraRef.current) {
-          // Rotate earth to bring relay to front
-          earthRef.current.rotation.y = startRotationY + (targetRotationY - startRotationY) * easeProgress;
-          earthRef.current.rotation.x = startRotationX + (targetRotationX - startRotationX) * easeProgress;
-
-          // Move camera to viewing position
+        if (cameraRef.current) {
+          // Move camera to position above relay
           cameraRef.current.position.x = startCameraX + (targetCameraX - startCameraX) * easeProgress;
           cameraRef.current.position.y = startCameraY + (targetCameraY - startCameraY) * easeProgress;
           cameraRef.current.position.z = startCameraZ + (targetCameraZ - startCameraZ) * easeProgress;
 
-          // Always make camera look at earth center
-          cameraRef.current.lookAt(0, 0, 0);
+          // Point camera at the relay's world position on Earth's surface
+          cameraRef.current.lookAt(relayWorldPos);
 
           // Debug logging
           if (progress === 1) {
-            console.log(`✅ Final earth rotation: Y=${earthRef.current.rotation.y.toFixed(2)}, X=${earthRef.current.rotation.x.toFixed(2)}`);
             console.log(`✅ Final camera position: X=${cameraRef.current.position.x.toFixed(2)}, Y=${cameraRef.current.position.y.toFixed(2)}, Z=${cameraRef.current.position.z.toFixed(2)}`);
           }
         }
 
         if (progress < 1) {
-          requestAnimationFrame(animateRotation);
+          requestAnimationFrame(animateCamera);
         } else {
           resolve();
         }
       };
 
-      animateRotation();
+      animateCamera();
     });
   }, [relayLocations]);
+
+  const startSmoothScroll = useCallback(() => {
+    // Stop any existing scroll first
+    if (smoothScrollIntervalRef.current) {
+      clearInterval(smoothScrollIntervalRef.current);
+      smoothScrollIntervalRef.current = null;
+    }
+
+    // Retry mechanism to wait for panel and ref to be properly initialized
+    const initScroll = (attempt = 1) => {
+      console.log(`📜 [Attempt ${attempt}] Trying to start smooth scroll...`);
+      console.log('📜 relayPanelRef.current:', relayPanelRef.current);
+      console.log('📜 scrollableRef available:', relayPanelRef.current?.scrollableRef);
+      console.log('📜 scrollableRef.current:', relayPanelRef.current?.scrollableRef?.current);
+
+      if (!relayPanelRef.current?.scrollableRef?.current) {
+        console.warn(`⚠️ [Attempt ${attempt}] Scrollable ref not available yet`);
+
+        // Retry up to 5 times with increasing delays
+        if (attempt < 5) {
+          setTimeout(() => initScroll(attempt + 1), 200 * attempt);
+        } else {
+          console.error('❌ Failed to initialize smooth scroll after 5 attempts');
+        }
+        return;
+      }
+
+      const scrollableElement = relayPanelRef.current.scrollableRef.current;
+
+      console.log('✅ Scrollable element found!');
+      console.log('📜 scrollHeight:', scrollableElement.scrollHeight);
+      console.log('📜 clientHeight:', scrollableElement.clientHeight);
+      console.log('📜 Can scroll:', scrollableElement.scrollHeight > scrollableElement.clientHeight);
+
+      // Reset scroll to top before starting
+      scrollableElement.scrollTop = 0;
+      console.log('📜 Starting smooth scroll from top');
+
+      // Scroll down by 2 pixels every 50ms (40 pixels per second)
+      smoothScrollIntervalRef.current = setInterval(() => {
+        if (scrollableElement) {
+          const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
+          const currentScroll = scrollableElement.scrollTop;
+
+          // If we've reached the bottom, stop scrolling
+          if (currentScroll >= maxScroll - 1) {
+            console.log('📜 Reached bottom of scroll area');
+            if (smoothScrollIntervalRef.current) {
+              clearInterval(smoothScrollIntervalRef.current);
+              smoothScrollIntervalRef.current = null;
+            }
+            return;
+          }
+
+          scrollableElement.scrollTop += 2;
+
+          // Log every 100px to verify scrolling is happening
+          if (Math.floor(currentScroll) % 100 === 0) {
+            console.log(`📜 Scrolling... ${currentScroll.toFixed(0)}/${maxScroll.toFixed(0)}px`);
+          }
+        }
+      }, 50);
+
+      console.log('📜 Scroll interval started!');
+    };
+
+    // Start after initial delay
+    setTimeout(() => initScroll(1), 300);
+  }, []);
+
+  const stopSmoothScroll = useCallback(() => {
+    if (smoothScrollIntervalRef.current) {
+      clearInterval(smoothScrollIntervalRef.current);
+      smoothScrollIntervalRef.current = null;
+      console.log('📜 Stopped smooth scroll');
+    }
+  }, []);
 
   const openRelayPanelForAutoPilot = useCallback(async (relayUrl: string) => {
     if (!relayLocations || !cameraRef.current) {
@@ -1037,6 +1139,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     }
 
     console.log(`📂 Opening relay panel for: ${relayUrl}`);
+
+    // Stop any smooth scrolling from previous relay
+    stopSmoothScroll();
 
     // Reset events state before opening new panel
     setEventsLoaded(false);
@@ -1057,7 +1162,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     createConnectionLine(relay);
 
     console.log(`✅ Relay panel opened for: ${relayUrl}`);
-  }, [relayLocations, openRelay]);
+  }, [relayLocations, openRelay, stopSmoothScroll]);
 
   const closeRelayPanel = useCallback(async () => {
     console.log('📂 Closing relay panel');
@@ -1067,25 +1172,6 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     setCurrentRelayUrl(null);
 
     // Don't automatically stop autopilot when panel closes - let the autopilot control this
-  }, []);
-
-  const scrollToEvent = useCallback(async (eventIndex: number) => {
-    if (!relayPanelRef.current?.scrollableRef?.current) {
-      console.warn('Scrollable ref not available');
-      return;
-    }
-
-    const scrollableElement = relayPanelRef.current.scrollableRef.current;
-    const eventElements = scrollableElement.querySelectorAll('[data-note-card]');
-
-    if (eventIndex < eventElements.length) {
-      const eventElement = eventElements[eventIndex] as HTMLElement;
-      eventElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
-      console.log(`📜 Scrolled to event ${eventIndex}`);
-    }
   }, []);
 
   const getCurrentEvents = useCallback(() => {
@@ -1127,7 +1213,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       rotateEarthToRelay,
       openRelayPanel: openRelayPanelForAutoPilot,
       closeRelayPanel,
-      scrollToEvent,
+      startSmoothScroll,
+      stopSmoothScroll,
       getCurrentEvents,
       isPanelOpen,
       areEventsLoaded,
@@ -1139,13 +1226,23 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     rotateEarthToRelay,
     openRelayPanel: openRelayPanelForAutoPilot,
     closeRelayPanel,
-    scrollToEvent,
+    startSmoothScroll,
+    stopSmoothScroll,
     getCurrentEvents,
     isPanelOpen,
     areEventsLoaded,
   };
 
   useAutoPilot(autoPilotControls);
+
+  // Cleanup smooth scroll on unmount
+  useEffect(() => {
+    return () => {
+      if (smoothScrollIntervalRef.current) {
+        clearInterval(smoothScrollIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Create connection line from relay to panel
   const createConnectionLine = useCallback((relay: RelayLocation) => {
@@ -1212,7 +1309,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     }
   }, []);
 
-  
+
 
 
 
@@ -1408,9 +1505,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     const hue2rgb = (p: number, q: number, t: number): number => {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
       return p;
     };
 
@@ -1421,9 +1518,9 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     } else {
       const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1/3);
+      r = hue2rgb(p, q, h + 1 / 3);
       g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
+      b = hue2rgb(p, q, h - 1 / 3);
     }
 
     const toHex = (x: number): string => {
@@ -1439,10 +1536,10 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
 
@@ -1651,19 +1748,8 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
             onClose={closeRelayPanelInternal}
             onMouseEnter={() => isMouseOverRelayPanel.current = true}
             onMouseLeave={() => isMouseOverRelayPanel.current = false}
-            onMouseDown={() => {}}
-            onEventsChange={(events, loaded) => {
-              console.log(`📋 ThreeEarth: onEventsChange called - events: ${events?.length || 0}, loaded: ${loaded}, relay: ${openRelay?.url}`);
-              if (events) {
-                setNotes(events);
-                console.log(`📋 ThreeEarth: Set notes to ${events.length} events`);
-              } else {
-                setNotes([]);
-                console.log(`📋 ThreeEarth: Cleared notes (events was null)`);
-              }
-              setEventsLoaded(loaded);
-              console.log(`📋 ThreeEarth: Set eventsLoaded to ${loaded}`);
-            }}
+            onMouseDown={() => { }}
+            onEventsChange={handleEventsChange}
             forwardScrollableRef={relayPanelRef}
           />
         </div>
@@ -1677,10 +1763,10 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
             side={openUserProfile.side}
             relayUrl={openUserProfile.relayUrl}
             onClose={() => setOpenUserProfile(null)}
-            onMouseEnter={() => {}}
-            onMouseLeave={() => {}}
-            onMouseDown={() => {}}
-            onEventsChange={() => {}}
+            onMouseEnter={() => { }}
+            onMouseLeave={() => { }}
+            onMouseDown={() => { }}
+            onEventsChange={() => { }}
             forwardScrollableRef={null}
           />
         </div>

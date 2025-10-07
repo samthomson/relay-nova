@@ -102,7 +102,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
     const relayUrl = relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`;
     const hasRelay = userRelays?.some(r => r.url === relayUrl) || false;
 
-    const { isAutoPilotMode, stopAutoPilot } = useAutoPilotContext();
+    const { isAutoPilotMode, stopAutoPilot, relayDisplayProgress } = useAutoPilotContext();
 
     const handleNextRelay = () => {
       if (isAutoPilotMode) {
@@ -166,6 +166,16 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
           onMouseDown={onMouseDown}
           data-relay-panel="true"
         >
+          {/* Autopilot Progress Bar - at the very top, inside rounded corners */}
+          {isAutoPilotMode && (
+            <div className="h-[2px] bg-white/10 relative overflow-hidden rounded-t-2xl">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 via-purple-600 to-orange-500 transition-all duration-100 ease-linear"
+                style={{ width: `${relayDisplayProgress}%` }}
+              />
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex-shrink-0 p-4 border-b border-white/20">
             <div className="flex items-center justify-between mb-3">
