@@ -736,9 +736,27 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
 
           // Only prevent default if we're going to handle the zoom
           event.preventDefault();
+
+          // Calculate current distance from origin
+          const currentDistance = Math.sqrt(
+            camera.position.x ** 2 +
+            camera.position.y ** 2 +
+            camera.position.z ** 2
+          );
+
+          // Calculate zoom change
           const zoomSpeed = 0.2;
-          const newZ = camera.position.z + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
-          camera.position.z = Math.max(3, Math.min(15, newZ)); // Allow closer zoom and farther out view
+          const newDistance = currentDistance + (event.deltaY > 0 ? zoomSpeed : -zoomSpeed);
+          const clampedDistance = Math.max(3, Math.min(15, newDistance));
+
+          // Scale camera position to maintain direction but change distance
+          const scale = clampedDistance / currentDistance;
+          camera.position.x *= scale;
+          camera.position.y *= scale;
+          camera.position.z *= scale;
+
+          // Keep camera looking at origin
+          camera.lookAt(0, 0, 0);
         };
 
         // Store event handlers in refs and add listeners
@@ -935,11 +953,19 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   const handleEventsChange = useCallback((events: NostrEvent[] | null, loaded: boolean) => {
     // Only update state if values have actually changed to prevent render loops
     setNotes(prevNotes => {
-      // Check if arrays are different (by length and reference)
-      if (!events && prevNotes.length === 0) return prevNotes;
-      if (events && events.length === prevNotes.length && events === prevNotes) return prevNotes;
-      console.log(`📋 ThreeEarth: onEventsChange - updating notes to ${events?.length || 0} events`);
-      return events || [];
+      // Both empty - no change needed
+      if ((!events || events.length === 0) && prevNotes.length === 0) {
+        return prevNotes;
+      }
+
+      // Same reference and same length - no change needed
+      if (events && events === prevNotes) {
+        return prevNotes;
+      }
+
+      // Different content - update
+      console.log(`📋 ThreeEarth: onEventsChange - updating notes from ${prevNotes.length} to ${events?.length || 0} events`);
+      return events || prevNotes; // Keep prevNotes if events is null instead of creating new []
     });
 
     setEventsLoaded(prevLoaded => {
@@ -989,25 +1015,21 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       console.log(`🎯 Relay local position: X=${relayLocalX.toFixed(2)}, Y=${relayLocalY.toFixed(2)}, Z=${relayLocalZ.toFixed(2)}`);
       console.log(`🎯 Relay world position: X=${relayWorldPos.x.toFixed(2)}, Y=${relayWorldPos.y.toFixed(2)}, Z=${relayWorldPos.z.toFixed(2)}`);
 
-      // Position camera directly above the relay (same direction, further out)
-      // Use current camera distance to maintain zoom level
-      const currentCameraDistance = Math.sqrt(
-        cameraRef.current.position.x ** 2 +
-        cameraRef.current.position.y ** 2 +
-        cameraRef.current.position.z ** 2
-      );
+      // Position camera directly above the relay at a fixed comfortable distance
+      // Use fixed distance for autopilot to ensure consistent viewing experience
+      const autopilotCameraDistance = 6.5; // Fixed comfortable viewing distance
 
-      // Normalize relay world position to get direction, then multiply by camera distance
+      // Normalize relay world position to get direction, then multiply by fixed distance
       const relayWorldDistance = Math.sqrt(
         relayWorldPos.x ** 2 +
         relayWorldPos.y ** 2 +
         relayWorldPos.z ** 2
       );
-      const targetCameraX = (relayWorldPos.x / relayWorldDistance) * currentCameraDistance;
-      const targetCameraY = (relayWorldPos.y / relayWorldDistance) * currentCameraDistance;
-      const targetCameraZ = (relayWorldPos.z / relayWorldDistance) * currentCameraDistance;
+      const targetCameraX = (relayWorldPos.x / relayWorldDistance) * autopilotCameraDistance;
+      const targetCameraY = (relayWorldPos.y / relayWorldDistance) * autopilotCameraDistance;
+      const targetCameraZ = (relayWorldPos.z / relayWorldDistance) * autopilotCameraDistance;
 
-      console.log(`🎯 Current camera distance: ${currentCameraDistance.toFixed(2)}`);
+      console.log(`🎯 Autopilot camera distance: ${autopilotCameraDistance.toFixed(2)}`);
       console.log(`🎯 Target camera position: X=${targetCameraX.toFixed(2)}, Y=${targetCameraY.toFixed(2)}, Z=${targetCameraZ.toFixed(2)}`);
 
       // Current camera state
@@ -1052,8 +1074,11 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   }, [relayLocations]);
 
   const startSmoothScroll = useCallback(() => {
+    console.log('🎬 startSmoothScroll called!');
+
     // Stop any existing scroll first
     if (smoothScrollIntervalRef.current) {
+      console.log('🛑 Clearing existing scroll interval');
       clearInterval(smoothScrollIntervalRef.current);
       smoothScrollIntervalRef.current = null;
     }
