@@ -145,7 +145,7 @@ export const RelayNotesPanel = forwardRef<HTMLDivElement, RelayNotesPanelProps>(
 
     // Panel classes function - handles both relay and user panel positioning
     const getPanelClasses = (isUserPanel: boolean = false) => {
-      const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[99999] pointer-events-auto flex flex-col';
+      const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[99999] pointer-events-auto flex flex-col overflow-hidden';
 
       if (side === 'bottom') {
         return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2`;
