@@ -1,11 +1,12 @@
 import { useState, useEffect, forwardRef, useRef } from 'react';
-import { useNostr } from '@nostrify/react';
 import { Button } from '@/components/ui/button';
 import { X, MessageCircle, Loader2, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { NoteContent } from './NoteContent';
 import { nip19 } from 'nostr-tools';
+import { useUserNotes, useUserProfile } from '@/hooks/useUserCombinedQuery';
+import { useAuthorProfile } from '@/hooks/useAuthorProfile';
 
 interface UserProfilePanelProps {
   pubkey: string;
@@ -22,273 +23,206 @@ interface UserProfilePanelProps {
 
 export const UserProfilePanel = forwardRef<HTMLDivElement, UserProfilePanelProps>(
   ({ pubkey, side, relayUrl, onClose, onMouseEnter, onMouseLeave, onMouseDown, onWheel, onEventsChange, forwardScrollableRef }, ref) => {
-  const { nostr } = useNostr();
-  const [notes, setNotes] = useState<NostrEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [author, setAuthor] = useState<any>(null);
-  const scrollableRef = useRef<HTMLDivElement>(null);
 
-  const fetchAuthor = async () => {
-    if (!nostr) return;
+    // Use the new routing hooks for user-combined queries
+    const { data: notes = [], isLoading: notesLoading, error: notesError } = useUserNotes(pubkey, {
+      limit: 20,
+      enabled: !!pubkey,
+      // include currently open relay (if any) to boost hit rate for this user's content
+      extraRelays: relayUrl ? [relayUrl] : [],
+    });
 
-    try {
-      // Try to fetch metadata from multiple relays for better chance of finding profile info
-      const relaysToTry = relayUrl 
-        ? [relayUrl, 'wss://relay.damus.io', 'wss://relay.nostr.band']
-        : ['wss://relay.damus.io', 'wss://relay.nostr.band'];
+    const { data: profileData, isLoading: profileLoading } = useUserProfile(pubkey, {
+      enabled: !!pubkey,
+      extraRelays: relayUrl ? [relayUrl] : [],
+    });
 
-      console.log('🔍 Fetching author metadata for:', pubkey, 'from relays:', relaysToTry);
-      
-      const relayGroup = nostr.group(relaysToTry);
+    const scrollableRef = useRef<HTMLDivElement>(null);
 
-      const authors = await relayGroup.query([
-        {
-          kinds: [0],
-          authors: [pubkey]
-        }
-      ], {
-        signal: AbortSignal.timeout(3000)
-      });
+    // Notify parent about events changes
+    useEffect(() => {
+      if (onEventsChange) {
+        onEventsChange(notes, !notesLoading);
+      }
+    }, [notes, notesLoading, onEventsChange]);
 
-      if (authors.length > 0) {
-        // Use the most recent metadata
-        const sortedAuthors = authors.sort((a, b) => b.created_at - a.created_at);
-        const metadata = sortedAuthors[0];
-        console.log('✅ Found author metadata:', metadata);
-        setAuthor(metadata);
+    // Expose scrollable ref to parent
+    useEffect(() => {
+      if (forwardScrollableRef) {
+        forwardScrollableRef.current = { scrollableRef };
+      }
+    }, [forwardScrollableRef]);
+
+    // Panel classes function - handles both relay and user panel positioning
+    const getPanelClasses = () => {
+      const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[99999] pointer-events-auto flex flex-col';
+
+      if (side === 'bottom') {
+        return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2`;
       } else {
-        console.log('⚠️ No metadata found for author:', pubkey);
+        // User panels are positioned right next to relay panels
+        return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] h-[70vh] rounded-2xl border-2 ${side === 'right' ? 'left-[404px]' : 'right-[404px]'
+          }`;
       }
-    } catch (err) {
-      console.error('❌ Failed to fetch author metadata:', err);
-    }
-  };
+    };
 
-  const fetchNotes = async () => {
-    if (!nostr) return;
+    const getDisplayName = () => {
+      if (!profileData?.metadata) return `@${pubkey.slice(0, 8)}`;
 
-    const targetRelay = relayUrl || 'wss://relay.damus.io';
-    console.log('🔍 Fetching notes from author:', pubkey, 'from relay:', targetRelay);
-    setIsLoading(true);
-    setError(null);
-    setNotes([]);
+      const metadata = profileData.metadata;
+      return metadata.name || metadata.display_name || `@${pubkey.slice(0, 8)}`;
+    };
 
-    try {
-      // Connect to the specific relay (or fallback to relay.damus.io)
-      const relayConnection = nostr.relay(targetRelay);
+    const getPicture = () => {
+      if (!profileData?.metadata) return null;
 
-      // Query for latest 20 notes by this author (kind:1 events)
-      const events = await relayConnection.query([
-        {
-          kinds: [1],
-          authors: [pubkey],
-          limit: 20,
-        }
-      ], {
-        signal: AbortSignal.timeout(5000)
-      });
+      const metadata = profileData.metadata;
+      return metadata.picture;
+    };
 
-      // Sort by created_at (newest first)
-      const sortedEvents = events.sort((a, b) => b.created_at - a.created_at);
-      setNotes(sortedEvents);
-      console.log(`✅ Successfully loaded ${sortedEvents.length} notes from author ${pubkey} from ${targetRelay}`);
-
-      // Notify parent that events are loaded
-      if (onEventsChange) {
-        onEventsChange(sortedEvents, true);
-      }
-    } catch (err) {
-      console.error(`❌ Failed to fetch notes from author ${pubkey} on ${targetRelay}:`, err);
-      setError('Failed to fetch notes from this author');
-
-      // Notify parent that events failed to load
-      if (onEventsChange) {
-        onEventsChange(null, false);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (pubkey) {
-      fetchAuthor();
-      fetchNotes();
-    }
-  }, [pubkey, relayUrl]);
-
-  // Expose scrollable ref to parent
-  useEffect(() => {
-    if (forwardScrollableRef) {
-      forwardScrollableRef.current = { scrollableRef };
-    }
-  }, [forwardScrollableRef]);
-
-  // Panel classes function - handles both relay and user panel positioning
-  const getPanelClasses = () => {
-    const baseClasses = 'absolute bg-black/95 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 z-[99999] pointer-events-auto flex flex-col';
-
-    if (side === 'bottom') {
-      return `${baseClasses} bottom-8 left-4 right-4 h-[70vh] rounded-2xl border-2`;
-    } else {
-      // User panels are positioned right next to relay panels
-      return `${baseClasses} top-24 bottom-8 w-[380px] max-w-[35vw] h-[70vh] rounded-2xl border-2 ${
-        side === 'right' ? 'left-[404px]' : 'right-[404px]'
-      }`;
-    }
-  };
-
-  const getDisplayName = () => {
-    if (!author) return `@${pubkey.slice(0, 8)}`;
-
-    const metadata = author.content ? JSON.parse(author.content) : {};
-    return metadata.name || metadata.display_name || `@${pubkey.slice(0, 8)}`;
-  };
-
-  const getPicture = () => {
-    if (!author) return null;
-
-    const metadata = author.content ? JSON.parse(author.content) : {};
-    return metadata.picture;
-  };
-
-  return (
-    <>
-      <div
-        ref={ref}
-        className={getPanelClasses()}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        onMouseDown={onMouseDown}
-        data-user-panel="true"
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-white/20">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="flex-shrink-0">
-                {getPicture() ? (
-                  <img
-                    src={getPicture()}
-                    alt={getDisplayName()}
-                    className="w-10 h-10 rounded-full object-cover border border-white/20"
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-base font-semibold text-white">
-                    {getDisplayName().charAt(0).toUpperCase()}
-                  </div>
-                )}
+    return (
+      <>
+        <div
+          ref={ref}
+          className={getPanelClasses()}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          onMouseDown={onMouseDown}
+          data-user-panel="true"
+        >
+          {/* Header */}
+          <div className="flex-shrink-0 p-4 border-b border-white/20">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex-shrink-0">
+                  {getPicture() ? (
+                    <img
+                      src={getPicture()}
+                      alt={getDisplayName()}
+                      className="w-10 h-10 rounded-full object-cover border border-white/20"
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-base font-semibold text-white">
+                      {getDisplayName().charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-lg truncate">
+                    {getDisplayName()}
+                  </h3>
+                  <p className="text-xs text-gray-400 truncate font-mono">
+                    {nip19.npubEncode(pubkey)}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-lg truncate">
-                  {getDisplayName()}
-                </h3>
-                <p className="text-xs text-gray-400 truncate font-mono">
-                  {nip19.npubEncode(pubkey)}
-                </p>
-              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-white/70 hover:text-white hover:bg-white/10 flex-shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-white/70 hover:text-white hover:bg-white/10 flex-shrink-0"
+            {/* Link to nostr.band profile */}
+            <a
+              href={`https://nostr.band/${nip19.npubEncode(pubkey)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
             >
-              <X className="w-4 h-4" />
-            </Button>
+              <ExternalLink className="w-3 h-3" />
+              View on nostr.band
+            </a>
           </div>
 
-          {/* Link to nostr.band profile */}
-          <a
-            href={`https://nostr.band/${nip19.npubEncode(pubkey)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-            View on nostr.band
-          </a>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {/* Scrollable content area */}
-          <div
-            ref={scrollableRef}
-            className="flex-1 overflow-y-auto"
-            data-scrollable="true"
-            style={{
-              overflowY: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              scrollBehavior: 'smooth'
-            }}
-            onWheel={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full p-4">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-                  <p className="text-sm text-gray-400">Fetching notes...</p>
+          {/* Content */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Scrollable content area */}
+            <div
+              ref={scrollableRef}
+              className="flex-1 overflow-y-auto"
+              data-scrollable="true"
+              style={{
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                scrollBehavior: 'smooth'
+              }}
+              onWheel={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              {notesLoading ? (
+                <div className="flex items-center justify-center h-full p-4">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                    <p className="text-sm text-gray-400">Fetching notes...</p>
+                  </div>
                 </div>
-              </div>
-            ) : error ? (
-              <div className="flex items-center justify-center h-full p-4">
-                <div className="text-center">
-                  <p className="text-sm text-red-400 mb-2">{error}</p>
-                  <p className="text-xs text-gray-500">Unable to fetch notes from this user</p>
+              ) : notesError ? (
+                <div className="flex items-center justify-center h-full p-4">
+                  <div className="text-center">
+                    <p className="text-sm text-red-400 mb-2">Failed to fetch notes</p>
+                    <p className="text-xs text-gray-500">Unable to fetch notes from this user</p>
+                  </div>
                 </div>
-              </div>
-            ) : notes.length === 0 ? (
-              <div className="flex items-center justify-center h-full p-4">
-                <div className="text-center">
-                  <MessageCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">No notes found</p>
-                  <p className="text-xs text-gray-500 mt-1">This user hasn't posted any public notes</p>
+              ) : notes.length === 0 ? (
+                <div className="flex items-center justify-center h-full p-4">
+                  <div className="text-center">
+                    <MessageCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400">No notes found</p>
+                    <p className="text-xs text-gray-500 mt-1">This user hasn't posted any public notes</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="p-4 space-y-3">
-                {notes.map((note) => (
-                  <UserNoteCard 
-                    key={note.id} 
-                    note={note}
-                    authorDisplayName={getDisplayName()}
-                    authorPicture={getPicture() || undefined}
-                  />
-                ))}
-              </div>
-            )}
+              ) : (
+                <div className="p-4 space-y-3">
+                  {notes.map((note) => (
+                    <UserNoteCard
+                      key={note.id}
+                      note={note}
+                      relayUrl={relayUrl}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </>
-  );
-});
+      </>
+    );
+  });
 
 interface UserNoteCardProps {
   note: NostrEvent;
-  authorDisplayName: string;
-  authorPicture?: string;
+  relayUrl?: string;
 }
 
-function UserNoteCard({ note, authorDisplayName, authorPicture }: UserNoteCardProps) {
+function UserNoteCard({ note, relayUrl }: UserNoteCardProps) {
+  // Fetch author profile for each note using initial relays + open relay
+  const { data: authorData } = useAuthorProfile(note.pubkey, {
+    enabled: !!note.pubkey,
+    extraRelay: relayUrl,
+  });
+
+  const metadata = authorData?.metadata;
+  const authorDisplayName = metadata?.name || metadata?.display_name || `@${note.pubkey.slice(0, 8)}`;
+  const authorPicture = metadata?.picture;
   const date = new Date(note.created_at * 1000);
-  const time = date.toLocaleTimeString('en-US', { 
+  const time = date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true
   });
-  const dateStr = date.toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric', 
+  const dateStr = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
     year: 'numeric'
   });
   const fullDateTime = `${time} ${dateStr}`;

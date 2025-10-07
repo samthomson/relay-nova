@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 import { useAppContext } from "@/hooks/useAppContext";
-import { useRelayConfigContext } from "@/contexts/RelayConfigContext";
+import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
 
 interface RelaySelectorProps {
   className?: string;
@@ -25,7 +25,7 @@ interface RelaySelectorProps {
 export function RelaySelector(props: RelaySelectorProps) {
   const { className } = props;
   const { config, updateConfig, presetRelays = [] } = useAppContext();
-  const { setCurrentRelayUrl } = useRelayConfigContext();
+  const { setCurrentRelayUrl } = useUserRelaysContext();
 
   const selectedRelay = config.relayUrl;
   const setSelectedRelay = (relay: string) => {
