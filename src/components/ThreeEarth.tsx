@@ -74,7 +74,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   const relayPanelRef = useRef<{
     element?: HTMLElement | null;
     scrollableRef?: React.RefObject<HTMLDivElement>;
-  } | null>(null);
+  }>({ element: null, scrollableRef: null });
 
   // Track whether wheel events should be enabled
   const wheelEventsEnabled = useRef(true);
@@ -101,7 +101,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
 
   // Function to check if mouse coordinates are within relay panel bounds
   const isMouseOverRelayPanelBounds = (x: number, y: number) => {
-    if (!relayPanelRef.current?.element || !openRelayRef.current) return false;
+    if (!relayPanelRef.current.element || !openRelayRef.current) return false;
 
     const rect = relayPanelRef.current.element.getBoundingClientRect();
     return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
@@ -167,7 +167,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     setHoveredRelay(null); // Clear the hovered relay to remove tooltip
     setTooltipPosition(null); // Clear tooltip position
     isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
-    relayPanelRef.current = null; // Clear the panel ref
+    relayPanelRef.current = { element: null, scrollableRef: null }; // Reset the panel ref
     wheelEventsEnabled.current = true; // Re-enable wheel events when panel closes
 
     // Remove connection line
@@ -1138,7 +1138,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     requestAnimationFrame(() => {
       // Double RAF to ensure layout is complete
       requestAnimationFrame(() => {
-        const scrollableElement = relayPanelRef.current?.scrollableRef?.current;
+        const scrollableElement = relayPanelRef.current.scrollableRef?.current;
 
         if (!scrollableElement) {
           console.error('❌ Scrollable element not available after render cycle');
@@ -1189,7 +1189,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       console.log('📜 Notes loaded in autopilot mode - auto-starting scroll');
       // Small delay to ensure ref is attached
       setTimeout(() => {
-        const scrollableElement = relayPanelRef.current?.scrollableRef?.current;
+        const scrollableElement = relayPanelRef.current.scrollableRef?.current;
         if (scrollableElement) {
           console.log('✅ Starting auto-scroll for autopilot');
           startSmoothScroll();
@@ -1326,7 +1326,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
 
   // Create connection line from relay to panel
   const createConnectionLine = useCallback((relay: RelayLocation) => {
-    if (!sceneRef.current || !earthRef.current || !relayPanelRef.current?.element) {
+    if (!sceneRef.current || !earthRef.current || !relayPanelRef.current.element) {
       return;
     }
 
@@ -1842,9 +1842,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
         <div ref={relayPanelContainerRef}>
           <RelayNotesPanel
             ref={(element) => {
-              if (relayPanelRef.current) {
-                relayPanelRef.current.element = element;
-              }
+              relayPanelRef.current.element = element;
             }}
             relay={openRelay}
             side={relaySide}
