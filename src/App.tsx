@@ -12,7 +12,6 @@ import { NostrLoginProvider } from '@nostrify/react/login';
 import { AppProvider } from '@/components/AppProvider';
 import { NWCProvider } from '@/contexts/NWCContext';
 import { UserRelaysProvider } from '@/contexts/UserRelaysContext';
-import { RelayConfigProvider } from '@/contexts/RelayConfigContext';
 import { AutoPilotProvider } from '@/contexts/AutoPilotContext';
 import { AppConfig } from '@/contexts/AppContext';
 import AppRouter from './AppRouter';
@@ -38,11 +37,13 @@ const defaultConfig: AppConfig = {
   relayUrl: "wss://relay.primal.net",
 };
 
-const presetRelays = [
-  { url: 'wss://ditto.pub/relay', name: 'Ditto' },
-  { url: 'wss://relay.nostr.band', name: 'Nostr.Band' },
-  { url: 'wss://relay.damus.io', name: 'Damus' },
-  { url: 'wss://relay.primal.net', name: 'Primal' },
+// Initial relays for smart routing - mainstream popular relays
+const initialRelays = [
+  'wss://relay.primal.net',
+  'wss://relay.damus.io',
+  'wss://relay.nostr.band',
+  'wss://nos.lol',
+  'wss://relay.snort.social'
 ];
 
 export function App() {
@@ -50,28 +51,26 @@ export function App() {
   try {
     return (
       <UnheadProvider head={head}>
-        <RelayConfigProvider initialRelayUrl={defaultConfig.relayUrl}>
-          <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} presetRelays={presetRelays}>
-            <QueryClientProvider client={queryClient}>
-              <NostrLoginProvider storageKey='nostr:login'>
-                <NostrProvider>
-                  <UserRelaysProvider>
-                    <NWCProvider>
-                      <AutoPilotProvider>
-                        <TooltipProvider>
-                          <Toaster />
-                          <Suspense>
-                            <AppRouter />
-                          </Suspense>
-                        </TooltipProvider>
-                      </AutoPilotProvider>
-                    </NWCProvider>
-                  </UserRelaysProvider>
-                </NostrProvider>
-              </NostrLoginProvider>
-            </QueryClientProvider>
-          </AppProvider>
-        </RelayConfigProvider>
+        <AppProvider storageKey="nostr:app-config" defaultConfig={defaultConfig} initialRelays={initialRelays}>
+          <QueryClientProvider client={queryClient}>
+            <NostrLoginProvider storageKey='nostr:login'>
+              <NostrProvider>
+                <UserRelaysProvider>
+                  <NWCProvider>
+                    <AutoPilotProvider>
+                      <TooltipProvider>
+                        <Toaster />
+                        <Suspense>
+                          <AppRouter />
+                        </Suspense>
+                      </TooltipProvider>
+                    </AutoPilotProvider>
+                  </NWCProvider>
+                </UserRelaysProvider>
+              </NostrProvider>
+            </NostrLoginProvider>
+          </QueryClientProvider>
+        </AppProvider>
       </UnheadProvider>
     );
   } catch (error) {
