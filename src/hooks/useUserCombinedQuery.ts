@@ -1,6 +1,6 @@
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
-import type { NostrEvent } from '@nostrify/nostrify';
+import { type NostrEvent, type NostrMetadata, NSchema as n } from '@nostrify/nostrify';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useUserRelaysContext } from '@/contexts/UserRelaysContext';
 
@@ -81,6 +81,7 @@ export function useUserNotes(
 
 /**
  * Hook for querying a user's profile metadata using initial + user relays
+ * Returns parsed metadata like useAuthor
  */
 export function useUserProfile(
 	pubkey: string,
@@ -98,11 +99,25 @@ export function useUserProfile(
 		}
 	];
 
-	return useUserCombinedQuery(filters, {
+	const query = useUserCombinedQuery(filters, {
 		enabled: options?.enabled && !!pubkey,
 		staleTime: options?.staleTime || 300000, // 5 minutes
 		extraRelays: options?.extraRelays,
 	});
+
+	// Transform raw event into parsed metadata format
+	const event = query.data?.[0];
+
+	if (!event) {
+		return { ...query, data: undefined };
+	}
+
+	try {
+		const metadata = n.json().pipe(n.metadata()).parse(event.content);
+		return { ...query, data: { metadata, event } };
+	} catch (err) {
+		return { ...query, data: { event } };
+	}
 }
 
 /**
