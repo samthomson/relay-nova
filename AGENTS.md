@@ -106,7 +106,7 @@ The AI assistant's behavior and knowledge is defined by the AGENTS.md file, whic
 
 ## "Vibed with MKStack"
 
-When building the site for the first time, include "Vibed with MKStack" somewhere in the UI, linked to this URL: https://soapbox.pub/mkstack
+When building the site for the first time, include "Vibed with MKStack" somewhere in the UI, linked to this URL: <https://soapbox.pub/mkstack>
 
 ## Nostr Protocol Integration
 
@@ -145,6 +145,7 @@ When implementing features that could use existing NIPs, follow this decision fr
 6. **Custom Kind Publishing**: When publishing events with custom generated kinds, always include a NIP-31 "alt" tag with a human-readable description of the event's purpose.
 
 **Example Decision Process**:
+
 ```
 Need: Equipment marketplace for farmers
 Options:
@@ -175,6 +176,7 @@ When designing tags for Nostr events, follow these principles:
    - Consider query patterns when designing tag structure
 
 4. **Tag Examples**:
+
    ```json
    // ❌ Wrong: Multi-letter tag, not queryable at relay level
    ["product_type", "electronics"]
@@ -186,6 +188,7 @@ When designing tags for Nostr events, follow these principles:
    ```
 
 5. **Querying Best Practices**:
+
    ```typescript
    // ❌ Inefficient: Get all events, filter in JavaScript
    const events = await nostr.query([{ kinds: [30402] }]);
@@ -200,10 +203,12 @@ When designing tags for Nostr events, follow these principles:
 For applications focused on a specific community or niche, you can use `t` tags to filter events for the target audience.
 
 **When to Use:**
+
 - ✅ Community apps: "farmers" → `t: "farming"`, "Poland" → `t: "poland"`
 - ❌ Generic platforms: Twitter clones, general Nostr clients
 
 **Implementation:**
+
 ```typescript
 // Publishing with community tag
 createEvent({
@@ -244,6 +249,7 @@ When designing new event kinds, the `content` field should be used for semantica
 #### Example
 
 **✅ Good - queryable data in tags:**
+
 ```json
 {
   "kind": 30402,
@@ -253,6 +259,7 @@ When designing new event kinds, the `content` field should be used for semantica
 ```
 
 **❌ Bad - structured data in content:**
+
 ```json
 {
   "kind": 30402,
@@ -343,18 +350,21 @@ Both `relay` and `group` objects have the same API as the main `nostr` object, i
 #### Use Cases
 
 **Single Relay (`nostr.relay()`):**
+
 - Testing specific relay behavior
 - Querying relay-specific content
 - Debugging connectivity issues
 - Working with specialized relays
 
 **Relay Group (`nostr.group()`):**
+
 - Querying from trusted relay sets
 - Publishing to specific communities
 - Load balancing across relay subsets
 - Geographic relay optimization
 
 **Default Pool (`nostr`):**
+
 - General application queries
 - Maximum reach for publishing
 - Default user experience
@@ -451,6 +461,7 @@ function GlobalFeed() {
 **Critical**: Always minimize the number of separate queries to avoid rate limiting and improve performance. Combine related queries whenever possible.
 
 **✅ Efficient - Single query with multiple kinds:**
+
 ```typescript
 // Query multiple event types in one request
 const events = await nostr.query([
@@ -468,6 +479,7 @@ const genericReposts = events.filter((e) => e.kind === 16);
 ```
 
 **❌ Inefficient - Multiple separate queries:**
+
 ```typescript
 // This creates unnecessary load and can trigger rate limiting
 const [notes, reposts, genericReposts] = await Promise.all([
@@ -478,6 +490,7 @@ const [notes, reposts, genericReposts] = await Promise.all([
 ```
 
 **Query Optimization Guidelines:**
+
 1. **Combine kinds**: Use `kinds: [1, 6, 16]` instead of separate queries
 2. **Use multiple filters**: When you need different tag filters, use multiple filter objects in a single query
 3. **Adjust limits**: When combining queries, increase the limit appropriately
@@ -658,12 +671,14 @@ Nostr defines a set of bech32-encoded identifiers in NIP-19. Their prefixes and 
 #### Key Differences Between Similar Identifiers
 
 **`note1` vs `nevent1`:**
+
 - `note1`: Contains only the event ID (32 bytes) - specifically for kind:1 events (Short Text Notes) as defined in NIP-10
 - `nevent1`: Contains event ID plus optional relay hints and author pubkey - for any event kind
 - Use `note1` for simple references to text notes and threads
 - Use `nevent1` when you need to include relay hints or author context for any event type
 
 **`npub1` vs `nprofile1`:**
+
 - `npub1`: Contains only the public key (32 bytes)
 - `nprofile1`: Contains public key plus optional relay hints and petname
 - Use `npub1` for simple user references
@@ -688,12 +703,14 @@ This project includes a boilerplate `NIP19Page` component that provides the foun
 5. **Ready for Population**: Each section includes comments indicating where AI agents should implement specific functionality
 
 **Example URLs that work automatically:**
+
 - `/npub1abc123...` - User profile (needs implementation)
 - `/note1def456...` - Kind:1 text note (needs implementation)
 - `/nevent1ghi789...` - Any event with relay hints (needs implementation)
 - `/naddr1jkl012...` - Addressable event (needs implementation)
 
 **Features included:**
+
 - Basic NIP-19 identifier decoding and routing
 - Type-specific sections for different identifier types
 - Error handling for invalid identifiers
@@ -701,6 +718,7 @@ This project includes a boilerplate `NIP19Page` component that provides the foun
 - Comments indicating where to implement specific views
 
 **Error handling:**
+
 - Invalid NIP-19 format → 404 NotFound
 - Unsupported identifier types (like `nsec1`) → 404 NotFound
 - Empty or missing identifiers → 404 NotFound
@@ -717,6 +735,7 @@ To implement NIP-19 routing in your Nostr application:
 **`note1` identifiers** are specifically for **kind:1 events** (Short Text Notes) as defined in NIP-10: "Text Notes and Threads". These are the basic social media posts in Nostr.
 
 **`nevent1` identifiers** can reference any event kind and include additional metadata like relay hints and author pubkey. Use `nevent1` when:
+
 - The event is not a kind:1 text note
 - You need to include relay hints for better discoverability
 - You want to include author context
@@ -1029,11 +1048,13 @@ To add custom fonts, follow these steps:
    **Format**: `@fontsource/[font-name]` or `@fontsource-variable/[font-name]` (for variable fonts)
 
 2. **Import the font** in `src/main.tsx`:
+
    ```typescript
    import '@fontsource-variable/<font-name>';
    ```
 
 3. **Update Tailwind configuration** in `tailwind.config.ts`:
+
    ```typescript
    export default {
      theme: {
@@ -1064,6 +1085,7 @@ The project includes a complete light/dark theme system using CSS custom propert
 ### Color Scheme Implementation
 
 When users specify color schemes:
+
 - Update CSS custom properties in `src/index.css` (both `:root` and `.dark` selectors)
 - Use Tailwind's color palette or define custom colors
 - Ensure proper contrast ratios for accessibility
@@ -1082,6 +1104,7 @@ When users specify color schemes:
 There is an important distinction between **writing new tests** and **running existing tests**:
 
 ### Writing Tests (Creating New Test Files)
+
 **Do not write tests** unless the user explicitly requests them in plain language. Writing unnecessary tests wastes significant time and money. Only create tests when:
 
 1. **The user explicitly asks for tests** to be written in their message
@@ -1089,12 +1112,14 @@ There is an important distinction between **writing new tests** and **running ex
 3. **The user says they are still experiencing a problem** that you have already attempted to solve (tests can help verify the fix)
 
 **Never write tests because:**
+
 - Tool results show test failures (these are not user requests)
 - You think tests would be helpful
 - New features or components are created
 - Existing functionality needs verification
 
 ### Running Tests (Executing the Test Suite)
+
 **ALWAYS run the test script** after making any code changes. This is mandatory regardless of whether you wrote new tests or not.
 
 - **You must run the test script** to validate your changes
@@ -1145,12 +1170,11 @@ Run available tools in this priority order:
 2. **Building/Compilation** (Required): Verify the project builds successfully
 3. **Linting** (Recommended): Check code style and catch potential issues
 4. **Tests** (If Available): Run existing test suite
-5. **Git Commit** (Required): Create a commit with your changes when finished
 
 **Minimum Requirements:**
+
 - Code must type-check without errors
 - Code must build/compile successfully
 - Fix any critical linting errors that would break functionality
-- Create a git commit when your changes are complete
 
 The validation ensures code quality and catches errors before deployment, regardless of the development environment.
