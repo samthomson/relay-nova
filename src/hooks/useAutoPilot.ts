@@ -185,7 +185,14 @@ export function useAutoPilot(controls: AutoPilotControls) {
       if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) return;
       console.log(`✅ [${sequenceId}] Auto pilot: Finished displaying relay`);
 
-      // Step 5: Move to next relay
+      // Step 5: Close relay panel
+      console.log(`🚪 [${sequenceId}] Auto pilot: Closing relay panel...`);
+      await controls.closeRelayPanel();
+
+      if (signal.aborted || masterExecutionRef.current.currentSequenceId !== sequenceId) return;
+      console.log(`✅ [${sequenceId}] Auto pilot: Relay panel closed`);
+
+      // Step 6: Move to next relay
       scheduleNextRelay(sequenceId);
 
     } catch (error) {
