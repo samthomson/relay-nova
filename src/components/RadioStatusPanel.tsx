@@ -1,6 +1,7 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { Radio } from 'lucide-react';
 import { useRadioModeContext } from '@/contexts/RadioModeContext';
+import { radioPlayer } from '@/lib/radio';
 
 interface RadioStatusPanelProps {
 	side: 'left' | 'right' | 'bottom';
@@ -13,7 +14,24 @@ interface RadioStatusPanelProps {
 export function RadioStatusPanel({ side, relay }: RadioStatusPanelProps) {
 	const { isRadioMode } = useRadioModeContext();
 
-	// Always render the panel, but show different content based on radio mode
+	// Switch to the relay's country when it changes
+	useEffect(() => {
+		console.log('Radio status changed:', { isRadioMode, countryCode: relay?.countryCode });
+		if (isRadioMode) {
+			if (relay?.countryCode) {
+				console.log('Switching to country:', relay.countryCode);
+				radioPlayer.play(relay.countryCode).catch(error => {
+					console.error('Failed to play radio for country:', relay.countryCode, error);
+				});
+			} else {
+				// Default to BBC World Service if no country selected
+				console.log('No country selected, using default station');
+				radioPlayer.play('GB').catch(console.error);
+			}
+		} else {
+			radioPlayer.stop();
+		}
+	}, [isRadioMode, relay?.countryCode]);
 
 	// Panel classes function - matches the relay panel styling
 	const getPanelClasses = () => {
@@ -29,6 +47,8 @@ export function RadioStatusPanel({ side, relay }: RadioStatusPanelProps) {
 		}
 	};
 
+	const currentStation = radioPlayer.getCurrentStation();
+
 	return (
 		<div className={getPanelClasses()}>
 			{/* Minimal Radio Status - just icon and text */}
@@ -36,7 +56,14 @@ export function RadioStatusPanel({ side, relay }: RadioStatusPanelProps) {
 				<div className="flex items-center gap-3">
 					<Radio className={`w-5 h-5 ${isRadioMode ? 'text-orange-400 animate-pulse' : 'text-gray-400'}`} />
 					<div className="text-lg font-semibold text-white">
-						{isRadioMode ? (relay?.countryCode || 'Unknown') : 'Radio is turned off'}
+						{isRadioMode ? (
+							<>
+								{currentStation?.name || relay?.countryCode || 'Unknown'}
+								{currentStation && <span className="text-sm text-gray-400 ml-2">📻</span>}
+							</>
+						) : (
+							'Radio is turned off'
+						)}
 					</div>
 				</div>
 			</div>

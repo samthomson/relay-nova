@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { radioPlayer } from '@/lib/radio';
 
 interface RadioModeContextType {
   isRadioMode: boolean;
@@ -11,22 +12,31 @@ const RadioModeContext = createContext<RadioModeContextType | undefined>(undefin
 export function RadioModeProvider({ children }: { children: React.ReactNode }) {
   const [isRadioMode, setIsRadioMode] = useState(false);
 
-  const toggleRadioMode = useCallback(() => {
+  // Handle radio playback when mode changes
+  useEffect(() => {
+    console.log('Radio mode changed:', { isRadioMode });
+    if (isRadioMode) {
+      // Start with US stations by default
+      console.log('Starting radio playback...');
+      radioPlayer.play('US').catch(error => {
+        console.error('Failed to play radio:', error);
+      });
+    } else {
+      console.log('Stopping radio playback...');
+      radioPlayer.stop();
+    }
+  }, [isRadioMode]);
+
+  const toggleRadioMode = () => {
     setIsRadioMode(prev => !prev);
-  }, []);
+  };
 
-  const setRadioMode = useCallback((enabled: boolean) => {
+  const setRadioMode = (enabled: boolean) => {
     setIsRadioMode(enabled);
-  }, []);
-
-  const value: RadioModeContextType = {
-    isRadioMode,
-    toggleRadioMode,
-    setRadioMode,
   };
 
   return (
-    <RadioModeContext.Provider value={value}>
+    <RadioModeContext.Provider value={{ isRadioMode, toggleRadioMode, setRadioMode }}>
       {children}
     </RadioModeContext.Provider>
   );
