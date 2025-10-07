@@ -197,7 +197,7 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   };
 
   // Auto pilot integration
-  const { stopAutoPilot, isAutoPilotMode } = useAutoPilotContext();
+  const { stopAutoPilot, isAutoPilotMode, registerCameraReset } = useAutoPilotContext();
 
   const [hoveredRelay, setHoveredRelay] = useState<RelayLocation | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -979,6 +979,48 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
   useEffect(() => {
     isAutoPilotModeActive.current = isAutoPilotMode;
   }, [isAutoPilotMode]);
+
+  // Register camera reset function for when autopilot is stopped
+  useEffect(() => {
+    const resetCamera = () => {
+      if (!cameraRef.current || !earthRef.current) return;
+
+      console.log('📷 Resetting camera to default position');
+
+      // Animate camera back to default position smoothly
+      const startX = cameraRef.current.position.x;
+      const startY = cameraRef.current.position.y;
+      const startZ = cameraRef.current.position.z;
+
+      const targetX = 0;
+      const targetY = 0;
+      const targetZ = 6.5; // Default viewing distance
+
+      const duration = 800; // 800ms animation
+      const startTime = Date.now();
+
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out
+
+        if (cameraRef.current) {
+          cameraRef.current.position.x = startX + (targetX - startX) * easeProgress;
+          cameraRef.current.position.y = startY + (targetY - startY) * easeProgress;
+          cameraRef.current.position.z = startZ + (targetZ - startZ) * easeProgress;
+          cameraRef.current.lookAt(0, 0, 0);
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+
+      animate();
+    };
+
+    registerCameraReset(resetCamera);
+  }, [registerCameraReset]);
 
   // Auto pilot controls implementation
   const rotateEarthToRelay = useCallback(async (relayUrl: string) => {

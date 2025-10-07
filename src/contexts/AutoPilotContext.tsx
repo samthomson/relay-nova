@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 
 interface AutoPilotContextType {
   isAutoPilotMode: boolean;
@@ -12,6 +12,7 @@ interface AutoPilotContextType {
   setTotalRelays: (count: number) => void;
   relayDisplayProgress: number; // 0-100 percentage
   setRelayDisplayProgress: (progress: number) => void;
+  registerCameraReset: (resetFn: () => void) => void;
 }
 
 const AutoPilotContext = createContext<AutoPilotContextType | undefined>(undefined);
@@ -22,6 +23,11 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
   const [currentRelayIndex, setCurrentRelayIndex] = useState(0);
   const [totalRelays, setTotalRelays] = useState(0);
   const [relayDisplayProgress, setRelayDisplayProgress] = useState(0);
+  const cameraResetFn = useRef<(() => void) | null>(null);
+
+  const registerCameraReset = useCallback((resetFn: () => void) => {
+    cameraResetFn.current = resetFn;
+  }, []);
 
   const stopAutoPilot = useCallback(() => {
     console.log('🛑 Stopping autopilot mode');
@@ -30,6 +36,12 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     setCurrentRelayIndex(0);
     setTotalRelays(0);
     setRelayDisplayProgress(0);
+
+    // Reset camera to default position
+    if (cameraResetFn.current) {
+      console.log('📷 Resetting camera to default position');
+      cameraResetFn.current();
+    }
   }, []);
 
   const startAutoPilot = useCallback(() => {
@@ -59,6 +71,7 @@ export function AutoPilotProvider({ children }: { children: React.ReactNode }) {
     setTotalRelays,
     relayDisplayProgress,
     setRelayDisplayProgress,
+    registerCameraReset,
   };
 
   return (
