@@ -32,9 +32,9 @@ interface RelayLocation {
 
 function validateNip65Event(event: any): event is { tags: string[][] } {
   return event &&
-         event.kind === 10002 &&
-         Array.isArray(event.tags) &&
-         event.tags.every(tag => Array.isArray(tag) && tag.length >= 2);
+    event.kind === 10002 &&
+    Array.isArray(event.tags) &&
+    event.tags.every(tag => Array.isArray(tag) && tag.length >= 2);
 }
 
 export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
@@ -138,7 +138,7 @@ export function MyRelaysModal({ isOpen, onClose }: MyRelaysModalProps) {
 
   const totalCountries = Object.keys(groupedRelays).length;
 
-return (
+  return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       // Only close if user explicitly closes the dialog, not due to relay operations
       if (!open) {
@@ -221,11 +221,10 @@ return (
                         type="button"
                         onClick={() => handleTogglePermission(relay.url, 'read')}
                         disabled={togglingRelays.has(relay.url)}
-                        className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
-                          relay.read
-                            ? 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
-                            : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                        } ${togglingRelays.has(relay.url) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${relay.read
+                          ? 'bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30'
+                          : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
+                          } ${togglingRelays.has(relay.url) ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {togglingRelays.has(relay.url) ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -238,11 +237,10 @@ return (
                         type="button"
                         onClick={() => handleTogglePermission(relay.url, 'write')}
                         disabled={togglingRelays.has(relay.url)}
-                        className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
-                          relay.write
-                            ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30'
-                            : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
-                        } ${togglingRelays.has(relay.url) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 ${relay.write
+                          ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30'
+                          : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/60'
+                          } ${togglingRelays.has(relay.url) ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {togglingRelays.has(relay.url) ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -278,177 +276,176 @@ return (
           {/* All Relays Tab */}
           <TabsContent value="all-relays" className="mt-4">
             <ScrollArea className="h-[60vh] pr-4">
-            {isLoadingAllRelays ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>
-                <span className="text-gray-300">Loading relay data...</span>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Summary Statistics */}
-                <div className="grid grid-cols-3 gap-4 p-4 border border-white/20 rounded-lg bg-white/5">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">{allRelays?.length || 0}</div>
-                    <div className="text-sm text-gray-300">Total Relays</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-400">{totalCountries}</div>
-                    <div className="text-sm text-gray-300">Countries</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-400">{relays?.length || 0}</div>
-                    <div className="text-sm text-gray-300">In My List</div>
-                  </div>
+              {isLoadingAllRelays ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>
+                  <span className="text-gray-300">Loading relay data...</span>
                 </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Summary Statistics */}
+                  <div className="grid grid-cols-3 gap-4 p-4 border border-white/20 rounded-lg bg-white/5">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-400">{allRelays?.length || 0}</div>
+                      <div className="text-sm text-gray-300">Total Relays</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-400">{totalCountries}</div>
+                      <div className="text-sm text-gray-300">Countries</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">{relays?.length || 0}</div>
+                      <div className="text-sm text-gray-300">In My List</div>
+                    </div>
+                  </div>
 
-                {/* Relays by Country */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold mb-4 text-white">Relays by Location</h3>
-                  {Object.entries(groupedRelays)
-                    .sort(([, a], [, b]) => b.length - a.length)
-                    .map(([country, countryRelays]) => (
-                      <div key={country} className="border border-white/20 rounded-lg p-4 bg-white/5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Globe className="w-4 h-4 text-blue-400" />
-                          <h4 className="font-semibold text-white">{country}</h4>
-                          <Badge variant="outline" className="ml-auto text-gray-200 border-gray-500 bg-white/5">
-                            {countryRelays.length} relay{countryRelays.length !== 1 ? 's' : ''}
-                          </Badge>
-                        </div>
+                  {/* Relays by Country */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold mb-4 text-white">Relays by Location</h3>
+                    {Object.entries(groupedRelays)
+                      .sort(([, a], [, b]) => b.length - a.length)
+                      .map(([country, countryRelays]) => (
+                        <div key={country} className="border border-white/20 rounded-lg p-4 bg-white/5">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Globe className="w-4 h-4 text-blue-400" />
+                            <h4 className="font-semibold text-white">{country}</h4>
+                            <Badge variant="outline" className="ml-auto text-gray-200 border-gray-500 bg-white/5">
+                              {countryRelays.length} relay{countryRelays.length !== 1 ? 's' : ''}
+                            </Badge>
+                          </div>
 
-                        <div className="grid gap-2">
-                          {countryRelays.map((relay, index) => {
-                            const isInUserList = relays?.some(r => r.url === relay.url);
+                          <div className="grid gap-2">
+                            {countryRelays.map((relay, index) => {
+                              const isInUserList = relays?.some(r => r.url === relay.url);
 
-                            return (
-                              <div
-                                key={`${relay.url}-${index}`}
-                                className="flex items-center justify-between p-3 border border-white/10 rounded bg-white/5 hover:bg-white/10 transition-colors"
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <Globe className="w-4 h-4 text-blue-400" />
-                                    <div className="font-mono text-sm truncate text-gray-200">
-                                      {relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`}
-                                    </div>
-                                  </div>
-                                  {relay.city && (
-                                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 ml-6">
-                                      <MapPin className="w-3 h-3" />
-                                      {relay.city}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Quick Connect Button - Opens Relay Viewer Panel */}
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    // Close modal and open relay viewer panel
-                                    onClose();
-                                    // Dispatch event to open relay panel
-                                    window.dispatchEvent(new CustomEvent('openRelayPanel', {
-                                      detail: { relayUrl: relay.url }
-                                    }));
-                                  }}
-                                  className="ml-4 bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30"
-                                  title="Open relay viewer"
+                              return (
+                                <div
+                                  key={`${relay.url}-${index}`}
+                                  className="flex items-center justify-between p-3 border border-white/10 rounded bg-white/5 hover:bg-white/10 transition-colors"
                                 >
-                                  <Globe className="w-3 h-3" />
-                                </Button>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <Globe className="w-4 h-4 text-blue-400" />
+                                      <div className="font-mono text-sm truncate text-gray-200">
+                                        {relay.url.startsWith('wss://') ? relay.url : `wss://${relay.url}`}
+                                      </div>
+                                    </div>
+                                    {relay.city && (
+                                      <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 ml-6">
+                                        <MapPin className="w-3 h-3" />
+                                        {relay.city}
+                                      </div>
+                                    )}
+                                  </div>
 
-                                {/* Add/Remove Relay Button */}
-                                <div className="ml-2">
+                                  {/* Quick Connect Button - Opens Relay Viewer Panel */}
                                   <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
-                                    onClick={async () => {
-                                      if (isInUserList) {
-                                        await removeRelay(relay.url);
-                                      } else {
-                                        // Add relay with default permissions
-                                        await updateRelayList([...(relays || []), { url: relay.url, read: true, write: true }]);
-                                      }
+                                    onClick={() => {
+                                      // Close modal and open relay viewer panel
+                                      onClose();
+                                      // Dispatch event to open relay panel
+                                      window.dispatchEvent(new CustomEvent('openRelayPanel', {
+                                        detail: { relayUrl: relay.url }
+                                      }));
                                     }}
-                                    disabled={isAnyOperationPending}
-                                    className={`h-8 px-3 text-xs whitespace-nowrap ${
-                                      isInUserList
+                                    className="ml-4 bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30"
+                                    title="Open relay viewer"
+                                  >
+                                    <Globe className="w-3 h-3" />
+                                  </Button>
+
+                                  {/* Add/Remove Relay Button */}
+                                  <div className="ml-2">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={async () => {
+                                        if (isInUserList) {
+                                          await removeRelay(relay.url);
+                                        } else {
+                                          // Add relay with default permissions
+                                          await updateRelayList([...(relays || []), { url: relay.url, read: true, write: true }]);
+                                        }
+                                      }}
+                                      disabled={isAnyOperationPending}
+                                      className={`h-8 px-3 text-xs whitespace-nowrap ${isInUserList
                                         ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20'
                                         : 'text-green-400 hover:text-green-300 hover:bg-green-500/10 border border-green-500/20'
-                                    }`}
-                                  >
-                                    {isInUserList ? 'Remove' : 'Add'}
-                                  </Button>
-                                </div>
+                                        }`}
+                                    >
+                                      {isInUserList ? 'Remove' : 'Add'}
+                                    </Button>
+                                  </div>
 
-                                <div className="text-right text-xs text-gray-400 ml-4">
-                                  <div>{Math.abs(relay.lat).toFixed(2)}°{relay.lat >= 0 ? 'N' : 'S'}</div>
-                                  <div>{Math.abs(relay.lng).toFixed(2)}°{relay.lng >= 0 ? 'E' : 'W'}</div>
+                                  <div className="text-right text-xs text-gray-400 ml-4">
+                                    <div>{Math.abs(relay.lat).toFixed(2)}°{relay.lat >= 0 ? 'N' : 'S'}</div>
+                                    <div>{Math.abs(relay.lng).toFixed(2)}°{relay.lng >= 0 ? 'E' : 'W'}</div>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
 
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             </ScrollArea>
           </TabsContent>
         </Tabs>
 
-      {/* Custom Confirmation Dialog - overlays within the main dialog */}
-      {showConfirmDialog && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
-          <div className="bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-orange-400 mt-1" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white mb-2">Remove Relay</h3>
-                <p className="text-white/70 text-sm mb-4">
-                  Are you sure you want to remove "{relayToRemove?.url}" from your relay list? This action will update your NIP-65 event.
-                </p>
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={cancelRemove}
-                    disabled={isRemoving}
-                    className="bg-white/10 text-white hover:bg-white/20 border-white/20"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleRemoveRelay}
-                    disabled={isRemoving}
-                    className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 min-w-[100px]"
-                  >
-                    {isRemoving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Removing...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Remove
-                      </>
-                    )}
-                  </Button>
+        {/* Custom Confirmation Dialog - overlays within the main dialog */}
+        {showConfirmDialog && (
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
+            <div className="bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-orange-400 mt-1" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-white mb-2">Remove Relay</h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Are you sure you want to remove "{relayToRemove?.url}" from your relay list? This action will update your NIP-65 event.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={cancelRemove}
+                      disabled={isRemoving}
+                      className="bg-white/10 text-white hover:bg-white/20 border-white/20"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleRemoveRelay}
+                      disabled={isRemoving}
+                      className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 min-w-[100px]"
+                    >
+                      {isRemoving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Removing...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </DialogContent>
     </Dialog>
   );
