@@ -14,8 +14,8 @@ export interface AppContextType {
   config: AppConfig;
   /** Update configuration using a callback that receives current config and returns new config */
   updateConfig: (updater: (currentConfig: AppConfig) => AppConfig) => void;
-  /** Optional list of preset relays to display in the RelaySelector */
-  presetRelays?: { name: string; url: string }[];
+  /** Initial relays for smart routing - mainstream popular relays */
+  initialRelays: string[];
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
