@@ -23,24 +23,19 @@ export function AutoPilotButton() {
           backdrop-blur-md
           transition-all duration-300 
           font-semibold text-sm
-          border-y border-l border-white/10
+          border-2
           group
           ${isAutoPilotMode
-            ? 'bg-gradient-to-br from-purple-500/90 to-orange-500/90 hover:from-purple-600/90 hover:to-orange-600/90'
-            : 'bg-black/40 hover:bg-black/60'
+            ? 'bg-gradient-to-br from-purple-500 to-orange-500 hover:from-purple-600 hover:to-orange-600 border-purple-400/50 scale-105'
+            : 'bg-gradient-to-br from-purple-500/20 to-orange-500/20 hover:from-purple-500/30 hover:to-orange-500/30 border-purple-500/30 hover:border-purple-400/50'
           }
         `}
       >
-        {/* Hover gradient for inactive state */}
-        {!isAutoPilotMode && (
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        )}
-
         <div className="relative flex items-center gap-3">
-          <Plane className={`w-4 h-4 transition-transform duration-300 ${isAutoPilotMode ? 'rotate-45' : ''}`} />
+          <Plane className={`w-5 h-5 transition-all duration-300 ${isAutoPilotMode ? 'rotate-45 text-white' : 'text-purple-300'}`} />
           <div className="flex flex-col items-start">
-            <span className="text-white whitespace-nowrap">
-              Auto Pilot: <span className={isAutoPilotMode ? 'text-white font-bold' : 'text-white/60'}>{isAutoPilotMode ? 'On' : 'Off'}</span>
+            <span className={`whitespace-nowrap transition-colors ${isAutoPilotMode ? 'text-white' : 'text-purple-200'}`}>
+              Auto Pilot: <span className={`font-bold ${isAutoPilotMode ? 'text-white' : 'text-purple-300'}`}>{isAutoPilotMode ? 'On' : 'Off'}</span>
             </span>
           </div>
         </div>
@@ -56,24 +51,19 @@ export function AutoPilotButton() {
           backdrop-blur-md
           transition-all duration-300 
           font-semibold text-sm
-          border-y border-r border-l-0 border-white/10
+          border-2 border-l-0
           group
           ${isRadioMode
-            ? 'bg-gradient-to-br from-blue-500/90 to-cyan-500/90 hover:from-blue-600/90 hover:to-cyan-600/90'
-            : 'bg-black/40 hover:bg-black/60'
+            ? 'bg-gradient-to-br from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 border-orange-400/50 scale-105'
+            : 'bg-gradient-to-br from-orange-500/20 to-purple-500/20 hover:from-orange-500/30 hover:to-purple-500/30 border-orange-500/30 hover:border-orange-400/50'
           }
         `}
       >
-        {/* Hover gradient for inactive state */}
-        {!isRadioMode && (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        )}
-
         <div className="relative flex items-center gap-3">
-          <Radio className={`w-4 h-4 ${isRadioMode ? 'animate-pulse' : ''}`} />
+          <Radio className={`w-5 h-5 transition-all duration-300 ${isRadioMode ? 'animate-pulse text-white' : 'text-orange-300'}`} />
           <div className="flex flex-col items-start">
-            <span className="text-white whitespace-nowrap">
-              Radio: <span className={isRadioMode ? 'text-white font-bold' : 'text-white/60'}>{isRadioMode ? 'On' : 'Off'}</span>
+            <span className={`whitespace-nowrap transition-colors ${isRadioMode ? 'text-white' : 'text-orange-200'}`}>
+              Radio: <span className={`font-bold ${isRadioMode ? 'text-white' : 'text-orange-300'}`}>{isRadioMode ? 'On' : 'Off'}</span>
             </span>
           </div>
         </div>
