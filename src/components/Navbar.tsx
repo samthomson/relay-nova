@@ -3,15 +3,15 @@ import { LoginArea } from '@/components/auth/LoginArea';
 import { MyRelaysButton } from '@/components/MyRelaysButton';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
-export function Navbar(): React.ReactElement {
+export function Navbar(): JSX.Element {
   const { user } = useCurrentUser();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand on the left */}
-          <div className="flex items-center">
+          <div className="flex-none">
             <h1 className="text-xl font-bold text-white">
               Relay Nova
             </h1>
