@@ -1083,67 +1083,73 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
       smoothScrollIntervalRef.current = null;
     }
 
-    // Retry mechanism to wait for panel and ref to be properly initialized
-    const initScroll = (attempt = 1) => {
-      console.log(`📜 [Attempt ${attempt}] Trying to start smooth scroll...`);
-      console.log('📜 relayPanelRef.current:', relayPanelRef.current);
-      console.log('📜 scrollableRef available:', relayPanelRef.current?.scrollableRef);
-      console.log('📜 scrollableRef.current:', relayPanelRef.current?.scrollableRef?.current);
+    // Wait for React to finish rendering and attach the ref
+    // Using requestAnimationFrame ensures we wait for the next render cycle
+    requestAnimationFrame(() => {
+      // Double RAF to ensure layout is complete
+      requestAnimationFrame(() => {
+        const scrollableElement = relayPanelRef.current?.scrollableRef?.current;
 
-      if (!relayPanelRef.current?.scrollableRef?.current) {
-        console.warn(`⚠️ [Attempt ${attempt}] Scrollable ref not available yet`);
-
-        // Retry up to 5 times with increasing delays
-        if (attempt < 5) {
-          setTimeout(() => initScroll(attempt + 1), 200 * attempt);
-        } else {
-          console.error('❌ Failed to initialize smooth scroll after 5 attempts');
+        if (!scrollableElement) {
+          console.error('❌ Scrollable element not available after render cycle');
+          return;
         }
-        return;
-      }
 
-      const scrollableElement = relayPanelRef.current.scrollableRef.current;
+        console.log('✅ Scrollable element found!');
+        console.log('📜 scrollHeight:', scrollableElement.scrollHeight);
+        console.log('📜 clientHeight:', scrollableElement.clientHeight);
+        console.log('📜 Can scroll:', scrollableElement.scrollHeight > scrollableElement.clientHeight);
 
-      console.log('✅ Scrollable element found!');
-      console.log('📜 scrollHeight:', scrollableElement.scrollHeight);
-      console.log('📜 clientHeight:', scrollableElement.clientHeight);
-      console.log('📜 Can scroll:', scrollableElement.scrollHeight > scrollableElement.clientHeight);
+        // Reset scroll to top before starting
+        scrollableElement.scrollTop = 0;
+        console.log('📜 Starting smooth scroll from top');
 
-      // Reset scroll to top before starting
-      scrollableElement.scrollTop = 0;
-      console.log('📜 Starting smooth scroll from top');
+        // Scroll down by 2 pixels every 50ms (40 pixels per second)
+        smoothScrollIntervalRef.current = setInterval(() => {
+          if (scrollableElement) {
+            const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
+            const currentScroll = scrollableElement.scrollTop;
 
-      // Scroll down by 2 pixels every 50ms (40 pixels per second)
-      smoothScrollIntervalRef.current = setInterval(() => {
-        if (scrollableElement) {
-          const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
-          const currentScroll = scrollableElement.scrollTop;
-
-          // If we've reached the bottom, stop scrolling
-          if (currentScroll >= maxScroll - 1) {
-            console.log('📜 Reached bottom of scroll area');
-            if (smoothScrollIntervalRef.current) {
-              clearInterval(smoothScrollIntervalRef.current);
-              smoothScrollIntervalRef.current = null;
+            // If we've reached the bottom, stop scrolling
+            if (currentScroll >= maxScroll - 1) {
+              console.log('📜 Reached bottom of scroll area');
+              if (smoothScrollIntervalRef.current) {
+                clearInterval(smoothScrollIntervalRef.current);
+                smoothScrollIntervalRef.current = null;
+              }
+              return;
             }
-            return;
+
+            scrollableElement.scrollTop += 2;
+
+            // Log every 100px to verify scrolling is happening
+            if (Math.floor(currentScroll) % 100 === 0) {
+              console.log(`📜 Scrolling... ${currentScroll.toFixed(0)}/${maxScroll.toFixed(0)}px`);
+            }
           }
+        }, 50);
 
-          scrollableElement.scrollTop += 2;
-
-          // Log every 100px to verify scrolling is happening
-          if (Math.floor(currentScroll) % 100 === 0) {
-            console.log(`📜 Scrolling... ${currentScroll.toFixed(0)}/${maxScroll.toFixed(0)}px`);
-          }
-        }
-      }, 50);
-
-      console.log('📜 Scroll interval started!');
-    };
-
-    // Start after initial delay
-    setTimeout(() => initScroll(1), 300);
+        console.log('📜 Scroll interval started!');
+      });
+    });
   }, []);
+
+  // Auto-start scrolling when notes are loaded in autopilot mode
+  useEffect(() => {
+    if (isAutoPilotMode && eventsLoaded && notes.length > 0) {
+      console.log('📜 Notes loaded in autopilot mode - auto-starting scroll');
+      // Small delay to ensure ref is attached
+      setTimeout(() => {
+        const scrollableElement = relayPanelRef.current?.scrollableRef?.current;
+        if (scrollableElement) {
+          console.log('✅ Starting auto-scroll for autopilot');
+          startSmoothScroll();
+        } else {
+          console.warn('⚠️ Scrollable element not ready yet');
+        }
+      }, 100);
+    }
+  }, [isAutoPilotMode, eventsLoaded, notes.length, startSmoothScroll]);
 
   const stopSmoothScroll = useCallback(() => {
     if (smoothScrollIntervalRef.current) {

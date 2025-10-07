@@ -157,9 +157,8 @@ export function useAutoPilot(controls: AutoPilotControls) {
       }
       console.log(`✅ [${sequenceId}] Auto pilot: Events loaded`);
 
-      // Step 4: Start smooth scrolling and wait for display time
-      console.log(`📜 [${sequenceId}] Auto pilot: Starting ${RELAY_DISPLAY_TIME_MS / 1000}-second display with smooth scrolling...`);
-      controls.startSmoothScroll();
+      // Step 4: Wait for display time (scrolling starts automatically via useEffect)
+      console.log(`📜 [${sequenceId}] Auto pilot: Displaying relay for ${RELAY_DISPLAY_TIME_MS / 1000} seconds (scroll auto-starts)...`);
 
       // Update progress bar during display time
       const progressStartTime = Date.now();
