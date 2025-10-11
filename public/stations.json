@@ -535,6 +535,271 @@
 			}
 		]
 	},
+	"DE": {
+		"name": "Germany",
+		"stations": [
+			{
+				"name": "\tBlasmusikradio mit Bernd",
+				"url": "https://stream.laut.fm/blasmusikradio_mit_bernd",
+				"tags": "blasmusik,folk,marsch,polka",
+				"language": "german",
+				"bitrate": 128
+			},
+			{
+				"name": "__DEUTSCHRAP CLASSIC__ by rautemusik (rm.fm)",
+				"url": "https://deutschrap-classic-high.rautemusik.fm/?ref=radiobrowser",
+				"tags": "chilled trap,deutsch,german,hip-hop,hiphop,rap,rap hiphop rnb,rnb",
+				"language": "english,german",
+				"bitrate": 192
+			},
+			{
+				"name": "delta radio deutsch",
+				"url": "http://streams.deltaradio.de/delta-deutsch/mp3-192/mediaplayer/",
+				"tags": "deutsche lieder",
+				"language": "german",
+				"bitrate": 0
+			},
+			{
+				"name": "Deutsche Welle Radio",
+				"url": "https://dw.audiostream.io/dw/1027/mp3/64/dw08",
+				"tags": "news",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Deutschlandfunk Kultur | DLF | OPUS 64k",
+				"url": "https://st02.sslstream.dlf.de/dlf/02/high/opus/stream.opus?aggregator=web",
+				"tags": "culture,news,public service,information",
+				"language": "",
+				"bitrate": 64
+			},
+			{
+				"name": "EPIC CLASSICAL - Classical Orchestral",
+				"url": "https://stream.epic-classical.com/classical-orchestral?ref=liveradio",
+				"tags": "classic,classical,klassik,klassisk,orchestra,orchestral,royal concertgebouw orchestra",
+				"language": "american english,british english,deutsch fränkisch,english,german",
+				"bitrate": 192
+			},
+			{
+				"name": "Epic Lounge - SAX HOUSE LOUNGE",
+				"url": "https://stream.epic-lounge.com/sax-house-lounge?ref=radiobrowser",
+				"tags": "ambient,ambient and relaxation music,house,lounge,lounge music,relax,relaxation",
+				"language": "deutsch fränkisch,english,german",
+				"bitrate": 192
+			},
+			{
+				"name": "Livestream Bibellesung Deutsch",
+				"url": "http://segenswelle.de:8000/bibellesung-de",
+				"tags": "bible,christian,religion",
+				"language": "german",
+				"bitrate": 64
+			},
+			{
+				"name": "MDR SACHSEN Markkleeberg",
+				"url": "http://streamer.secondradio.de:7070/dab-sr?ref=emil.marche@radio-zett.org",
+				"tags": "80er,90er,alternative,charts,chillout,classic,dab+,ddr,ddr musik,ddr radio,deutsche musik,funk,hip hop,house,internet radio,klassik,leipzig,liebesbriefe,liveradio,mixe,musik,musik brunch,musiksender,neue bundesländer,new age,new wave,onlineradio,ostrock,ostrock radio,ostrockradio,party,radio,radio ostrock,rap,rock,schlager,secondradio,smooth jazz,soul,stream,top10,treffpunkt,webradio,wendezeit",
+				"language": "german",
+				"bitrate": 320
+			},
+			{
+				"name": "Nostalgie Deutschland 90er",
+				"url": "https://edge03.streamonkey.net/nostalgie-90er?aggregator=shorty",
+				"tags": "90er,90s",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "Ostseewelle Deutsche Hits",
+				"url": "http://streamosw.ir-media-tec.com/deutsch/mp3-128/web/",
+				"tags": "deutsche lieder",
+				"language": "german",
+				"bitrate": 0
+			},
+			{
+				"name": "Radio München",
+				"url": "http://stream.radiomuenchen.net:8000/rm256.mp3",
+				"tags": "",
+				"language": "deutsch fränkisch",
+				"bitrate": 256
+			},
+			{
+				"name": "RadioMV Deutsch Neues Testament",
+				"url": "https://stream.radiomv.com/german-nt/stream.mp3",
+				"tags": "christian",
+				"language": "german",
+				"bitrate": 128
+			},
+			{
+				"name": "REGENBOGEN 2 – DEUTSCHROCK",
+				"url": "https://stream.regenbogen2.de/deutschrock/mp3-128/radiobrowser",
+				"tags": "deutsch rock,deutschrock,rock",
+				"language": "german",
+				"bitrate": 0
+			}
+		]
+	},
+	"DK": {
+		"name": "Denmark",
+		"stations": [
+			{
+				"name": "Classic Rock Danmark",
+				"url": "https://netradio.classicfm.dk/classicrock",
+				"tags": "classic rock,hard rock,progressive rock,punk rock,retro,rock fra dit liv!",
+				"language": "danish",
+				"bitrate": 192
+			},
+			{
+				"name": "Danmarks Radio p2",
+				"url": "https://live-icy.dr.dk/A/A04L.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Danmarks Radio P3",
+				"url": "https://live-icy.dr.dk/A/A27L.mp3",
+				"tags": "classical music,intelligent,modern rock",
+				"language": "danish",
+				"bitrate": 128
+			},
+			{
+				"name": "Danmarks Radio P6",
+				"url": "https://live-icy.dr.dk/A/A29H.mp3",
+				"tags": "danish,music,talk",
+				"language": "danish",
+				"bitrate": 128
+			},
+			{
+				"name": "The Voice - Danmarks Hitstation",
+				"url": "https://live-bauerdk.sharp-stream.com/thevoice_dk_mp3",
+				"tags": "",
+				"language": "danish",
+				"bitrate": 128
+			}
+		]
+	},
+	"ES": {
+		"name": "Spain",
+		"stations": [
+			{
+				"name": "1000 Hits Spain ",
+				"url": "https://c2.auracast.net:8022/;",
+				"tags": "hits,music,pop",
+				"language": "spanish",
+				"bitrate": 128
+			},
+			{
+				"name": "99.9 Plaza Radio Valencia",
+				"url": "https://stream1.solstreaming.com:8112/stream",
+				"tags": "local news,music,talk",
+				"language": "spanish",
+				"bitrate": 192
+			},
+			{
+				"name": "AdagioRadio",
+				"url": "https://stream.tunerplay.com/radio/8010/adagioradio.mp3",
+				"tags": "clasica,opera,symphony",
+				"language": "spanish",
+				"bitrate": 192
+			},
+			{
+				"name": "Ágora Sol Radio",
+				"url": "https://cervera.eldialdigital.com:23141/stream",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Almodóvar en La Onda 107.2 FM",
+				"url": "https://nrf1.newradio.it:9972/stream",
+				"tags": "cumbia,dance,latino,musica variada,radio hablada,reggaeton",
+				"language": "spanish",
+				"bitrate": 64
+			},
+			{
+				"name": "Altafulla Ràdio",
+				"url": "https://enacast.com/altafullaradio/streams/HD",
+				"tags": "altafulla",
+				"language": "catalan",
+				"bitrate": 128
+			},
+			{
+				"name": "Alzira ràdio 107.9 FM",
+				"url": "https://alziraradiomob.streaming-pro.com:6172/alziraradio.mp3",
+				"tags": "deportes,entretenimiento,música variada,news,noticias,radio hablada,reggae,rock,sports",
+				"language": "catalan,spanish",
+				"bitrate": 128
+			}
+		]
+	},
+	"FI": {
+		"name": "Finland",
+		"stations": [
+			{
+				"name": "\tTick Tock Radio - 1950",
+				"url": "https://streaming.ticktock.radio/tt/1950/icecast.audio",
+				"tags": "1950",
+				"language": "finnish",
+				"bitrate": 0
+			},
+			{
+				"name": "Ålands Radio",
+				"url": "https://stream.alandsradio.ax/stream.ogg",
+				"tags": "",
+				"language": "swedish",
+				"bitrate": 0
+			},
+			{
+				"name": "Bassoradio",
+				"url": "https://stream.radioplay.fi/basso/bassoradio_64.aac",
+				"tags": "finland,finnish,hiphop,rap,rnb,suomi",
+				"language": "finnish",
+				"bitrate": 68
+			},
+			{
+				"name": "Doubleclap Radio",
+				"url": "https://s3.radio.co/scfd7273b2/listen",
+				"tags": "dance,electronic,hardstyle,house,lounge,psytrance,trance",
+				"language": "english,finnish",
+				"bitrate": 192
+			},
+			{
+				"name": "Järviradio",
+				"url": "https://jarviradio.radiotaajuus.fi:9000/jr",
+				"tags": "",
+				"language": "finish",
+				"bitrate": 192
+			},
+			{
+				"name": "Kaaos Radio Chiptune",
+				"url": "http://stream.kaaosradio.fi:8000/chip",
+				"tags": "chiptune",
+				"language": "finnish",
+				"bitrate": 0
+			},
+			{
+				"name": "NRJ Suomi",
+				"url": "http://stream.bauermedia.fi/nrj/nrj_128.mp3",
+				"tags": "",
+				"language": "finnish",
+				"bitrate": 128
+			},
+			{
+				"name": "POPfm",
+				"url": "https://stream.madmenmedia.se/popfm",
+				"tags": "pop",
+				"language": "finnish",
+				"bitrate": 96
+			},
+			{
+				"name": "Radio KAAKKO",
+				"url": "http://wr2.downtime.fi/kaakko.aac",
+				"tags": "kymenlaakso",
+				"language": "finnish",
+				"bitrate": 80
+			}
+		]
+	},
 	"KE": {
 		"name": "Kenya",
 		"stations": [
