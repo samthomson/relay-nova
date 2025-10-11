@@ -800,6 +800,88 @@
 			}
 		]
 	},
+	"IE": {
+		"name": "Ireland",
+		"stations": [
+			{
+				"name": "Christmas FM Ireland",
+				"url": "https://christmasfm.cdnstream1.com/2547_128.mp3?listenerId=esTrackblock097016&aw_0_1st.playerid=esPlayer&aw_0_1st.skey=1692448019",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "DDM RADIO IRELAND",
+				"url": "http://93.107.98.107:8000/;stream.nsv",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Easy Radio Ireland",
+				"url": "https://easyradio.radioca.st/;stream.nsv",
+				"tags": "easy listening,love songs,relaxing",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "Galway Bay FM",
+				"url": "https://wg.cdn.tibus.net/galwaybay.mp3",
+				"tags": "galway,ireland,local",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "LiveIreland",
+				"url": "http://192.111.140.11:8058/stream",
+				"tags": "celtic,irish folk",
+				"language": "english,gaelic",
+				"bitrate": 128
+			},
+			{
+				"name": "Newstalk Ireland",
+				"url": "https://edge.audioxi.com/NT",
+				"tags": "news",
+				"language": "english",
+				"bitrate": 25
+			},
+			{
+				"name": "Ocean FM Sligo",
+				"url": "https://edge4.audioxi.com/OCEANSAAC",
+				"tags": "ireland,pop,rock,sligo",
+				"language": "",
+				"bitrate": 48
+			},
+			{
+				"name": "SOLID GOLD RADIO IRELAND",
+				"url": "https://a1.asurahosting.com:10000/radio.mp3",
+				"tags": "",
+				"language": "english uk",
+				"bitrate": 320
+			},
+			{
+				"name": "The Sound of Ireland",
+				"url": "https://christmasfm.cdnstream1.com/2548_128.mp3",
+				"tags": "classic hits,ireland",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Timewarp Ireland",
+				"url": "https://broadcast.shoutstream.co.uk:8052/stream",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Wired FM - FM 99.9 - Limerick, Ireland",
+				"url": "https://s2.radio.co/sf0986595a/listen",
+				"tags": "college,education,science,technology",
+				"language": "english",
+				"bitrate": 192
+			}
+		]
+	},
 	"KE": {
 		"name": "Kenya",
 		"stations": [
@@ -858,6 +940,67 @@
 				"tags": "classical",
 				"language": "",
 				"bitrate": 0
+			}
+		]
+	},
+	"PL": {
+		"name": "Poland",
+		"stations": [
+			{
+				"name": "\tPolskie Radio Bialystok",
+				"url": "http://stream4.nadaje.com:15476/radiobialystok",
+				"tags": "",
+				"language": "polish",
+				"bitrate": 160
+			},
+			{
+				"name": " RADIO WIELKOPOLSKA",
+				"url": "http://217.182.76.63:8000/webstream",
+				"tags": "",
+				"language": "polish",
+				"bitrate": 0
+			},
+			{
+				"name": "Polski FM",
+				"url": "https://usa8.fastcast4u.com/proxy/live?mp=/1",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Polskie Radio - Czwórka",
+				"url": "http://stream3.polskieradio.pl:8906/;stream",
+				"tags": "",
+				"language": "polish",
+				"bitrate": 192
+			},
+			{
+				"name": "Polskie Radio 24",
+				"url": "http://stream3.polskieradio.pl:8080/;.mp3",
+				"tags": "information,news,talk",
+				"language": "polish",
+				"bitrate": 192
+			},
+			{
+				"name": "Polskie Radio Jedynka",
+				"url": "http://mp3.polskieradio.pl:8900/;.mp3",
+				"tags": "polskieradio,public radio",
+				"language": "polish",
+				"bitrate": 192
+			},
+			{
+				"name": "Program Pierwszy Polskiego Radia",
+				"url": "http://mp3.polskieradio.pl:8900/;",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "Radio Mbox - Polska Muzyka",
+				"url": "https://s3.slotex.pl:7072/stream",
+				"tags": "polish,pop",
+				"language": "polish",
+				"bitrate": 320
 			}
 		]
 	},
