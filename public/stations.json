@@ -800,6 +800,294 @@
 			}
 		]
 	},
+	"FR": {
+		"name": "France",
+		"stations": [
+			{
+				"name": "\tRTL France",
+				"url": "http://streaming.radio.rtl.fr/rtl-1-44-128",
+				"tags": "",
+				"language": "french,frenchhttps://rfiswahili96k.ice.infomaniak.ch/rfis",
+				"bitrate": 128
+			},
+			{
+				"name": "21 RADIO DIJON",
+				"url": "http://82.64.123.204:8001/21radio",
+				"tags": "goldies,local music,local news,poetry,variety hits",
+				"language": "french",
+				"bitrate": 128
+			},
+			{
+				"name": "432hz Radio",
+				"url": "http://stream.zeno.fm/er3nkny6fd0uv",
+				"tags": "",
+				"language": "french",
+				"bitrate": 0
+			},
+			{
+				"name": "Allzic Radio Disco",
+				"url": "http://allzic36.ice.infomaniak.ch/allzic36.mp3",
+				"tags": "80s,classic disco,disco",
+				"language": "french",
+				"bitrate": 128
+			},
+			{
+				"name": "BFM Business ",
+				"url": "http://audio.bfmtv.com/bfmbusiness_128.mp3?aw_0_1st.playerId=BFMBusiness_audio_web&aggregator=BFMBusiness_audio_web",
+				"tags": "economic news",
+				"language": "french",
+				"bitrate": 256
+			},
+			{
+				"name": "Bretagne 5",
+				"url": "http://bretagne5.streamakaci.com/bretagne5.mp3",
+				"tags": "local news,local weather,music,news,regional radio",
+				"language": "french",
+				"bitrate": 192
+			},
+			{
+				"name": "C9 Radio",
+				"url": "https://stream.c9.fr/c9radio-192.mp3",
+				"tags": "dance,pop,rock,talk,top 40",
+				"language": "english,french",
+				"bitrate": 192
+			},
+			{
+				"name": "Espace FM",
+				"url": "http://listen.radioking.com/radio/16769/stream/49487",
+				"tags": "zouk",
+				"language": "creole,french",
+				"bitrate": 128
+			},
+			{
+				"name": "FIP Jazz",
+				"url": "http://icecast.radiofrance.fr/fipjazz-hifi.aac",
+				"tags": "aac,jazz,public radio,radio france",
+				"language": "french",
+				"bitrate": 192
+			},
+			{
+				"name": "France Bleu Limousin",
+				"url": "http://direct.francebleu.fr/live/fblimousin-midfi.mp3",
+				"tags": "",
+				"language": "french",
+				"bitrate": 128
+			}
+		]
+	},
+	"GB": {
+		"name": "The United Kingdom Of Great Britain And Northern Ireland",
+		"stations": [
+			{
+				"name": "100% Whatever Westcountry",
+				"url": "https://dh1-sanityradio.radioca.st/stream",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "105.9 Academy FM (Folkestone)",
+				"url": "http://s2.xrad.io:8080/stream",
+				"tags": "",
+				"language": "english",
+				"bitrate": 48
+			},
+			{
+				"name": "107FM",
+				"url": "http://88.99.195.180:8031/stream",
+				"tags": "community",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "1940s Radio - Home Service - UK 1940s 1950s (Pumpkin FM OTRN)",
+				"url": "https://cast2.asurahosting.com/proxy/1940sradio/stream",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "24/7 Classical Radio",
+				"url": "https://ec3.yesstreaming.net:3615/stream",
+				"tags": "",
+				"language": "",
+				"bitrate": 64
+			},
+			{
+				"name": "60 NORTH RADIO - FLAC",
+				"url": "http://r5.zetcast.net/flac",
+				"tags": "",
+				"language": "",
+				"bitrate": 1411
+			},
+			{
+				"name": "96.3 Seahaven FM",
+				"url": "https://stream1.hippynet.co.uk:8107/stream?_=526570",
+				"tags": "",
+				"language": "",
+				"bitrate": 170
+			},
+			{
+				"name": "BBC tv",
+				"url": "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service?s=1619733260&e=1619747660&h=f8bc47f18c4b24de16cf2efa7951f91d",
+				"tags": "news,world news",
+				"language": "english",
+				"bitrate": 56
+			},
+			{
+				"name": "BBC World Service",
+				"url": "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service_east_asia",
+				"tags": "news",
+				"language": "",
+				"bitrate": 56
+			},
+			{
+				"name": "BCfm 93.2",
+				"url": "https://bcfmradiomain.radioca.st/live.mp3",
+				"tags": "bristol,rock",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Bedrock Radio",
+				"url": "https://s40.myradiostream.com:16652/bedrockradio",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Beware! The Radio",
+				"url": "https://bewaretheradio.out.airtime.pro/bewaretheradio_a",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "BFBS Blandford",
+				"url": "http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs14.aac",
+				"tags": "",
+				"language": "english",
+				"bitrate": 64
+			},
+			{
+				"name": "BFBS Radio 2",
+				"url": "http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs2.aac",
+				"tags": "",
+				"language": "english",
+				"bitrate": 64
+			},
+			{
+				"name": "BHFR British Home Front Radio",
+				"url": "https://solid24.streamupsolutions.com/proxy/mmpplqiv?mp=/;type=mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Bolton FM",
+				"url": "https://radio.canstream.co.uk:8083/live.mp3",
+				"tags": "community,local",
+				"language": "british english",
+				"bitrate": 128
+			},
+			{
+				"name": "Box UK Radio",
+				"url": "https://boxstream.danceradiouk.com/stream/1/stream.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Bristol Sound Webradio",
+				"url": "https://thebristolsoundwebradio.stream.laut.fm/thebristolsoundwebradio",
+				"tags": "bristol,chillout,downtempo,trip-hop,triphop",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "BritCom 1 - Pumpkin FM",
+				"url": "https://cast2.asurahosting.com/proxy/britcom1/stream",
+				"tags": "british comedy,comedy,old time radio,vintage comedy",
+				"language": "british english,english",
+				"bitrate": 64
+			},
+			{
+				"name": "Brooklands Radio",
+				"url": "https://stream4.hippynet.co.uk/stream/brooklandsradio",
+				"tags": "community radio,local news,local talk,pop music",
+				"language": "",
+				"bitrate": 192
+			}
+		]
+	},
+	"HU": {
+		"name": "Hungary",
+		"stations": [
+			{
+				"name": " Győr+ Rádió ",
+				"url": "https://stream.42netmedia.com:8443/sc_gyor1",
+				"tags": "classical,comedy,local news,local radio,music,news",
+				"language": "hungarian",
+				"bitrate": 128
+			},
+			{
+				"name": "Aktív Rádió",
+				"url": "http://aktivradio.hu:8000/aktiv.mp3",
+				"tags": "pop",
+				"language": "hungarian",
+				"bitrate": 160
+			},
+			{
+				"name": "Base FM",
+				"url": "https://icast.connectmedia.hu/5401/live.mp3",
+				"tags": "hiphop,rap,rnb",
+				"language": "hungarian",
+				"bitrate": 320
+			},
+			{
+				"name": "BDPST ROCK -  192 kbit/s",
+				"url": "https://bdpstrock.hu/live.mp3",
+				"tags": "rock",
+				"language": "hungarian",
+				"bitrate": 192
+			},
+			{
+				"name": "Best FM",
+				"url": "http://stream.webthings.hu:8000/fm95-x-128.mp3",
+				"tags": "pop,rock",
+				"language": "hungarian",
+				"bitrate": 128
+			},
+			{
+				"name": "Best FM Székesfehérvár",
+				"url": "https://icast.connectmedia.hu/5113/live.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "Campus Rádió FM90",
+				"url": "https://stream.fm90.hu:8000/;",
+				"tags": "hits,top40",
+				"language": "english,hungarian",
+				"bitrate": 128
+			},
+			{
+				"name": "Csillagpont Rádió",
+				"url": "http://streamer1.borsodweb.hu:48000/csillagpont",
+				"tags": "local radio",
+				"language": "hungarian",
+				"bitrate": 96
+			},
+			{
+				"name": "Csukás Meserádió",
+				"url": "https://mr-stream.connectmedia.hu/4611/mr10.mp3",
+				"tags": "children",
+				"language": "",
+				"bitrate": 320
+			}
+		]
+	},
 	"IE": {
 		"name": "Ireland",
 		"stations": [
@@ -879,6 +1167,67 @@
 				"tags": "college,education,science,technology",
 				"language": "english",
 				"bitrate": 192
+			}
+		]
+	},
+	"IS": {
+		"name": "Iceland",
+		"stations": [
+			{
+				"name": "Apparatid",
+				"url": "http://icecast.365net.is:8000/orbApparatid.aac",
+				"tags": "local music",
+				"language": "icelandic",
+				"bitrate": 129
+			},
+			{
+				"name": "Bylgjan 98.9 Reykjavik",
+				"url": "http://icecast.365net.is:8000/orbbylgjan.aac",
+				"tags": "local music,music,news,reykjavik,sport,talk",
+				"language": "icelandic",
+				"bitrate": 129
+			},
+			{
+				"name": "Cathedral 13",
+				"url": "http://listen.shoutcast.com/cathedralxiii",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "Fred Film Radio-26 Íslenska",
+				"url": "https://s10.webradio-hosting.com/proxy/fredradiois/stream",
+				"tags": "film",
+				"language": "icelandic",
+				"bitrate": 128
+			},
+			{
+				"name": "Radio Bodun 105.5 Reykjavik",
+				"url": "http://radio.bodun.is:8000/stream",
+				"tags": "religion,reykjavik",
+				"language": "icelandic",
+				"bitrate": 128
+			},
+			{
+				"name": "Rás2",
+				"url": "http://netradio.ruv.is/ras2.aac",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Suðurland FM",
+				"url": "https://ice-11.spilarinn.is/xsudurlandfm",
+				"tags": "country,pop,rock,varied",
+				"language": "icelandic",
+				"bitrate": 0
+			},
+			{
+				"name": "Trolli FM 103.7 Siglufjordu",
+				"url": "http://live.trolli.is:8200/;",
+				"tags": "adult contemporary,siglufjordu,top 40",
+				"language": "icelandic",
+				"bitrate": 256
 			}
 		]
 	},
@@ -1121,6 +1470,210 @@
 			}
 		]
 	},
+	"MD": {
+		"name": "The Republic Of Moldova",
+		"stations": [
+			{
+				"name": "Aquarelle FM",
+				"url": "http://93.115.137.75:8000/aquarellefm.mp3",
+				"tags": "",
+				"language": "romanian",
+				"bitrate": 128
+			},
+			{
+				"name": "Dance Fm Moldova",
+				"url": "http://37.233.41.76:8000/dancefm",
+				"tags": "dance,dance pop,electronic,house,new music,pop",
+				"language": "moldovian,romanian,russian",
+				"bitrate": 128
+			},
+			{
+				"name": "Haliz Gagauz Radiosu - GRT",
+				"url": "http://s02.radio-tochka.com:8020/radio?type=.mp3",
+				"tags": "ethno...,folk,pop",
+				"language": "gagauz",
+				"bitrate": 96
+			},
+			{
+				"name": "Jurnal Fm",
+				"url": "https://audio.jurnalfm.md/hq",
+				"tags": "hits,music,new music,news,pop,talk",
+				"language": "moldovian,romanian,russian",
+				"bitrate": 96
+			},
+			{
+				"name": "Kiss FM Moldova",
+				"url": "https://live.kissfm.md/kissfm.chisinau",
+				"tags": "top hits,top40",
+				"language": "moldovian",
+				"bitrate": 80
+			},
+			{
+				"name": "Megapolis Fm",
+				"url": "https://megapolisfm.md:8443/886",
+				"tags": "dance,dance pop,electronic,house,new music",
+				"language": "moldovian,romanian,russian",
+				"bitrate": 128
+			}
+		]
+	},
+	"NL": {
+		"name": "The Netherlands",
+		"stations": [
+			{
+				"name": "538 Dance Departmetn",
+				"url": "http://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR01.mp3",
+				"tags": "dance,house",
+				"language": "dutch,english",
+				"bitrate": 128
+			},
+			{
+				"name": "Aalburg FM",
+				"url": "https://server-28.stream-server.nl:8808/stream",
+				"tags": "24/7,various music",
+				"language": "dutch",
+				"bitrate": 192
+			},
+			{
+				"name": "Airplay Radio",
+				"url": "https://stream.and-stuff.nl:8443/live-airplay_320",
+				"tags": "local news,variety",
+				"language": "dutch",
+				"bitrate": 320
+			},
+			{
+				"name": "Aladna FM",
+				"url": "https://aladnafm.beheerstream.nl/8024/stream",
+				"tags": "",
+				"language": "dutch",
+				"bitrate": 320
+			},
+			{
+				"name": "All Oldies Channel",
+				"url": "http://radio.alloldieschannel.com:8000/stream",
+				"tags": "folk,oldies,pop,rock",
+				"language": "dutch",
+				"bitrate": 192
+			},
+			{
+				"name": "Echtepiraten.nl",
+				"url": "https://azuraserv3.live-streams.nl:8040/stream.mp3",
+				"tags": "echtepiraten,etherpiraten,holland,nederlandstalig,piraten,piratenhits",
+				"language": "dutch",
+				"bitrate": 192
+			},
+			{
+				"name": "Foute Radio",
+				"url": "http://stream.dotpoint.nl:8000/fouteradio",
+				"tags": "classic hits,hits,pop,top40",
+				"language": "dutch,english",
+				"bitrate": 128
+			},
+			{
+				"name": "Fryslan Strijders - Piratenhits op volle toeren",
+				"url": "https://streambeheer.fryslanstrijders.nl/proxy/fryslanstrijders/stream",
+				"tags": "folk,piraten muziek,piratenhits",
+				"language": "dutch,english,holland,nederland",
+				"bitrate": 128
+			},
+			{
+				"name": "Groeistad Radio",
+				"url": "http://213.202.241.176:8564/stream",
+				"tags": "pop",
+				"language": "dutch",
+				"bitrate": 160
+			}
+		]
+	},
+	"NZ": {
+		"name": "New Zealand",
+		"stations": [
+			{
+				"name": "100,3FM South Canterbury",
+				"url": "http://uk4-vn.mixstream.net:8066/stream/1/",
+				"tags": "geraldine,local radio,temuka,timaru,variety",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "8K.NZ || Christchurch, NZ",
+				"url": "http://radio8k.out.airtime.pro:8000/radio8k_a",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "91.2 Oamaru FM",
+				"url": "https://usa1-vn.mixstream.net/8096/listen.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "95bFM - 256Kbps MP3",
+				"url": "https://streams.95bfm.com/stream95",
+				"tags": "university radio,university of auckland,auckland,alternative",
+				"language": "",
+				"bitrate": 256
+			},
+			{
+				"name": "Akaroa World Radio",
+				"url": "https://n07.radiojar.com/k0t12bsns1duv?rj-ttl=5&rj-tok=AAABf7nGP10A7NK4A0_6v63i4w",
+				"tags": "easy listening",
+				"language": "english",
+				"bitrate": 0
+			},
+			{
+				"name": "Country Radio Invercargilll",
+				"url": "http://countryradio2.no-ip.org:8000/;",
+				"tags": "community,country",
+				"language": "english",
+				"bitrate": 32
+			},
+			{
+				"name": "Galaxy 107 FM  Kawerau",
+				"url": "http://s39.myradiostream.com:14858/;listen.mp3",
+				"tags": "adult contemporary,community radio,kawerau",
+				"language": "english",
+				"bitrate": 192
+			},
+			{
+				"name": "Heads FM Mangawhai 106.4",
+				"url": "https://headsfm.radioca.st/stream",
+				"tags": "community,rock",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "https://badradio.nz/ - 24/7 PHONK",
+				"url": "https://s2.radio.co/s2b2b68744/listen",
+				"tags": "",
+				"language": "",
+				"bitrate": 320
+			},
+			{
+				"name": "JAZZGROOVE.org - Smooth Jazz (64k)",
+				"url": "http://streams.radiomast.io/4fdf004c-c2f3-49c1-bdb1-22e208d48780",
+				"tags": "",
+				"language": "",
+				"bitrate": 56
+			},
+			{
+				"name": "Kiwi Folk Radio",
+				"url": "https://streamer.radio.co/sde527a41e/listen",
+				"tags": "folk,local",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Lake FM Taupo",
+				"url": "https://lakefm-gecko.radioca.st/stream",
+				"tags": "community,contemporary",
+				"language": "english",
+				"bitrate": 192
+			}
+		]
+	},
 	"PL": {
 		"name": "Poland",
 		"stations": [
@@ -1179,6 +1732,116 @@
 				"tags": "polish,pop",
 				"language": "polish",
 				"bitrate": 320
+			}
+		]
+	},
+	"PT": {
+		"name": "Portugal",
+		"stations": [
+			{
+				"name": "00's RFM",
+				"url": "https://27793.live.streamtheworld.com/LIVESTREAMAAC.aac",
+				"tags": "2000s",
+				"language": "portuguese",
+				"bitrate": 64
+			},
+			{
+				"name": "105.4 Cascais - O Rock da Linha",
+				"url": "https://play.radioregional.pt:8220/stream/2/;;/stream.mp3",
+				"tags": "rock",
+				"language": "portuguese",
+				"bitrate": 256
+			},
+			{
+				"name": "ABC Portugal",
+				"url": "http://centova.radio.com.pt:8547/;",
+				"tags": "latin,latino,world music",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "Alvor FM",
+				"url": "http://centova.radio.com.pt:8469/;",
+				"tags": "pop,top 40",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "Antena Livre",
+				"url": "http://centova.radio.com.pt:9456/;",
+				"tags": "local music",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "Batida FM",
+				"url": "http://stream-icy.bauermedia.pt/batidafm.aac",
+				"tags": "urban contemporary",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "BBN Portuguese",
+				"url": "https://audio-edge-5bkfj.fra.h.radiomast.io/ec065d59-f358-48c9-a288-4efc797e5860",
+				"tags": "christian",
+				"language": "portuguese",
+				"bitrate": 64
+			},
+			{
+				"name": "Diana FM",
+				"url": "http://centova.radio.com.pt:9460/;",
+				"tags": "local music,news,variety",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "Estação Diária",
+				"url": "http://centova.radio.com.pt:9430/;",
+				"tags": "electro,pop,top 40",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "Estação Diária Rádio, Viseu – 96.8 FM",
+				"url": "https://centova.radio.com.pt/proxy/430?mp=/stream",
+				"tags": "",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "Fama Rádio",
+				"url": "http://digitalfm.dynu.com:8000/digitalfm64",
+				"tags": "local news,pop music",
+				"language": "portuguese",
+				"bitrate": 160
+			},
+			{
+				"name": "FUTURA - Rádio de Autor",
+				"url": "https://s4.radio.co/s7e7b6c165/listen",
+				"tags": "",
+				"language": "portuguese",
+				"bitrate": 320
+			},
+			{
+				"name": "Geice FM",
+				"url": "https://ec2.yesstreaming.net:3275/stream",
+				"tags": "classic hits,hits,oldies,pop",
+				"language": "english,portuguese",
+				"bitrate": 320
+			},
+			{
+				"name": "M80 rádio",
+				"url": "http://stream-icy.bauermedia.pt/m80.mp3",
+				"tags": "2000's,70's,80's,90's",
+				"language": "portuguese",
+				"bitrate": 128
+			},
+			{
+				"name": "Porão da nau radio ",
+				"url": "https://stream.zeno.fm/rwmao7mxxt8vv",
+				"tags": "classic hits",
+				"language": "english",
+				"bitrate": 0
 			}
 		]
 	},
@@ -1304,6 +1967,95 @@
 			}
 		]
 	},
+	"SE": {
+		"name": "Sweden",
+		"stations": [
+			{
+				"name": "Göteborgs Närradio 102.6 MHz",
+				"url": "http://lyssna.fnf.nu:8080/gnf102.mp3",
+				"tags": "",
+				"language": "swedish",
+				"bitrate": 0
+			},
+			{
+				"name": "Northern Metal Radio Extreme",
+				"url": "https://s2.free-shoutcast.com/stream/18092",
+				"tags": "",
+				"language": "",
+				"bitrate": 256
+			},
+			{
+				"name": "P4 Dalarna",
+				"url": "http://http-live.sr.se/p4dalarna-aac-192",
+				"tags": "",
+				"language": "swedish",
+				"bitrate": 192
+			},
+			{
+				"name": "P4 Örebro",
+				"url": "http://http-live.sr.se/p4orebro-aac-192",
+				"tags": "local radio,sveriges radio",
+				"language": "swedish",
+				"bitrate": 192
+			},
+			{
+				"name": "Sveriges Radio - P1",
+				"url": "http://sverigesradio.se/topsy/direkt/srapi/132-hi-aac-http",
+				"tags": "",
+				"language": "swedish",
+				"bitrate": 312
+			},
+			{
+				"name": "Sveriges Radio - P2",
+				"url": "https://edge1.sr.se/p2-flac",
+				"tags": "classical music",
+				"language": "swedish",
+				"bitrate": 128
+			},
+			{
+				"name": "Sveriges Radio - P4 Jämtland",
+				"url": "https://http-live.sr.se/p4jamtland-mp3-192",
+				"tags": "",
+				"language": "swedish",
+				"bitrate": 192
+			},
+			{
+				"name": "Sveriges Radio - P4 Värmland",
+				"url": "https://http-live.sr.se/p4varmland-mp3-128",
+				"tags": "local radio,sveriges radio",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Sveriges Radio - Radioapans knattekanal",
+				"url": "https://http-live.sr.se/knattekanalen-mp3-192",
+				"tags": "",
+				"language": "swedish",
+				"bitrate": 128
+			},
+			{
+				"name": "Sveriges Radio - SR Sápmi",
+				"url": "http://http-live.sr.se/srsapmi-aac-192",
+				"tags": "public radio,sveriges radio",
+				"language": "swedish",
+				"bitrate": 128
+			},
+			{
+				"name": "Sveriges Radio P2",
+				"url": "https://http-live.sr.se/p2musik-aac-320",
+				"tags": "classical,jazz",
+				"language": "swedish",
+				"bitrate": 320
+			},
+			{
+				"name": "Sveriges Radio P4 Gävleborg",
+				"url": "https://http-live.sr.se/p4gavleborg-mp3-192",
+				"tags": "local radio,music",
+				"language": "swedish",
+				"bitrate": 192
+			}
+		]
+	},
 	"SG": {
 		"name": "Singapore",
 		"stations": [
@@ -1355,6 +2107,67 @@
 				"tags": "pop",
 				"language": "mandarin",
 				"bitrate": 48
+			}
+		]
+	},
+	"SK": {
+		"name": "Slovakia",
+		"stations": [
+			{
+				"name": "Československé radio ",
+				"url": "http://live.topradio.cz:8000/csradio128",
+				"tags": "pop music",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "Detské rádio",
+				"url": "https://stream.21.sk/detskeradio-192.mp3",
+				"tags": "",
+				"language": "slovak",
+				"bitrate": 192
+			},
+			{
+				"name": "Detské Rádio",
+				"url": "http://stream.21.sk/detskeradio-192.mp3",
+				"tags": "children,childrens music",
+				"language": "slovak",
+				"bitrate": 192
+			},
+			{
+				"name": "Dobré Rádio",
+				"url": "https://stream.dobreradio.sk/dobreradio.mp3",
+				"tags": "news,pop,top 40",
+				"language": "slovak",
+				"bitrate": 128
+			},
+			{
+				"name": "Fit Famili Rádio ",
+				"url": "https://solid1.streamupsolutions.com/proxy/utwrguip/stream",
+				"tags": "music",
+				"language": "slovak",
+				"bitrate": 128
+			},
+			{
+				"name": "Fred Film Radio-25 Slovenčina",
+				"url": "https://s10.webradio-hosting.com/proxy/fredradiosk/stream",
+				"tags": "film",
+				"language": "slovak",
+				"bitrate": 128
+			},
+			{
+				"name": "Rádio Aetter",
+				"url": "http://stream.aetter.sk:8000/aetter",
+				"tags": "",
+				"language": "slovak",
+				"bitrate": 192
+			},
+			{
+				"name": "Radio Basavel",
+				"url": "https://stream.zeno.fm/6gd9c6yn4nhvv",
+				"tags": "basavel,bašavel,ciganske",
+				"language": "roma,slovak",
+				"bitrate": 0
 			}
 		]
 	},
@@ -1672,6 +2485,81 @@
 				"tags": "",
 				"language": "",
 				"bitrate": 48
+			}
+		]
+	},
+	"ZA": {
+		"name": "South Africa",
+		"stations": [
+			{
+				"name": "94.7 Highveld Stereo",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/FM947_SC",
+				"tags": "",
+				"language": "",
+				"bitrate": 64
+			},
+			{
+				"name": "Afrobeat N1 FM",
+				"url": "https://streamer.radio.co/s919e54210/listen",
+				"tags": "afrobeat",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Cape Talk 567",
+				"url": "https://27863.live.streamtheworld.com/CAPE_TALKAAC_SC?dist=CapeTalkWeb&pname=TDSdk",
+				"tags": "adult contemporary,south africa,talk",
+				"language": "english",
+				"bitrate": 32
+			},
+			{
+				"name": "Diamond Radio",
+				"url": "https://vm65162.streamerr.co/listen/diamond_fm/radio.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "ECR - East Coast Radio -KwaZulu Natal",
+				"url": "https://edge.iono.fm/xice/ecr_live_medium.aac",
+				"tags": "news,urban,urban adult contemporary",
+				"language": "english",
+				"bitrate": 48
+			},
+			{
+				"name": "Harties FM",
+				"url": "https://s5.radio.co/s68c6f4028/listen",
+				"tags": "afrikaans,easy listening,pop,rock,smooth",
+				"language": "afrikaans,english",
+				"bitrate": 320
+			},
+			{
+				"name": "Helderberg FM",
+				"url": "https://helderberg.highquality.radiostream.co.za/",
+				"tags": "community radio",
+				"language": "afrikaans,english",
+				"bitrate": 0
+			},
+			{
+				"name": "Hellenic Radio",
+				"url": "http://iceant.eclipse-streaming.co.za/Hellenic",
+				"tags": "greek",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Jakaranda FM",
+				"url": "https://edge.iono.fm/xice/jacarandafm_live_high.mp3",
+				"tags": "80s",
+				"language": "afrikaans,english",
+				"bitrate": 128
+			},
+			{
+				"name": "Jozi FM (HiFi aac)",
+				"url": "https://edge.iono.fm/xice/51_high.aac",
+				"tags": "",
+				"language": "english,sepedi,sesotho,setswana,tshivenḓa,xitsonga",
+				"bitrate": 0
 			}
 		]
 	}
