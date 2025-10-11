@@ -1,0 +1,162 @@
+{
+	"AD": {
+		"name": "Andorra",
+		"stations": [
+			{
+				"name": "Abdulbasit Abdulsamad",
+				"url": "https://radio.mp3islam.com/listen/abdulbasit/radio.mp3",
+				"tags": "",
+				"language": "arabic",
+				"bitrate": 192
+			},
+			{
+				"name": "RadioSoleLuna",
+				"url": "https://cast3.server89.com/radio/8040/radio.mp3",
+				"tags": "music",
+				"language": "italian",
+				"bitrate": 320
+			},
+			{
+				"name": "tch",
+				"url": "http://node-01.zeno.fm/bwrw9xcgqeruv",
+				"tags": "classical",
+				"language": "",
+				"bitrate": 0
+			}
+		]
+	},
+	"AE": {
+		"name": "The United Arab Emirates",
+		"stations": [
+			{
+				"name": ". Abdulbasit Abdulsamad",
+				"url": "https://radio.mp3islam.com/listen/abdulbasit/radio.mp3",
+				"tags": "",
+				"language": "arabic",
+				"bitrate": 192
+			},
+			{
+				"name": ".القرآن الكريم ",
+				"url": "https://n09.radiojar.com/0tpy1h0kxtzuv?rj-ttl=5&rj-tok=AAABjKoABHgAdULpynjQ7EwB6A",
+				"tags": "classical",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "Big Melodies",
+				"url": "https://funasia.streamguys1.com/live9",
+				"tags": "music",
+				"language": "hindi",
+				"bitrate": 320
+			},
+			{
+				"name": "Quran Radio From Sharjah",
+				"url": "https://l3.itworkscdn.net/smcquranlive/quranradiolive/icecast.audio",
+				"tags": "islam",
+				"language": "arabic",
+				"bitrate": 56
+			}
+		]
+	},
+	"KE": {
+		"name": "Kenya",
+		"stations": [
+			{
+				"name": "#Radio Quran",
+				"url": "https://n0a.radiojar.com/0tpy1h0kxtzuv?rj-ttl=5&rj-tok=AAABhdgGORQA-2acfyF3_4WY2g",
+				"tags": "classical",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "Baze Radio",
+				"url": "https://n10.radiojar.com/h831kbtdm3hvv",
+				"tags": "afrobeats,hiphop,pop",
+				"language": "english",
+				"bitrate": 0
+			},
+			{
+				"name": "Campus Radio Kenya",
+				"url": "https://stream.zenolive.com/mayn36v1v8quv.aac",
+				"tags": "",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "ghetto kenya",
+				"url": "https://stream.zeno.fm/kvudezx1h2zuv",
+				"tags": "classical",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "GHETTOKE KENYA",
+				"url": "http://stream-47.zeno.fm/gf58b0pt5x8uv?zs=9Rb0nsM4TlCJ9aggk8nWAg",
+				"tags": "classical",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "GHETTOO KENYA",
+				"url": "http://stream.zeno.fm/cs4q33arb2zuv",
+				"tags": "classical",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "JESUS IS LORD Radio",
+				"url": "https://s3.radio.co/s97f38db97/listen",
+				"tags": "christian,gospel",
+				"language": "chinese,english,french,kiswahili,portuguese,spanish",
+				"bitrate": 48
+			},
+			{
+				"name": "MWANGAZA WA NENO FM KENYA",
+				"url": "https://stream.zeno.fm/e34h1cbrmeruv",
+				"tags": "classical",
+				"language": "",
+				"bitrate": 0
+			}
+		]
+	},
+	"US": {
+		"name": "The United States Of America",
+		"stations": [
+			{
+				"name": " 90.7 FM KWMU-1",
+				"url": "https://kwmu1-ice.streamguys1.com/kwmu1.m3u",
+				"tags": "",
+				"language": "english",
+				"bitrate": 64
+			},
+			{
+				"name": " KFXR - Talk Radio 1190AM",
+				"url": "https://stream.revma.ihrhls.com/zc4276",
+				"tags": "",
+				"language": "english",
+				"bitrate": 0
+			},
+			{
+				"name": " WorkoutTime USA",
+				"url": "https://stream.zeno.fm/60pg6mi67hytv",
+				"tags": "gym,workout",
+				"language": "english",
+				"bitrate": 0
+			},
+			{
+				"name": "_Radio Energy(USA)",
+				"url": "https://gmusto.radioca.st/mp3",
+				"tags": "2000s,70s,80s,90s,adult contemporary,adult hits,classic hits,classic italian pop,classic pop,evergreen,evergreens,hits,italian,italian pop,oldies,pop,top 40,top100,top40",
+				"language": "italian",
+				"bitrate": 256
+			},
+			{
+				"name": ".100 Hip hop and RNB FM",
+				"url": "https://ice64.securenetsystems.net/LFTM",
+				"tags": "hip hop,r&b,soul,urban",
+				"language": "english",
+				"bitrate": 32
+			}
+		]
+	}
+}
