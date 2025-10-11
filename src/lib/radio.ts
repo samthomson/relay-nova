@@ -83,9 +83,34 @@ class RadioPlayer {
 			this.audio = new Audio();
 			this.audio.crossOrigin = 'anonymous';
 
-			// Add error handling for audio element
+			// Add comprehensive error handling for audio element
 			this.audio.onerror = (error) => {
 				console.error('RadioPlayer: Audio error:', error);
+
+				// Get more detailed error information if available
+				const mediaError = this.audio?.error;
+				if (mediaError) {
+					const errorCodes = {
+						1: 'MEDIA_ERR_ABORTED - The user aborted the fetching process.',
+						2: 'MEDIA_ERR_NETWORK - A network error occurred while fetching the media.',
+						3: 'MEDIA_ERR_DECODE - The media could not be decoded.',
+						4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The media format or MIME type is not supported.',
+					};
+
+					const errorMessage = errorCodes[mediaError.code as keyof typeof errorCodes] || 'Unknown media error';
+					console.error(`RadioPlayer: MediaError code ${mediaError.code}: ${errorMessage}`);
+
+					if (mediaError.message) {
+						console.error(`RadioPlayer: MediaError message: ${mediaError.message}`);
+					}
+				}
+
+				// If we have a current station, try to handle the failure
+				if (this.currentStation) {
+					this.handleFailedStation(error).catch(e => {
+						console.error('RadioPlayer: Error in error handler:', e);
+					});
+				}
 			};
 
 			this.audio.onplay = () => {
@@ -100,7 +125,21 @@ class RadioPlayer {
 				console.error('RadioPlayer: Audio playback stalled');
 			};
 
-			console.log('RadioPlayer: Audio element initialized');
+			// Additional error events
+			this.audio.addEventListener('error', (e) => {
+				console.error('RadioPlayer: Audio error event:', e);
+			});
+
+			// Network state events
+			this.audio.onwaiting = () => {
+				console.log('RadioPlayer: Audio buffering (waiting)');
+			};
+
+			this.audio.onsuspend = () => {
+				console.log('RadioPlayer: Audio loading suspended');
+			};
+
+			console.log('RadioPlayer: Audio element initialized with enhanced error handling');
 
 			// Load stations data
 			loadStationsData().then(data => {
@@ -174,6 +213,21 @@ class RadioPlayer {
 	private maxRetries: number = 3;
 	private retryCount: number = 0;
 
+	// Helper function to apply CORS proxy to a URL
+	private applyCorsProxy(url: string): string {
+		// Use a reliable CORS proxy service
+		// We're using cors-anywhere as an example, but in production you should use your own proxy
+		// or a more reliable service
+		const corsProxyUrl = 'https://corsproxy.io/?';
+
+		// Only apply proxy to URLs that need it (not already proxied)
+		if (url.startsWith(corsProxyUrl)) {
+			return url;
+		}
+
+		return `${corsProxyUrl}${encodeURIComponent(url)}`;
+	}
+
 	private async playStation(station: RadioStation): Promise<void> {
 		if (!this.audio) {
 			console.error('RadioPlayer: Audio element not initialized');
@@ -194,7 +248,11 @@ class RadioPlayer {
 		try {
 			console.log('RadioPlayer: Playing station:', station.name);
 			this.currentStation = station;
-			this.audio.src = station.url;
+
+			// Apply CORS proxy to the stream URL
+			const proxiedUrl = this.applyCorsProxy(station.url);
+			console.log('RadioPlayer: Using proxied URL:', proxiedUrl);
+			this.audio.src = proxiedUrl;
 
 			// Reset volume to full before playing
 			this.audio.volume = 1;
@@ -225,8 +283,9 @@ class RadioPlayer {
 			const errorString = String(error);
 			if (errorString.includes('Content Security Policy') ||
 				errorString.includes('CSP') ||
-				errorString.includes('Refused to load')) {
-				console.error('RadioPlayer: Content Security Policy violation detected');
+				errorString.includes('Refused to load') ||
+				errorString.includes('CORS')) {
+				console.error('RadioPlayer: Content Security Policy or CORS violation detected');
 			}
 
 			// Try another station
@@ -238,6 +297,25 @@ class RadioPlayer {
 	 * Handle failed station playback by trying another station
 	 */
 	private async handleFailedStation(error: unknown): Promise<void> {
+		// Categorize error for better handling
+		const errorString = String(error);
+		let errorType = 'unknown';
+
+		if (errorString.includes('Content Security Policy') ||
+			errorString.includes('CSP') ||
+			errorString.includes('CORS') ||
+			errorString.includes('Refused to load')) {
+			errorType = 'cors';
+		} else if (errorString.includes('NotSupportedError') ||
+			errorString.includes('no supported source')) {
+			errorType = 'format';
+		} else if (errorString.includes('NetworkError') ||
+			errorString.includes('Failed to fetch')) {
+			errorType = 'network';
+		}
+
+		console.log(`RadioPlayer: Error type categorized as: ${errorType}`);
+
 		// Try another station from the same country that we haven't tried yet
 		if (this.currentCountryCode && stationsData[this.currentCountryCode] && this.retryCount < this.maxRetries) {
 			this.retryCount++;
