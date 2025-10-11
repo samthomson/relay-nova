@@ -385,6 +385,60 @@
 			}
 		]
 	},
+	"CR": {
+		"name": "Costa Rica",
+		"stations": [
+			{
+				"name": "103 (FM 103.1)",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CRC_103_1AAC.aac",
+				"tags": "hits,music,musica,música urbana",
+				"language": "spanish",
+				"bitrate": 96
+			},
+			{
+				"name": "Azul 99.9 FM",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CRC_999AAC.aac",
+				"tags": "baladas en español,entretenimiento,musica romantica,pop en español",
+				"language": "spanish",
+				"bitrate": 64
+			},
+			{
+				"name": "Bésame Costa Rica - 89.9 FM - TIRB - Multimedios Radio - San José, Costa Rica",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/BESAME_CR_SC.mp3",
+				"tags": "89.9 fm,bésame,estación,fm,multimedios,multimedios radio,radio",
+				"language": "spanish",
+				"bitrate": 128
+			},
+			{
+				"name": "Radio Costa",
+				"url": "https://sonicpanel.globalstream.pro:10979/;",
+				"tags": "",
+				"language": "",
+				"bitrate": 104
+			},
+			{
+				"name": "Radio Frecuencia Tierra",
+				"url": "http://68.235.35.243:9008/stream",
+				"tags": "costa rica",
+				"language": "spanish",
+				"bitrate": 112
+			},
+			{
+				"name": "Radio María Costa Rica - 100.7 FM",
+				"url": "http://dreamsiteradiocp2.com:8044/stream",
+				"tags": "catholic,religious,talk",
+				"language": "spanish",
+				"bitrate": 64
+			},
+			{
+				"name": "Urbano 106 - 105.9 FM - San José, Costa Rica",
+				"url": "https://usa18.fastcast4u.com/proxy/rmoohhrw?mp=/1",
+				"tags": "105.9 fm,américa,centroamérica,costa rica,dancehall,entretenimiento,español,estación,fm,hiphop,juvenil,latinoamérica,moi merino,music,música,música en español e inglés,música urbana,r&b,r&b/urban,radio,reggae,san josé,urban,urban contemporary,urban music,urbana,urbano,urbano 106",
+				"language": "spanish",
+				"bitrate": 64
+			}
+		]
+	},
 	"KE": {
 		"name": "Kenya",
 		"stations": [

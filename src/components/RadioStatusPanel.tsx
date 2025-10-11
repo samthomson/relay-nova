@@ -47,7 +47,7 @@ export function RadioStatusPanel({ side, relay }: RadioStatusPanelProps) {
 			});
 		} else {
 			// Stop radio if radio mode is off or no relay selected
-			radioPlayer.stop();
+			radioPlayer.fadeOutAndStop();
 			if (isRadioMode) {
 				if (!relay) {
 					console.log('Radio mode is on but no relay panel is open');
@@ -112,11 +112,18 @@ export function RadioStatusPanel({ side, relay }: RadioStatusPanelProps) {
 							)}
 						</div>
 					</div>
-					{isRadioMode && stationInfo.total > 1 && (
+					{isRadioMode && currentStation && (
 						<button
-							className="p-2 hover:bg-white/10 rounded-full transition-colors"
-							onClick={() => radioPlayer.nextStation()}
-							title="Next station"
+							className="p-2 hover:bg-white/10 rounded-full transition-colors active:bg-white/20"
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								console.log('Shuffle button clicked - switching to random station');
+								radioPlayer.nextStation().catch(err => {
+									console.error('Failed to switch station:', err);
+								});
+							}}
+							title="Random station"
 						>
 							<Shuffle className="w-4 h-4 text-gray-300" />
 						</button>

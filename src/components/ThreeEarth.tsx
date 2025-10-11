@@ -7,6 +7,8 @@ import { RadioStatusPanel } from './RadioStatusPanel';
 import { UserProfilePanel } from './UserProfilePanel';
 import { useAutoPilot } from '@/hooks/useAutoPilot';
 import { useAutoPilotContext } from '@/contexts/AutoPilotContext';
+import { useRadioModeContext } from '@/contexts/RadioModeContext';
+import { radioPlayer } from '@/lib/radio';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface RelayLocation {
@@ -179,6 +181,11 @@ export const ThreeEarth = forwardRef<ThreeEarthRef, ThreeEarthProps>((props, ref
     isMouseOverRelayPanel.current = false; // Reset mouse over state when panel closes
     relayPanelRef.current = { element: null, scrollableRef: null }; // Reset the panel ref
     wheelEventsEnabled.current = true; // Re-enable wheel events when panel closes
+
+    // Immediately stop the radio when relay panel closes
+    if (radioPlayer) {
+      radioPlayer.fadeOutAndStop();
+    }
 
     // Remove connection line
     removeConnectionLine();

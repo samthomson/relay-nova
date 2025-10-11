@@ -41,6 +41,8 @@ class RadioPlayer {
 	private currentStationIndex: number = -1;
 	private countryStationCount: number = 0;
 	private triedStations: Set<string> = new Set();
+	private fadeOutInterval: number | null = null;
+	private fadeOutDuration: number = 500; // Fade out duration in ms
 
 	private constructor() {
 		if (typeof window !== 'undefined') {
@@ -85,6 +87,12 @@ class RadioPlayer {
 
 	public async play(countryCode: string): Promise<void> {
 		try {
+			// Clear any existing fade out to prevent it from stopping new playback
+			if (this.fadeOutInterval !== null) {
+				clearInterval(this.fadeOutInterval);
+				this.fadeOutInterval = null;
+			}
+
 			// Reset state before starting
 			this.triedStations.clear();
 			this.retryCount = 0;
@@ -145,6 +153,10 @@ class RadioPlayer {
 			console.log('RadioPlayer: Playing station:', station.name);
 			this.currentStation = station;
 			this.audio.src = station.url;
+
+			// Reset volume to full before playing
+			this.audio.volume = 1;
+
 			await this.audio.play();
 			console.log('RadioPlayer: Playback started successfully');
 			// Clear the tried stations set on success
@@ -185,6 +197,13 @@ class RadioPlayer {
 
 	public stop(): void {
 		if (this.audio) {
+			// Clear any existing fade out
+			if (this.fadeOutInterval !== null) {
+				clearInterval(this.fadeOutInterval);
+				this.fadeOutInterval = null;
+			}
+
+			// Immediately stop without fade
 			this.audio.pause();
 			this.audio.src = '';
 			this.currentStation = null;
@@ -193,6 +212,60 @@ class RadioPlayer {
 			this.countryStationCount = 0;
 			this.triedStations.clear();
 		}
+	}
+
+	/**
+	 * Fade out the audio and then stop playback
+	 */
+	public fadeOutAndStop(): void {
+		if (!this.audio || this.audio.paused || this.audio.volume === 0) {
+			// If already stopped or no audio, just stop immediately
+			this.stop();
+			return;
+		}
+
+		// Clear any existing fade out
+		if (this.fadeOutInterval !== null) {
+			clearInterval(this.fadeOutInterval);
+			this.fadeOutInterval = null;
+		}
+
+		// Set initial volume if not set
+		if (this.audio.volume !== 1) {
+			this.audio.volume = 1;
+		}
+
+		// Calculate fade step
+		const steps = 20; // Number of steps for fade
+		const stepTime = this.fadeOutDuration / steps; // Time per step
+		const volumeStep = this.audio.volume / steps; // Volume change per step
+
+		// Start fading
+		let currentStep = 0;
+		this.fadeOutInterval = window.setInterval(() => {
+			currentStep++;
+
+			if (this.audio) {
+				// Reduce volume
+				this.audio.volume = Math.max(0, this.audio.volume - volumeStep);
+
+				// Check if fade is complete
+				if (currentStep >= steps || this.audio.volume <= 0) {
+					// Clear interval and stop completely
+					if (this.fadeOutInterval !== null) {
+						clearInterval(this.fadeOutInterval);
+						this.fadeOutInterval = null;
+					}
+					this.stop();
+				}
+			} else {
+				// Audio element no longer exists
+				if (this.fadeOutInterval !== null) {
+					clearInterval(this.fadeOutInterval);
+					this.fadeOutInterval = null;
+				}
+			}
+		}, stepTime);
 	}
 
 	public getCurrentStation(): RadioStation | null {
@@ -212,12 +285,48 @@ class RadioPlayer {
 
 	public async nextStation(): Promise<void> {
 		if (!this.currentCountryCode || this.countryStationCount === 0) {
+			console.log('RadioPlayer: Cannot switch station - no current country or stations');
 			return;
 		}
 
+		console.log('RadioPlayer: Switching to a random station');
+
+		// Clear any existing fade out
+		if (this.fadeOutInterval !== null) {
+			clearInterval(this.fadeOutInterval);
+			this.fadeOutInterval = null;
+		}
+
 		const countryStations = stationsData[this.currentCountryCode].stations;
-		this.currentStationIndex = (this.currentStationIndex + 1) % countryStations.length;
+
+		// Get a random station different from the current one
+		let newStationIndex;
+		if (countryStations.length > 1) {
+			// If we have more than one station, make sure we pick a different one
+			do {
+				newStationIndex = Math.floor(Math.random() * countryStations.length);
+			} while (newStationIndex === this.currentStationIndex && countryStations.length > 1);
+		} else {
+			// If there's only one station, we have no choice but to use it again
+			newStationIndex = 0;
+		}
+
+		this.currentStationIndex = newStationIndex;
 		const station = countryStations[this.currentStationIndex];
+		console.log(`RadioPlayer: Selected new station: ${station.name} (${this.currentStationIndex + 1}/${countryStations.length})`);
+
+		// Stop current playback before starting new station
+		if (this.audio) {
+			this.audio.pause();
+			// Reset volume to full
+			this.audio.volume = 1;
+		}
+
+		// Reset tried stations
+		this.triedStations.clear();
+		this.retryCount = 0;
+
+		// Play the new station
 		await this.playStation(station);
 	}
 }
