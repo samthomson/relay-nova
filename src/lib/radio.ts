@@ -202,10 +202,45 @@ class RadioPlayer {
 			this.currentStationIndex = Math.floor(Math.random() * countryStations.stations.length);
 			const station = countryStations.stations[this.currentStationIndex];
 			console.log('RadioPlayer: Selected station:', station.name, 'in', countryStations.name);
-			await this.playStation(station);
+
+			try {
+				// Try to play the selected station
+				await this.playStation(station);
+			} catch (stationError) {
+				// If the first station fails, try another one
+				console.error('RadioPlayer: First station failed, trying another:', stationError);
+
+				// Add the failed station to the tried stations set
+				this.triedStations.add(station.url);
+
+				// Get untried stations
+				const untried = countryStations.stations.filter(s => !this.triedStations.has(s.url));
+
+				// If we have other stations to try
+				if (untried.length > 0) {
+					// Pick a random untried station
+					const randomIndex = Math.floor(Math.random() * untried.length);
+					const fallbackStation = untried[randomIndex];
+					this.currentStationIndex = countryStations.stations.findIndex(s => s.url === fallbackStation.url);
+					console.log('RadioPlayer: Trying alternative station:', fallbackStation.name);
+					await this.playStation(fallbackStation);
+				} else if (countryStations.stations.length > 0) {
+					// If all stations have been tried once, reset and try again
+					console.log('RadioPlayer: All stations tried once, trying again with first station');
+					this.triedStations.clear();
+					this.currentStationIndex = 0;
+					await this.playStation(countryStations.stations[0]);
+				} else {
+					// This shouldn't happen as we checked countryStations.stations.length above
+					throw new Error('No stations available for this country');
+				}
+			}
 		} catch (error) {
 			console.error('RadioPlayer: Error playing radio:', error);
-			this.stop();
+			// Don't clear the current station to prevent "No stations available" message
+			// Just reset the retry count and tried stations
+			this.retryCount = 0;
+			this.triedStations.clear();
 		}
 	}
 
@@ -439,6 +474,15 @@ class RadioPlayer {
 			console.log(`RadioPlayer: Retry attempt ${this.retryCount} of ${this.maxRetries}`);
 
 			const countryStations = stationsData[this.currentCountryCode].stations;
+
+			// If there's only one station for this country, try it again with a different proxy
+			if (countryStations.length === 1 && this.currentStation) {
+				console.log('RadioPlayer: Only one station available for this country, trying with a different proxy');
+				this.rotateToNextProxy();
+				await this.playStation(countryStations[0]);
+				return;
+			}
+
 			// Only consider stations we haven't tried yet
 			const untried = countryStations.filter(s => !this.triedStations.has(s.url));
 
@@ -451,9 +495,29 @@ class RadioPlayer {
 				this.currentStationIndex = countryStations.findIndex(s => s.url === fallbackStation.url);
 				console.log('RadioPlayer: Trying another station:', fallbackStation.name);
 				await this.playStation(fallbackStation);
+			} else if (countryStations.length > 0) {
+				// If we've tried all stations but still have retries left, 
+				// clear the tried stations and try again from the beginning
+				if (this.retryCount < this.maxRetries) {
+					console.log('RadioPlayer: Tried all stations, resetting and trying again');
+					this.triedStations.clear();
+
+					// Try a random station again
+					this.currentStationIndex = Math.floor(Math.random() * countryStations.length);
+					const station = countryStations[this.currentStationIndex];
+					console.log('RadioPlayer: Trying station again:', station.name);
+					await this.playStation(station);
+				} else {
+					// We've tried all stations and reached max retries
+					console.log('RadioPlayer: All stations failed to play and max retries reached');
+					// Keep the current station reference so UI doesn't show "No stations available"
+					// Just clear the tried stations and reset retry count
+					this.triedStations.clear();
+					this.retryCount = 0;
+				}
 			} else {
-				// We've tried all stations and none work
-				console.log('RadioPlayer: All stations failed to play');
+				// No stations available for this country
+				console.log('RadioPlayer: No stations available for country:', this.currentCountryCode);
 				this.currentStation = null;
 				this.triedStations.clear();
 				this.retryCount = 0;
@@ -461,7 +525,8 @@ class RadioPlayer {
 		} else {
 			// Max retries reached or no more stations to try
 			console.log('RadioPlayer: Max retries reached or no stations available');
-			this.currentStation = null;
+			// Don't set currentStation to null to prevent "No stations available" message
+			// Instead, keep the current station reference but clear other state
 			this.triedStations.clear();
 			this.retryCount = 0;
 		}
@@ -553,6 +618,14 @@ class RadioPlayer {
 			index: this.currentStationIndex + 1, // 1-based for display
 			total: this.countryStationCount
 		};
+	}
+
+	/**
+	 * Get the audio element for direct access to its events
+	 * This is used by the UI to monitor playback state
+	 */
+	public getAudioElement(): HTMLAudioElement | null {
+		return this.audio;
 	}
 
 	public async nextStation(): Promise<void> {
