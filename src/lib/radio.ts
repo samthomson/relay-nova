@@ -213,19 +213,67 @@ class RadioPlayer {
 	private maxRetries: number = 3;
 	private retryCount: number = 0;
 
+	// List of CORS proxies to try in order
+	private corsProxies = [
+		'https://api.allorigins.win/raw?url=',
+		'https://corsproxy.io/?',
+		'https://cors-anywhere.herokuapp.com/'
+	];
+
+	private currentProxyIndex = 0;
+
 	// Helper function to apply CORS proxy to a URL
 	private applyCorsProxy(url: string): string {
-		// Use a reliable CORS proxy service
-		// We're using cors-anywhere as an example, but in production you should use your own proxy
-		// or a more reliable service
-		const corsProxyUrl = 'https://corsproxy.io/?';
-
-		// Only apply proxy to URLs that need it (not already proxied)
-		if (url.startsWith(corsProxyUrl)) {
-			return url;
+		// Check if URL is already proxied
+		for (const proxy of this.corsProxies) {
+			if (url.startsWith(proxy)) {
+				return url;
+			}
 		}
 
-		return `${corsProxyUrl}${encodeURIComponent(url)}`;
+		// Use the current proxy in the rotation
+		const proxy = this.corsProxies[this.currentProxyIndex];
+		console.log(`RadioPlayer: Using proxy ${this.currentProxyIndex + 1}/${this.corsProxies.length}: ${proxy}`);
+
+		return `${proxy}${encodeURIComponent(url)}`;
+	}
+
+	// Rotate to next proxy when current one fails
+	private rotateToNextProxy(): void {
+		this.currentProxyIndex = (this.currentProxyIndex + 1) % this.corsProxies.length;
+		console.log(`RadioPlayer: Rotating to next proxy: ${this.currentProxyIndex + 1}/${this.corsProxies.length}`);
+	}
+
+	// Check if a stream URL is accessible
+	private async checkStreamUrl(url: string): Promise<boolean> {
+		try {
+			console.log(`RadioPlayer: Checking stream URL: ${url}`);
+
+			// Create an AbortController for timeout
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
+			try {
+				// Use fetch with HEAD request to check if URL is accessible
+				const response = await fetch(url, {
+					method: 'HEAD',
+					mode: 'no-cors',
+					cache: 'no-cache',
+					headers: {
+						'Accept': 'audio/*'
+					},
+					signal: controller.signal
+				});
+
+				console.log(`RadioPlayer: Stream check response status: ${response.status}`);
+				return response.ok;
+			} finally {
+				clearTimeout(timeoutId);
+			}
+		} catch (error) {
+			console.log(`RadioPlayer: Stream check failed: ${error}`);
+			return false;
+		}
 	}
 
 	private async playStation(station: RadioStation): Promise<void> {
@@ -252,30 +300,77 @@ class RadioPlayer {
 			// Apply CORS proxy to the stream URL
 			const proxiedUrl = this.applyCorsProxy(station.url);
 			console.log('RadioPlayer: Using proxied URL:', proxiedUrl);
-			this.audio.src = proxiedUrl;
 
-			// Reset volume to full before playing
-			this.audio.volume = 1;
+			// Set a maximum number of proxy attempts
+			let proxyAttempts = 0;
+			const maxProxyAttempts = this.corsProxies.length;
 
-			// Add specific error handler for CSP violations
-			const errorHandler = (e: Event) => {
-				if (e instanceof ErrorEvent && e.message && e.message.includes('Content Security Policy')) {
-					console.error('RadioPlayer: CSP violation detected:', e.message);
+			// Try each proxy in rotation until one works or we've tried them all
+			while (proxyAttempts < maxProxyAttempts) {
+				try {
+					// Set the audio source
+					this.audio.src = proxiedUrl;
+
+					// Reset volume to full before playing
+					this.audio.volume = 1;
+
+					// Add specific error handler for CSP violations
+					const errorHandler = (e: Event) => {
+						if (e instanceof ErrorEvent && e.message && e.message.includes('Content Security Policy')) {
+							console.error('RadioPlayer: CSP violation detected:', e.message);
+						}
+					};
+
+					// Listen for CSP errors
+					window.addEventListener('error', errorHandler);
+
+					try {
+						// Try to play the audio
+						await this.audio.play();
+						console.log('RadioPlayer: Playback started successfully');
+						// Clear the tried stations set on success
+						this.triedStations.clear();
+						return; // Success! Exit the function
+					} catch (playError) {
+						// If we get a 404 or media error, try the next proxy
+						const errorString = String(playError);
+						if (errorString.includes('404') ||
+							errorString.includes('not found') ||
+							errorString.includes('MEDIA_ERR_SRC_NOT_SUPPORTED')) {
+
+							console.error(`RadioPlayer: Play error with proxy ${this.currentProxyIndex + 1}:`, playError);
+
+							// Rotate to next proxy
+							this.rotateToNextProxy();
+							proxyAttempts++;
+
+							// If we still have proxies to try, continue the loop
+							if (proxyAttempts < maxProxyAttempts) {
+								console.log(`RadioPlayer: Trying next proxy (${proxyAttempts + 1}/${maxProxyAttempts})`);
+								continue;
+							}
+						}
+
+						// For other errors, or if we've tried all proxies, rethrow
+						throw playError;
+					} finally {
+						// Always remove the error handler
+						window.removeEventListener('error', errorHandler);
+					}
+				} catch (proxyError) {
+					// If this is the last proxy attempt, rethrow the error
+					if (proxyAttempts >= maxProxyAttempts - 1) {
+						throw proxyError;
+					}
+
+					// Otherwise try the next proxy
+					this.rotateToNextProxy();
+					proxyAttempts++;
 				}
-			};
-
-			// Listen for CSP errors
-			window.addEventListener('error', errorHandler);
-
-			try {
-				await this.audio.play();
-				console.log('RadioPlayer: Playback started successfully');
-				// Clear the tried stations set on success
-				this.triedStations.clear();
-			} finally {
-				// Always remove the error handler
-				window.removeEventListener('error', errorHandler);
 			}
+
+			// If we've tried all proxies and none worked, throw an error
+			throw new Error('All proxies failed to play the station');
 		} catch (error) {
 			console.error('RadioPlayer: Failed to play station:', error);
 
@@ -286,6 +381,8 @@ class RadioPlayer {
 				errorString.includes('Refused to load') ||
 				errorString.includes('CORS')) {
 				console.error('RadioPlayer: Content Security Policy or CORS violation detected');
+			} else if (errorString.includes('404') || errorString.includes('not found')) {
+				console.error('RadioPlayer: Stream URL returned 404 Not Found');
 			}
 
 			// Try another station
@@ -307,14 +404,34 @@ class RadioPlayer {
 			errorString.includes('Refused to load')) {
 			errorType = 'cors';
 		} else if (errorString.includes('NotSupportedError') ||
-			errorString.includes('no supported source')) {
+			errorString.includes('no supported source') ||
+			errorString.includes('MEDIA_ERR_SRC_NOT_SUPPORTED')) {
 			errorType = 'format';
 		} else if (errorString.includes('NetworkError') ||
 			errorString.includes('Failed to fetch')) {
 			errorType = 'network';
+		} else if (errorString.includes('404') ||
+			errorString.includes('Not Found')) {
+			errorType = '404';
 		}
 
 		console.log(`RadioPlayer: Error type categorized as: ${errorType}`);
+
+		// For CORS, format, or 404 errors, try rotating the proxy first if we haven't exceeded max retries
+		if ((errorType === 'cors' || errorType === 'format' || errorType === '404') &&
+			this.currentStation && this.retryCount < 1) {
+
+			// Increment retry count
+			this.retryCount++;
+
+			// Try the same station with a different proxy
+			this.rotateToNextProxy();
+			console.log(`RadioPlayer: Trying same station with different proxy (attempt ${this.retryCount})`);
+
+			// Try the same station again with a new proxy
+			await this.playStation(this.currentStation);
+			return;
+		}
 
 		// Try another station from the same country that we haven't tried yet
 		if (this.currentCountryCode && stationsData[this.currentCountryCode] && this.retryCount < this.maxRetries) {
@@ -326,6 +443,9 @@ class RadioPlayer {
 			const untried = countryStations.filter(s => !this.triedStations.has(s.url));
 
 			if (untried.length > 0) {
+				// Reset proxy index when trying a new station
+				this.currentProxyIndex = 0;
+
 				const randomIndex = Math.floor(Math.random() * untried.length);
 				const fallbackStation = untried[randomIndex];
 				this.currentStationIndex = countryStations.findIndex(s => s.url === fallbackStation.url);
