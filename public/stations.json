@@ -77,6 +77,159 @@
 			}
 		]
 	},
+	"AT": {
+		"name": "Austria",
+		"stations": [
+			{
+				"name": "Austrian Rock Radio",
+				"url": "http://live.antenne.at/arr",
+				"tags": "rock",
+				"language": "german",
+				"bitrate": 128
+			},
+			{
+				"name": "Lounge.FM - 100% Austria",
+				"url": "https://s35.derstream.net/100austria.mp3",
+				"tags": "downtempo,easy listening,lounge,smooth jazz",
+				"language": "german",
+				"bitrate": 128
+			},
+			{
+				"name": "Pirate Radio Austria",
+				"url": "https://secureonair.krone.at/pirate.aac",
+				"tags": "alternative pop,alternative rock",
+				"language": "german",
+				"bitrate": 128
+			},
+			{
+				"name": "Radio Maria Austria (56 kbps)",
+				"url": "http://live.radiomaria.at:8000/rma2",
+				"tags": "catholic,christian,religion",
+				"language": "german",
+				"bitrate": 64
+			},
+			{
+				"name": "Radio Rot Weiß Rot",
+				"url": "https://secureonair.krone.at/rwr.aac",
+				"tags": "austrian music,austrian pop music,austropop",
+				"language": "german",
+				"bitrate": 128
+			}
+		]
+	},
+	"AU": {
+		"name": "Australia",
+		"stations": [
+			{
+				"name": "4K1G 107.1FM TATSICM Indigenous Community Radio Townsville",
+				"url": "https://usa4.fastcast4u.com/proxy/4k1g?mp=/stream",
+				"tags": "classic rock,comedy,education,heritage,indigenous current affairs,news",
+				"language": "australian indigenous,english,torres strait creole",
+				"bitrate": 96
+			},
+			{
+				"name": "ABC Local Radio 97.3 Illawarra, NSW (MP3)",
+				"url": "http://live-radio03.mediahubaustralia.com/2WOLW/mp3/",
+				"tags": "abc,australia,illawarra",
+				"language": "english",
+				"bitrate": 64
+			},
+			{
+				"name": "Australian Digital Radio Network - 1950s Pop Number 1s (MP3)",
+				"url": "http://abm21.com.au:8000/CONTAINER75",
+				"tags": "1950s,pop",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Australian Digital Radio Network - 24/7 News (MP3)",
+				"url": "http://abm22.com.au:8000/CONTAINER169",
+				"tags": "24/7,news,talk",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Australian Digital Radio Network - Aboriginal Music (MP3)",
+				"url": "http://abm21.com.au:8000/CONTAINER113",
+				"tags": "aboriginal music",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Australian Digital Radio Network - Aussie Classic Pop (MP3)",
+				"url": "http://abm21.com.au:8000/CONTAINER74",
+				"tags": "australian music,classic pop",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "Australian Digital Radio Network - Aussie Indie Music (MP3)",
+				"url": "http://abm21.com.au:8000/CONTAINER14",
+				"tags": "australian music,indie",
+				"language": "english",
+				"bitrate": 128
+			}
+		]
+	},
+	"BE": {
+		"name": "Belgium",
+		"stations": [
+			{
+				"name": "' t Is Vloms Affligem, be",
+				"url": "http://bluford.torontocast.com:8093/stream",
+				"tags": "hot adult contemporary,nederlandstalig",
+				"language": "dutch",
+				"bitrate": 128
+			},
+			{
+				"name": "Antipode",
+				"url": "https://streaming.antipode.be/antipode.mp3",
+				"tags": "belgium,french,louvain-la-neuve,wallonia",
+				"language": "french",
+				"bitrate": 128
+			},
+			{
+				"name": "BRF2 Radio",
+				"url": "https://streaming.brf.be/brf2-high.mp3",
+				"tags": "",
+				"language": "dutch,flemish,french,german",
+				"bitrate": 128
+			},
+			{
+				"name": "CK RADIO Belgique",
+				"url": "https://charlekingradio.ice.infomaniak.ch/ckradio-192.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			}
+		]
+	},
+	"BG": {
+		"name": "Bulgaria",
+		"stations": [
+			{
+				"name": "BNR Sofia (high)",
+				"url": "http://stream.bnr.bg:8030/radio-sofia.aac",
+				"tags": "bnr,public radio,sofia",
+				"language": "bulgarian",
+				"bitrate": 36
+			},
+			{
+				"name": "Radio Euronews Bulgaria - 105.6 FM Sofia",
+				"url": "https://play.euronews.bg/stream",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "Radio Mall Sofia",
+				"url": "http://79.98.108.170:8104/autodj",
+				"tags": "misc",
+				"language": "",
+				"bitrate": 192
+			}
+		]
+	},
 	"KE": {
 		"name": "Kenya",
 		"stations": [
