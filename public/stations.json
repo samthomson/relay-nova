@@ -1004,6 +1004,278 @@
 			}
 		]
 	},
+	"RU": {
+		"name": "The Russian Federation",
+		"stations": [
+			{
+				"name": "\tRadio Record - Russian Gold",
+				"url": "https://radiorecord.hostingradio.ru/russiangold96.aacp",
+				"tags": "pop,russian",
+				"language": "russian",
+				"bitrate": 0
+			},
+			{
+				"name": "101.ru Bard songs - Авторская Песня",
+				"url": "https://ic6.101.ru:8000/stream/pro/aac/64/35",
+				"tags": "bard,chanson",
+				"language": "russian",
+				"bitrate": 64
+			},
+			{
+				"name": "101.ru ДДТ",
+				"url": "https://pub0101.101.ru/stream/pro/aac/64/112",
+				"tags": "101.ru,64kbps,ddt,rock,russian,ддт",
+				"language": "russian",
+				"bitrate": 64
+			},
+			{
+				"name": "101.ru Михаил Боярский (Mikhail Boyarsky)",
+				"url": "https://srv02.gpmradio.ru:8443/stream/personal/aacp/64/1786150",
+				"tags": "64kbps,aac,discography",
+				"language": "russian",
+				"bitrate": 64
+			},
+			{
+				"name": "32 Радио Брянск 87.9 FM",
+				"url": "http://online.guberniya.tv:8000/32radio",
+				"tags": "32 radio,87_9 fm,bryansk,music,rock",
+				"language": "russian",
+				"bitrate": 192
+			},
+			{
+				"name": "90RU",
+				"url": "https://stream.pcradio.ru/ru90pcradio-hi",
+				"tags": "90,disco,pop,retro,russian",
+				"language": "russian",
+				"bitrate": 0
+			},
+			{
+				"name": "Radio Petersburg",
+				"url": "https://radio.5-tv.ru/radio.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Royal Radio Sankt Peterburg",
+				"url": "https://c22.radioboss.fm/stream/186",
+				"tags": "eurodance,hits,top40",
+				"language": "russian",
+				"bitrate": 128
+			},
+			{
+				"name": "Град Петров Санкт Петербург 73.10 УКВ",
+				"url": "http://stream.grad-petrov.ru:8093/mp3",
+				"tags": "christian,grad petrov,religious,sankt peterburg",
+				"language": "russian",
+				"bitrate": 96
+			},
+			{
+				"name": "Радио Орфей Москва 99.2 FM",
+				"url": "http://orfeyfm.hostingradio.ru:8034/orfeyfm64.mp3",
+				"tags": "classical music,moskva,music,orpheus",
+				"language": "russian",
+				"bitrate": 64
+			},
+			{
+				"name": "Радио Русский Хит 99.6 FM Москва",
+				"url": "http://stream2.ruhit.fm:9000/19_ruhit_64_reg_1",
+				"tags": "moskva,music,pop,russian hit",
+				"language": "russian",
+				"bitrate": 64
+			},
+			{
+				"name": "Ретро FM",
+				"url": "http://retroserver.streamr.ru:8043/retro256.mp3",
+				"tags": "classic hits,moscow,music,pop,retro,russia,russian pop",
+				"language": "russian",
+				"bitrate": 256
+			},
+			{
+				"name": "Ретро ФМ Москва 88.3 FM",
+				"url": "http://emgregion.hostingradio.ru:8064/moscow.retrofm.mp3",
+				"tags": "80-е,88_3 fm,90-е,moskva,music,old,retro fm",
+				"language": "russian",
+				"bitrate": 320
+			},
+			{
+				"name": "Русское радио Москва 105.7 FM",
+				"url": "http://23.105.238.4/rusradio128.mp3",
+				"tags": "moskva,music,pop,russkoe radio",
+				"language": "russian",
+				"bitrate": 0
+			},
+			{
+				"name": "Спокойное радио",
+				"url": "https://listen1.myradio24.com/6262",
+				"tags": "ambient,chillout,easy listening,jazz,lounge,moscow,relax,sounds of nature",
+				"language": "russian",
+				"bitrate": 128
+			}
+		]
+	},
+	"SG": {
+		"name": "Singapore",
+		"stations": [
+			{
+				"name": "AXR Singapore",
+				"url": "http://singaporestream.axr.online/",
+				"tags": "news,sport",
+				"language": "english",
+				"bitrate": 64
+			},
+			{
+				"name": "Class 95 Radio",
+				"url": "http://playerservices.streamtheworld.com/api/livestream-redirect/CLASS95AAC.aac",
+				"tags": "",
+				"language": "english",
+				"bitrate": 48
+			},
+			{
+				"name": "CNA938",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac",
+				"tags": "melisten",
+				"language": "english",
+				"bitrate": 64
+			},
+			{
+				"name": "Gold 905 Radio",
+				"url": "http://playerservices.streamtheworld.com/api/livestream-redirect/GOLD905AAC.aac",
+				"tags": "",
+				"language": "english",
+				"bitrate": 48
+			},
+			{
+				"name": "Love 972 Radio",
+				"url": "http://playerservices.streamtheworld.com/api/livestream-redirect/LOVE972FMAAC.aac",
+				"tags": "",
+				"language": "chinese",
+				"bitrate": 48
+			},
+			{
+				"name": "Ria 897 Radio",
+				"url": "http://playerservices.streamtheworld.com/api/livestream-redirect/RIA897FMAAC.aac",
+				"tags": "",
+				"language": "malay",
+				"bitrate": 48
+			},
+			{
+				"name": "Singapore Chinese POP YES FM 933",
+				"url": "https://22893.live.streamtheworld.com/YES933_SC?dist=radiosingapore",
+				"tags": "pop",
+				"language": "mandarin",
+				"bitrate": 48
+			}
+		]
+	},
+	"TH": {
+		"name": "Thailand",
+		"stations": [
+			{
+				"name": "90 rakthai",
+				"url": "http://radio11.plathong.net:8896/;stream.mp3",
+				"tags": "",
+				"language": "thai",
+				"bitrate": 96
+			},
+			{
+				"name": "97qfm",
+				"url": "https://cdn-th2.livestreaming.in.th/shoutcast/8610",
+				"tags": "news",
+				"language": "thai",
+				"bitrate": 320
+			},
+			{
+				"name": "Best Radio FM. 89.0 MHz.",
+				"url": "https://80sv2.hostpleng.com/?url=http://112.121.150.133:8198/;",
+				"tags": "คลื่นฮิตอันดับ 1 ของชาวขอนแก่น",
+				"language": "thai",
+				"bitrate": 48
+			},
+			{
+				"name": "BigFM RadioSocial",
+				"url": "http://media.login.in.th:8195/;stream.mp3",
+				"tags": "variety",
+				"language": "thai",
+				"bitrate": 128
+			},
+			{
+				"name": "Bluewave 97",
+				"url": "https://80sv2.hostpleng.com/?url=http://112.121.151.133:8109/stream",
+				"tags": "music",
+				"language": "thai",
+				"bitrate": 128
+			},
+			{
+				"name": "COOLISM",
+				"url": "https://coolism-web.cdn.byteark.com/;stream/1",
+				"tags": "คูลลิซึ่ม คลื่นเพลงเพราะอันดับ 1 ของเมืองไทย",
+				"language": "thai",
+				"bitrate": 128
+			},
+			{
+				"name": "FM 93.50 MHz บ้านใหม่ เรดิโอ",
+				"url": "https://radio10.plathong.net/7590/;stream.mp3",
+				"tags": "music",
+				"language": "thai",
+				"bitrate": 185
+			},
+			{
+				"name": "Hitz Thailand (Formerly 95.5)",
+				"url": "https://22253.live.streamtheworld.com/HITZ_955AAC_128.aac",
+				"tags": "regional music",
+				"language": "thai",
+				"bitrate": 128
+			},
+			{
+				"name": "JS100",
+				"url": "http://103.246.19.203:8004/stream?type=http&nocache=145",
+				"tags": "traffic,volunteer",
+				"language": "thai",
+				"bitrate": 128
+			}
+		]
+	},
+	"TR": {
+		"name": "Türkiye",
+		"stations": [
+			{
+				"name": "90lar turkey",
+				"url": "http://37.247.98.8/stream/166/",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "BAYRAM FM TURKEY",
+				"url": "https://sslyayin.netyayin.net/3442/stream",
+				"tags": "",
+				"language": "",
+				"bitrate": 96
+			},
+			{
+				"name": "JOY TÜRK TURKEY",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK_SC?/",
+				"tags": "",
+				"language": "",
+				"bitrate": 64
+			},
+			{
+				"name": "Metro fm turkey",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM_SC?",
+				"tags": "",
+				"language": "",
+				"bitrate": 64
+			},
+			{
+				"name": "SUPER FM 2 TURKEY",
+				"url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER2_SC?/",
+				"tags": "",
+				"language": "",
+				"bitrate": 64
+			}
+		]
+	},
 	"TW": {
 		"name": "Taiwan, Republic Of China",
 		"stations": [
@@ -1020,6 +1292,95 @@
 				"tags": "entertainment,information,music",
 				"language": "hakka",
 				"bitrate": 128
+			}
+		]
+	},
+	"UA": {
+		"name": "Ukraine",
+		"stations": [
+			{
+				"name": "7 Rays Radio",
+				"url": "https://7rays.stream.laut.fm/7rays",
+				"tags": "ambient,chillout,deep space,healing,meditation,new age,relax",
+				"language": "ukrainian",
+				"bitrate": 128
+			},
+			{
+				"name": "Avtoradio",
+				"url": "https://cast.mediaonline.net.ua/avtoradio",
+				"tags": "",
+				"language": "ukrainian",
+				"bitrate": 128
+			},
+			{
+				"name": "Classic Radio Ukraine",
+				"url": "https://online.classicradio.com.ua/ClassicRadio",
+				"tags": "classic,classical,classical music,classics",
+				"language": "ukrainian",
+				"bitrate": 128
+			},
+			{
+				"name": "DJFM DANCE",
+				"url": "https://cast.brg.ua/djfmdance_main_public_mp3_hq",
+				"tags": "dance,music,other,pop,varied",
+				"language": "ukrainian",
+				"bitrate": 256
+			},
+			{
+				"name": "KMusic Radio",
+				"url": "https://stream.zeno.fm/z9x8zy7747zuv",
+				"tags": "128 kbit/s,https,internet radio,mp3,music",
+				"language": "ukranian",
+				"bitrate": 0
+			},
+			{
+				"name": "Lux FM",
+				"url": "http://icecast.luxnet.ua/lux",
+				"tags": "ukrainian",
+				"language": "ukrainian",
+				"bitrate": 128
+			},
+			{
+				"name": "Mousse Radio",
+				"url": "https://stream.mjoy.ua:8443/radio-mousse",
+				"tags": "160 kbit/s,https,internet radio,mp3,music",
+				"language": "ukranian",
+				"bitrate": 192
+			},
+			{
+				"name": "NRJ Ukraine",
+				"url": "https://cast.mediaonline.net.ua/nrj320",
+				"tags": "dance,electronic,pop,top 40",
+				"language": "ukrainian",
+				"bitrate": 320
+			},
+			{
+				"name": "Radio Gold Ukraine",
+				"url": "https://online.radioplayer.ua/RadioGold",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Radio NV",
+				"url": "https://online-radio.nv.ua/radionv.mp3",
+				"tags": "christian,christmas music",
+				"language": "russian,ukrainian",
+				"bitrate": 128
+			},
+			{
+				"name": "Radio ROCKS Kyiv 103.6FM HD",
+				"url": "https://online.radioroks.ua/RadioROKS_HD",
+				"tags": "classic rock,heavy metal,rock",
+				"language": "english,ukrainian",
+				"bitrate": 320
+			},
+			{
+				"name": "Radio ROKS New Rock",
+				"url": "http://online.radioroks.ua/RadioROKS_NewRock_HD",
+				"tags": "alternative rock,new rock,pop rock,rock",
+				"language": "ukrainian",
+				"bitrate": 320
 			}
 		]
 	},
