@@ -882,6 +882,184 @@
 			}
 		]
 	},
+	"IT": {
+		"name": "Italy",
+		"stations": [
+			{
+				"name": "Ballando Web Radio",
+				"url": "http://sr10.inmystream.info:8073/;",
+				"tags": "folk music,local music,segrate",
+				"language": "italian",
+				"bitrate": 320
+			},
+			{
+				"name": "Basilicata Radio 2",
+				"url": "http://sr1.inmystream.info:8333/;stream.mp3",
+				"tags": "adult contemporary,local news",
+				"language": "italian",
+				"bitrate": 128
+			},
+			{
+				"name": "Byoblu",
+				"url": "https://byoblu.meway.host/stream",
+				"tags": "news,news talk,talk",
+				"language": "italian",
+				"bitrate": 0
+			},
+			{
+				"name": "Canale Italia+",
+				"url": "https://rci.canaleitalia.tv:8005/;",
+				"tags": "music,música pop",
+				"language": "italian",
+				"bitrate": 0
+			},
+			{
+				"name": "Canzoni Italiane",
+				"url": "https://stream.zeno.fm/7mcmhe87wnhvv",
+				"tags": "",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "Centro Suono Sport",
+				"url": "http://streaming.centrosuono.com:8000/cssport.mp3",
+				"tags": "roma,sport,talk",
+				"language": "italian",
+				"bitrate": 128
+			},
+			{
+				"name": "CLASSIC HITS RADIO Italia",
+				"url": "https://classichitsradio.streamingmedia.it/play",
+				"tags": "1970s,1980s,70's,70s,70s disco,80,80's,80s,classic hits",
+				"language": "english,italian",
+				"bitrate": 192
+			},
+			{
+				"name": "Contatto Radio",
+				"url": "http://contattoradio.radioca.st/stream?type=https&nocache=1?ver=572863",
+				"tags": "eclectic,independent",
+				"language": "italian",
+				"bitrate": 192
+			},
+			{
+				"name": "Deejay Fox Radio",
+				"url": "http://sr2.inmystream.info:8125/;",
+				"tags": "",
+				"language": "italian",
+				"bitrate": 320
+			}
+		]
+	},
+	"JP": {
+		"name": "Japan",
+		"stations": [
+			{
+				"name": "BadRadio",
+				"url": "https://badradio.nz/stream",
+				"tags": "music",
+				"language": "",
+				"bitrate": 320
+			},
+			{
+				"name": "Big B Radio - Jpop",
+				"url": "https://antares.dribbcast.com/proxy/jpop?mp=/s",
+				"tags": "music,pop",
+				"language": "japanese",
+				"bitrate": 192
+			},
+			{
+				"name": "BOX : Japan City Pop - 日本のシティポップ",
+				"url": "https://play.streamafrica.net/japancitypop",
+				"tags": "city pop,japanese",
+				"language": "english,japanese",
+				"bitrate": 0
+			},
+			{
+				"name": "FM Kahoku 78.7 (FMかほく, JOZZ5AM-FM, 78.7 MHz, Kahoku City, Ishikawa)",
+				"url": "http://radio.kahoku.net:8000/;",
+				"tags": "enka,japan,japanese,jpop,kayokyoku,talk radio",
+				"language": "japanese",
+				"bitrate": 96
+			},
+			{
+				"name": "Free FM Tokyo",
+				"url": "https://rocafmadrid.radioca.st/stream",
+				"tags": "1980s,2000s,80's,80s rock,90's,rock",
+				"language": "american english,japanese,spanish",
+				"bitrate": 320
+			},
+			{
+				"name": "Friends Forever 128kbps MP3",
+				"url": "https://s5.radio.co/s6140c7241/listen",
+				"tags": "j-pop,j-rock,jpop,jrock,shibuya kei",
+				"language": "english,japanese",
+				"bitrate": 128
+			},
+			{
+				"name": "Gotanno FM 89.2",
+				"url": "https://radio.gotanno.love/;",
+				"tags": "indie pop,jpop",
+				"language": "japanese",
+				"bitrate": 96
+			},
+			{
+				"name": "Hitsujikai Radio",
+				"url": "http://streaming.radio.co/se4a8e6a93/listen",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "J-Club Powerplay HipHop",
+				"url": "https://kathy.torontocast.com:3350/;",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "J-Pop Powerplay",
+				"url": "https://kathy.torontocast.com:3560/;",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "J-Pop Powerplay Kawaii",
+				"url": "https://kathy.torontocast.com:3060/;",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Jazz Sakura",
+				"url": "https://kathy.torontocast.com:3330/;",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Kishiwada Radio",
+				"url": "http://61.89.201.27:8000/radikishi.mp3",
+				"tags": "",
+				"language": "japanese",
+				"bitrate": 48
+			},
+			{
+				"name": "Listen.Moe JPop Vorbis",
+				"url": "https://listen.moe/stream",
+				"tags": "jpop",
+				"language": "english,japanese",
+				"bitrate": 256
+			},
+			{
+				"name": "Otaku Music Radio",
+				"url": "https://kathy.torontocast.com:2880/;?type=http&nocache=1606748882",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			}
+		]
+	},
 	"KE": {
 		"name": "Kenya",
 		"stations": [
@@ -1111,6 +1289,18 @@
 				"tags": "ambient,chillout,easy listening,jazz,lounge,moscow,relax,sounds of nature",
 				"language": "russian",
 				"bitrate": 128
+			}
+		]
+	},
+	"SC": {
+		"name": "Seychelles",
+		"stations": [
+			{
+				"name": "Abdulbasit Abdulsamad",
+				"url": "https://radio.mp3islam.com/listen/abdulbasit/radio.mp3",
+				"tags": "",
+				"language": "arabic",
+				"bitrate": 192
 			}
 		]
 	},
@@ -1421,6 +1611,67 @@
 				"tags": "hip hop,r&b,soul,urban",
 				"language": "english",
 				"bitrate": 32
+			}
+		]
+	},
+	"VN": {
+		"name": "Vietnam",
+		"stations": [
+			{
+				"name": "FM HANOI 90 MHz",
+				"url": "http://14.162.146.90:8000/HANOI90",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Little Saigon Radio",
+				"url": "https://stream-148.zeno.fm/kxynzu2qe7duv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiJreHluenUycWU3ZHV2IiwiaG9zdCI6InN0cmVhbS0xNDguemVuby5mbSIsInJ0dGwiOjUsImp0aSI6IklCSlYyMXNuVC02QUFEWTVhQTUxWmciLCJpYXQiOjE3Mjk4MzExMTcsImV4cCI6MTcyOTgzMTE3N30.MnLyarUeN7gD-e-g1fZiD0UQWGzpIaPx7o3vYOhQCfk",
+				"tags": "news",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "M Radio Vietnam",
+				"url": "https://stream-155.zeno.fm/4q7y9hvkp2zuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiI0cTd5OWh2a3AyenV2IiwiaG9zdCI6InN0cmVhbS0xNTUuemVuby5mbSIsInJ0dGwiOjUsImp0aSI6ImlpeGFsbUNWVE51cGxub1h2eE9NTmciLCJpYXQiOjE3MzE1NTExNjIsImV4cCI6MTczMTU1MTIyMn0.RQUqatQ8CtSaIcvH9kT1xRfeuptGIM13jzFd-2SehU0&aw_0_req_lsid=8196d2c78a734f244852a3f8bbbecbcb",
+				"tags": "pop",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "RFI Tiếng Việt",
+				"url": "https://rfienvietnamien64k.ice.infomaniak.ch/rfienvietnamien-64.mp3",
+				"tags": "news",
+				"language": "",
+				"bitrate": 64
+			},
+			{
+				"name": "Saigon Houston AM900",
+				"url": "http://142.4.215.82:8070/stream?type=http&nocache=151",
+				"tags": "news",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Vien Thao",
+				"url": "https://stream-175.zeno.fm/fmarzyqmq0hvv",
+				"tags": "news",
+				"language": "",
+				"bitrate": 0
+			},
+			{
+				"name": "VIET RADIO 1560",
+				"url": "http://71.4.56.20/3rdout/radio.hou.std2/icecast.audio",
+				"tags": "news",
+				"language": "",
+				"bitrate": 109
+			},
+			{
+				"name": "VOV Mekong",
+				"url": "https://stream.vovmedia.vn/vovmekong",
+				"tags": "",
+				"language": "",
+				"bitrate": 48
 			}
 		]
 	}
