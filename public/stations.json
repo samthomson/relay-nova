@@ -439,6 +439,102 @@
 			}
 		]
 	},
+	"CZ": {
+		"name": "Czechia",
+		"stations": [
+			{
+				"name": "BlueRadio.cz",
+				"url": "http://sc.ipip.cz:7980/;?1711695047279",
+				"tags": "",
+				"language": "czech",
+				"bitrate": 192
+			},
+			{
+				"name": "Český Impuls",
+				"url": "http://icecast6.play.cz/cesky-impuls.mp3",
+				"tags": "",
+				"language": "czech",
+				"bitrate": 128
+			},
+			{
+				"name": "Český rozhlas České Budějovice",
+				"url": "https://rozhlas.stream/ceske_budejovice_high.aac",
+				"tags": "regional",
+				"language": "czech",
+				"bitrate": 160
+			},
+			{
+				"name": "City FM",
+				"url": "http://ice.abradio.cz/cityfm128.mp3",
+				"tags": "dance,eurodance,hits,top100",
+				"language": "czech,english",
+				"bitrate": 128
+			},
+			{
+				"name": "Classic Praha",
+				"url": "http://icecast8.play.cz/classic128.mp3",
+				"tags": "",
+				"language": "czech",
+				"bitrate": 128
+			},
+			{
+				"name": "ČRo Dvojka",
+				"url": "http://icecast1.play.cz:8000/cro2-32aac",
+				"tags": "32k,aac+,public radio,talk,český rozhlas",
+				"language": "czech",
+				"bitrate": 64
+			},
+			{
+				"name": "ČRo Dvojka",
+				"url": "http://icecast6.play.cz/cro2-128.mp3",
+				"tags": "public radio,talk,český rozhlas",
+				"language": "czech",
+				"bitrate": 128
+			},
+			{
+				"name": "Čro Dvojka (256k ogg)",
+				"url": "http://amp1.cesnet.cz:8000/cro2-256.ogg",
+				"tags": "news",
+				"language": "czech",
+				"bitrate": 0
+			},
+			{
+				"name": "ČRo Jazz",
+				"url": "http://amp.cesnet.cz:8000/cro-jazz.flac",
+				"tags": "flac,jazz,lossless,public radio,český rozhlas",
+				"language": "czech",
+				"bitrate": 0
+			},
+			{
+				"name": "ČRo Radiožurnál",
+				"url": "http://icecast1.play.cz:8000/cro132aac",
+				"tags": "news,public radio,český rozhlas",
+				"language": "czech",
+				"bitrate": 64
+			},
+			{
+				"name": "ČRo Vltava",
+				"url": "http://icecast5.play.cz/cro3-128.mp3",
+				"tags": "classical,public radio,český rozhlas",
+				"language": "czech",
+				"bitrate": 128
+			},
+			{
+				"name": "Frekvence 1 - Youradio Osmdesátky",
+				"url": "http://ice.actve.net/web-80",
+				"tags": "80's",
+				"language": "czech",
+				"bitrate": 128
+			},
+			{
+				"name": "Radio Praha",
+				"url": "http://icecast2.play.cz/cro7-128.mp3",
+				"tags": "public radio,český rozhlas",
+				"language": "",
+				"bitrate": 128
+			}
+		]
+	},
 	"KE": {
 		"name": "Kenya",
 		"stations": [
