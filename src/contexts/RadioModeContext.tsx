@@ -12,19 +12,15 @@ const RadioModeContext = createContext<RadioModeContextType | undefined>(undefin
 export function RadioModeProvider({ children }: { children: React.ReactNode }) {
   const [isRadioMode, setIsRadioMode] = useState(false);
 
-  // Handle radio playback when mode changes
+  // Handle radio mode changes
   useEffect(() => {
     console.log('Radio mode changed:', { isRadioMode });
-    if (isRadioMode) {
-      // Start with US stations by default
-      console.log('Starting radio playback...');
-      radioPlayer.play('US').catch(error => {
-        console.error('Failed to play radio:', error);
-      });
-    } else {
+    if (!isRadioMode) {
+      // Stop radio when radio mode is turned off
       console.log('Stopping radio playback...');
       radioPlayer.stop();
     }
+    // We don't start playback here - it should only start when a relay panel is open
   }, [isRadioMode]);
 
   const toggleRadioMode = () => {
