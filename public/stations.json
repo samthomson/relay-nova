@@ -230,6 +230,161 @@
 			}
 		]
 	},
+	"CA": {
+		"name": "Canada",
+		"stations": [
+			{
+				"name": "CFQR 600",
+				"url": "https://centova.radioservers.biz/proxy/canadai1/stream",
+				"tags": "canada,classic hits,montreal,news talk,quebec",
+				"language": "english",
+				"bitrate": 160
+			},
+			{
+				"name": "CJRP-FM - Alive FM Saint John Canada",
+				"url": "https://us9.streamingpulse.com/ssl/NewsongFM",
+				"tags": "christian,inspirtational,music,talk",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "RADIO MARIA CANADA - HMWN",
+				"url": "http://dreamsiteradiocp.com:8016/stream",
+				"tags": "catholic,christian,talk",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "SENSUAL LOUNGE RADIO",
+				"url": "https://kathy.torontocast.com:3590/;?type=http&nocache=1739707069",
+				"tags": "ambient,ambient lounge,canada,chillout,chillout+lounge,deep ambient,easy listening,erotic,jazz,jazz lounge,lounge,lounge music,lounge radio,sensual,sensuale,smooth jazz,smooth lounge,soft music,toronto,vocal lounge",
+				"language": "english",
+				"bitrate": 320
+			},
+			{
+				"name": "The Lynx Retro 80s",
+				"url": "http://80s-lynxradio.radioca.st/stream",
+				"tags": "80s,canada",
+				"language": "english",
+				"bitrate": 128
+			},
+			{
+				"name": "WKND 99.5, Montreal City",
+				"url": "http://streaming.cjpx.leclerccommunication.ca:8000/cjpx.mp3?type=.mp3&1597284756",
+				"tags": "alternative,alternative rock,canada,commercial,montreal,mp3,pop rock",
+				"language": "french",
+				"bitrate": 128
+			}
+		]
+	},
+	"CH": {
+		"name": "Switzerland",
+		"stations": [
+			{
+				"name": " A Fine Jazz Gumbo Radio ",
+				"url": "https://streaming.smartradio.ch:9502/stream",
+				"tags": "jazz",
+				"language": "",
+				"bitrate": 48
+			},
+			{
+				"name": "1.FM - Blues Radio",
+				"url": "http://strm112.1.fm/blues_mobile_mp3",
+				"tags": "blues",
+				"language": "english",
+				"bitrate": 192
+			},
+			{
+				"name": "1.FM - Gorilla FM Radio",
+				"url": "http://strm112.1.fm/gorillafm_mobile_mp3",
+				"tags": "alternative rock,indie rock,progressive rock",
+				"language": "english",
+				"bitrate": 320
+			},
+			{
+				"name": "1.FM - Ibiza Chill Tropical",
+				"url": "http://strm112.1.fm/ibizachill_mobile_mp3?aw_0_req.gdpr=true",
+				"tags": "1.fm,chillout,ibiza,tropical,tropical music",
+				"language": "english,german",
+				"bitrate": 192
+			},
+			{
+				"name": "1.FM - Italia On Air Radio",
+				"url": "http://strm112.1.fm/italiaonair_mobile_mp3",
+				"tags": "italian pop",
+				"language": "english",
+				"bitrate": 320
+			},
+			{
+				"name": "1.FM - Otto's Opera House",
+				"url": "http://strm112.1.fm/opera_mobile_mp3",
+				"tags": "opera",
+				"language": "english",
+				"bitrate": 192
+			},
+			{
+				"name": "Radioswiss ",
+				"url": "http://stream.laut.fm/radioswiss",
+				"tags": "pop",
+				"language": "",
+				"bitrate": 128
+			},
+			{
+				"name": "Wildmountain Radio",
+				"url": "https://wildmountain.ice.infomaniak.ch/wmr.mp3",
+				"tags": "",
+				"language": "gernan,swiss german",
+				"bitrate": 192
+			},
+			{
+				"name": "World Radio Switzerland",
+				"url": "https://uksouth.streaming.broadcast.radio:10290/wrs",
+				"tags": "",
+				"language": "",
+				"bitrate": 128
+			}
+		]
+	},
+	"CN": {
+		"name": "China",
+		"stations": [
+			{
+				"name": "Alxa Chinese Radio",
+				"url": "http://lhttp.qingting.fm/live/5022521/64k.mp3",
+				"tags": "",
+				"language": "chinese",
+				"bitrate": 0
+			},
+			{
+				"name": "Auto FM汽车联播网",
+				"url": "https://lhttp.qtfm.cn/live/15318569/64k.mp3",
+				"tags": "music",
+				"language": "chinese",
+				"bitrate": 0
+			},
+			{
+				"name": "BBN 中文",
+				"url": "https://streams.radiomast.io/ce298b32-8776-4192-9900-092f44b63e7f",
+				"tags": "bible",
+				"language": "chinese",
+				"bitrate": 64
+			},
+			{
+				"name": "Bridge Radio - 华语 HITS",
+				"url": "https://das-edge11-live365-dal03.cdnstream.com/a57743_2",
+				"tags": "music,oldies",
+				"language": "cantonese,chinese",
+				"bitrate": 320
+			},
+			{
+				"name": "Chinese Classical Music (Mp3 stream)",
+				"url": "https://radio.chinesemusicworld.com/chinesemusic.mp3",
+				"tags": "classical,instrumental,traditional",
+				"language": "chinese,english",
+				"bitrate": 128
+			}
+		]
+	},
 	"KE": {
 		"name": "Kenya",
 		"stations": [
@@ -288,6 +443,25 @@
 				"tags": "classical",
 				"language": "",
 				"bitrate": 0
+			}
+		]
+	},
+	"TW": {
+		"name": "Taiwan, Republic Of China",
+		"stations": [
+			{
+				"name": "TAIWAN LOUNGE RADIO",
+				"url": "https://azuracast.conceptradio.fr:8030/stream.mp3",
+				"tags": "",
+				"language": "",
+				"bitrate": 192
+			},
+			{
+				"name": "新客家廣播電台",
+				"url": "http://live.fm935newhakka.com.tw:5006/live",
+				"tags": "entertainment,information,music",
+				"language": "hakka",
+				"bitrate": 128
 			}
 		]
 	},
