@@ -25,7 +25,41 @@ async function loadStationsData(): Promise<StationsData> {
 		if (!response.ok) {
 			throw new Error(`Failed to load stations data: ${response.status}`);
 		}
-		return await response.json();
+
+		// Load raw data
+		const rawData: StationsData = await response.json();
+
+		// Filter out HTTP URLs due to Content Security Policy
+		const filteredData: StationsData = {};
+		let totalStations = 0;
+		let filteredStations = 0;
+
+		Object.keys(rawData).forEach(countryCode => {
+			const countryData = rawData[countryCode];
+			const httpsStations = countryData.stations.filter(station => {
+				totalStations++;
+				// Only allow HTTPS URLs
+				const isHttps = station.url.toLowerCase().startsWith('https://');
+				if (!isHttps) {
+					filteredStations++;
+					console.log(`RadioPlayer: Filtered out HTTP station: ${station.name} (${station.url})`);
+				}
+				return isHttps;
+			});
+
+			// Only add countries that have at least one HTTPS station
+			if (httpsStations.length > 0) {
+				filteredData[countryCode] = {
+					name: countryData.name,
+					stations: httpsStations
+				};
+			}
+		});
+
+		console.log(`RadioPlayer: Loaded stations for ${Object.keys(filteredData).length} countries`);
+		console.log(`RadioPlayer: Filtered out ${filteredStations} HTTP stations out of ${totalStations} total stations`);
+
+		return filteredData;
 	} catch (error) {
 		console.error('Error loading stations data:', error);
 		return {};
@@ -149,6 +183,14 @@ class RadioPlayer {
 		// Add this station URL to the tried stations set
 		this.triedStations.add(station.url);
 
+		// Check for HTTP URL (should already be filtered, but just in case)
+		if (!station.url.toLowerCase().startsWith('https://')) {
+			console.error('RadioPlayer: Cannot play HTTP station due to Content Security Policy:', station.name, station.url);
+			// Handle as a failed station
+			await this.handleFailedStation('Content Security Policy violation - HTTP URL not allowed');
+			return;
+		}
+
 		try {
 			console.log('RadioPlayer: Playing station:', station.name);
 			this.currentStation = station;
@@ -157,41 +199,73 @@ class RadioPlayer {
 			// Reset volume to full before playing
 			this.audio.volume = 1;
 
-			await this.audio.play();
-			console.log('RadioPlayer: Playback started successfully');
-			// Clear the tried stations set on success
-			this.triedStations.clear();
+			// Add specific error handler for CSP violations
+			const errorHandler = (e: Event) => {
+				if (e instanceof ErrorEvent && e.message && e.message.includes('Content Security Policy')) {
+					console.error('RadioPlayer: CSP violation detected:', e.message);
+				}
+			};
+
+			// Listen for CSP errors
+			window.addEventListener('error', errorHandler);
+
+			try {
+				await this.audio.play();
+				console.log('RadioPlayer: Playback started successfully');
+				// Clear the tried stations set on success
+				this.triedStations.clear();
+			} finally {
+				// Always remove the error handler
+				window.removeEventListener('error', errorHandler);
+			}
 		} catch (error) {
 			console.error('RadioPlayer: Failed to play station:', error);
-			// Try another station from the same country that we haven't tried yet
-			if (this.currentCountryCode && stationsData[this.currentCountryCode] && this.retryCount < this.maxRetries) {
-				this.retryCount++;
-				console.log(`RadioPlayer: Retry attempt ${this.retryCount} of ${this.maxRetries}`);
 
-				const countryStations = stationsData[this.currentCountryCode].stations;
-				// Only consider stations we haven't tried yet
-				const untried = countryStations.filter(s => !this.triedStations.has(s.url));
+			// Check if this is a CSP error
+			const errorString = String(error);
+			if (errorString.includes('Content Security Policy') ||
+				errorString.includes('CSP') ||
+				errorString.includes('Refused to load')) {
+				console.error('RadioPlayer: Content Security Policy violation detected');
+			}
 
-				if (untried.length > 0) {
-					const randomIndex = Math.floor(Math.random() * untried.length);
-					const fallbackStation = untried[randomIndex];
-					this.currentStationIndex = countryStations.findIndex(s => s.url === fallbackStation.url);
-					console.log('RadioPlayer: Trying another station:', fallbackStation.name);
-					await this.playStation(fallbackStation);
-				} else {
-					// We've tried all stations and none work
-					console.log('RadioPlayer: All stations failed to play');
-					this.currentStation = null;
-					this.triedStations.clear();
-					this.retryCount = 0;
-				}
+			// Try another station
+			await this.handleFailedStation(error);
+		}
+	}
+
+	/**
+	 * Handle failed station playback by trying another station
+	 */
+	private async handleFailedStation(error: unknown): Promise<void> {
+		// Try another station from the same country that we haven't tried yet
+		if (this.currentCountryCode && stationsData[this.currentCountryCode] && this.retryCount < this.maxRetries) {
+			this.retryCount++;
+			console.log(`RadioPlayer: Retry attempt ${this.retryCount} of ${this.maxRetries}`);
+
+			const countryStations = stationsData[this.currentCountryCode].stations;
+			// Only consider stations we haven't tried yet
+			const untried = countryStations.filter(s => !this.triedStations.has(s.url));
+
+			if (untried.length > 0) {
+				const randomIndex = Math.floor(Math.random() * untried.length);
+				const fallbackStation = untried[randomIndex];
+				this.currentStationIndex = countryStations.findIndex(s => s.url === fallbackStation.url);
+				console.log('RadioPlayer: Trying another station:', fallbackStation.name);
+				await this.playStation(fallbackStation);
 			} else {
-				// Max retries reached or no more stations to try
-				console.log('RadioPlayer: Max retries reached or no stations available');
+				// We've tried all stations and none work
+				console.log('RadioPlayer: All stations failed to play');
 				this.currentStation = null;
 				this.triedStations.clear();
 				this.retryCount = 0;
 			}
+		} else {
+			// Max retries reached or no more stations to try
+			console.log('RadioPlayer: Max retries reached or no stations available');
+			this.currentStation = null;
+			this.triedStations.clear();
+			this.retryCount = 0;
 		}
 	}
 
@@ -289,7 +363,7 @@ class RadioPlayer {
 			return;
 		}
 
-		console.log('RadioPlayer: Switching to a random station');
+		console.log('RadioPlayer: Switching to a different station');
 
 		// Clear any existing fade out
 		if (this.fadeOutInterval !== null) {
@@ -299,16 +373,62 @@ class RadioPlayer {
 
 		const countryStations = stationsData[this.currentCountryCode].stations;
 
-		// Get a random station different from the current one
+		// Log current station info
+		const currentStationName = this.currentStation?.name || 'unknown';
+		const currentUrl = this.currentStation?.url;
+		console.log(`RadioPlayer: Current station: ${currentStationName} (index: ${this.currentStationIndex}, url: ${currentUrl?.substring(0, 30)}...)`);
+		console.log(`RadioPlayer: Country has ${countryStations.length} stations total`);
+
+		// Get a different station than the current one
 		let newStationIndex;
+
 		if (countryStations.length > 1) {
-			// If we have more than one station, make sure we pick a different one
-			do {
-				newStationIndex = Math.floor(Math.random() * countryStations.length);
-			} while (newStationIndex === this.currentStationIndex && countryStations.length > 1);
+			// Special case for exactly two stations - just pick the other one
+			if (countryStations.length === 2) {
+				console.log('RadioPlayer: Exactly two stations available - selecting the other one');
+
+				// Find the index of the station that's not currently playing
+				if (countryStations[0].url === currentUrl) {
+					newStationIndex = 1;
+					console.log('RadioPlayer: Current is first station, switching to second');
+				} else if (countryStations[1].url === currentUrl) {
+					newStationIndex = 0;
+					console.log('RadioPlayer: Current is second station, switching to first');
+				} else {
+					// If somehow neither matches (shouldn't happen), pick the first one
+					console.warn('RadioPlayer: Current station URL doesn\'t match either station - defaulting to first');
+					newStationIndex = 0;
+				}
+
+				// Debug log the URLs to verify
+				console.log(`RadioPlayer: Station 0 URL: ${countryStations[0].url.substring(0, 30)}...`);
+				console.log(`RadioPlayer: Station 1 URL: ${countryStations[1].url.substring(0, 30)}...`);
+			} else {
+				// For more than two stations, use the original algorithm
+				// Create an array of indices excluding the current station
+				const availableIndices: number[] = [];
+				for (let i = 0; i < countryStations.length; i++) {
+					if (countryStations[i].url !== currentUrl) {
+						availableIndices.push(i);
+					}
+				}
+
+				console.log(`RadioPlayer: Found ${availableIndices.length} alternative stations`);
+
+				if (availableIndices.length > 0) {
+					// Pick a random index from the available options
+					const randomIndex = Math.floor(Math.random() * availableIndices.length);
+					newStationIndex = availableIndices[randomIndex];
+				} else {
+					// Fallback - should never happen if we have more than one station
+					console.warn('RadioPlayer: Could not find a different station despite having multiple stations');
+					newStationIndex = (this.currentStationIndex + 1) % countryStations.length;
+				}
+			}
 		} else {
 			// If there's only one station, we have no choice but to use it again
 			newStationIndex = 0;
+			console.log('RadioPlayer: Only one station available, reusing it');
 		}
 
 		this.currentStationIndex = newStationIndex;

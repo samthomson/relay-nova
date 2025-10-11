@@ -114,16 +114,35 @@ export function RadioStatusPanel({ side, relay }: RadioStatusPanelProps) {
 					</div>
 					{isRadioMode && currentStation && (
 						<button
-							className="p-2 hover:bg-white/10 rounded-full transition-colors active:bg-white/20"
+							className="p-2 hover:bg-white/10 rounded-full transition-all active:scale-90 active:bg-white/30"
 							onClick={(e) => {
 								e.preventDefault();
 								e.stopPropagation();
-								console.log('Shuffle button clicked - switching to random station');
-								radioPlayer.nextStation().catch(err => {
-									console.error('Failed to switch station:', err);
-								});
+
+								// Add visual feedback
+								const button = e.currentTarget;
+								button.classList.add('text-orange-400');
+
+								// Special message for two-station countries
+								if (stationInfo.total === 2) {
+									console.log('Switching between two stations');
+								} else {
+									console.log('Shuffle button clicked - switching to different station');
+								}
+
+								radioPlayer.nextStation()
+									.then(() => {
+										// Remove highlight after successful station change
+										setTimeout(() => {
+											button.classList.remove('text-orange-400');
+										}, 500);
+									})
+									.catch(err => {
+										console.error('Failed to switch station:', err);
+										button.classList.remove('text-orange-400');
+									});
 							}}
-							title="Random station"
+							title={stationInfo.total === 2 ? "Switch to other station" : "Different station"}
 						>
 							<Shuffle className="w-4 h-4 text-gray-300" />
 						</button>
